@@ -95,6 +95,8 @@ typedef struct _PUBLIC_DATA
 {
 	//程序版本信息
 	TVersion SoftVer;				//软件版本号
+    char build_date[32];
+
     int LCDLight;
 	int ScrSaversTimer;		// 屏幕保护计数
 

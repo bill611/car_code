@@ -29,17 +29,22 @@ extern "C" {
 
 #include <stdint.h>
 
+    typedef struct _BmpLocation {
+        BITMAP 	*bmp;
+        char 	*location;
+    }BmpLocation;
+
 	// 控件结构体
 	typedef struct _MgCtrlButton{
 		HWND idc;		// 控件ID
 		uint8_t op_code;  	// 设备操作
 		char *img_name; 	// 常态图片名字,不带扩展名,完整路径由循环赋值
+		int16_t x,y,h,w;
+		NOTIFPROC notif_proc; 	// 回调函数
 		uint8_t display; 	// 0不显示 1显示
 		uint8_t device_id;	// 设备编号
 		BITMAP image_normal;	// 正常状态图片
 		BITMAP image_press;	// 按下状态图片
-		NOTIFPROC notif_proc; 	// 回调函数
-		int16_t x,y,h,w;
 	}MgCtrlButton;
 
 	void SetAlarmForm(HWND hWnd);
@@ -55,6 +60,10 @@ extern "C" {
 	void TranslateIconPart(HDC hdc,int x,int y,int w,int h,BITMAP *FgBmp,int LineIconCnt,int IconIdx,int t,
 			BOOL Translate);
 
+    void bmpLoad(BITMAP *bmp,char *path);
+    void bmpsLoad(BmpLocation *bmp,int num);
+    void bmpRelease(BITMAP *bmp);
+    void bmpsRelease(BmpLocation *bmp,int num);
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */

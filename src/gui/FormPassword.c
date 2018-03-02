@@ -28,15 +28,11 @@
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
 static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
-static void updateReminder(HWND hwnd,char *string);
-static void formInitCtrlLabers(HWND hDlg);
-static void formInitCtrlButtons(HWND hDlg);
-static void formInitCtrlEdits(HWND hDlg);
-static void formInitPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
+static void initCtrlButtons(HWND hDlg);
+static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 
-static void btGetID(HWND hwnd, int id, int nc, DWORD add_data);
-static void btSave(HWND hwnd, int id, int nc, DWORD add_data);
-static void btBack(HWND hwnd, int id, int nc, DWORD add_data);
+static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -47,50 +43,25 @@ static void btBack(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define MSG_UPDATE_REMINDER		 	(MSG_USER + 1)
-
+#define BMP_LOCAL_PATH "res/image/system1/"
 enum {
-	IDC_TIMER_GETID = 10,
-
-	IDC_LB_TITLE,
-	IDC_LB_IP,
-	IDC_LB_MASK,
-	IDC_LB_GATEWAY,
-	IDC_LB_CENTER_IP,
-	IDC_LB_IMEI,
-	IDC_LB_IMEI_ADD,
-	IDC_LB_MAC,
-	IDC_LB_MAC_ADD,
-	IDC_LB_ENABLE_UBROEKN,
-	IDC_LB_ENABLE_ALARM_DOOR,
-	IDC_LB_ALARM_DOOR,
-	IDC_LB_ENABLE_UBROEKN_IMG,
-	IDC_LB_ENABLE_ALARM_DOOR_IMG,
-	IDC_LB_REMINDER,
-
-	IDC_EDIT_IP,
-	IDC_EDIT_MASK,
-	IDC_EDIT_GATEWAY,
-	IDC_EDIT_CENTER_IP,
-	IDC_EDIT_ALAMR_DOOR,
-
-	IDC_BT_GET_IMEI,
-	IDC_BT_SAVE,
-	IDC_BT_BACK,
-	IDC_MYKEYBOARD
+	IDC_BUTTON_MANAGE,
+	IDC_BUTTON_EXIT,
+	IDC_LABER_VERSION,
+	IDC_LABER_DATE,
 };
 
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
+static BITMAP bmp_bkg_system1; // 背景
+
+static BmpLocation bmp_load[] = {
+    {&bmp_bkg_system1, BMP_LOCAL_PATH"bkg_system1.JPG"},
+};
 
 static MY_CTRLDATA ChildCtrls [] = {
-	STATIC_LB  (X_LB_TITLE, Y_LB_TITLE, W_LB_TITLE, H_LB_TITLE,
-			IDC_LB_TITLE,
-			Word[WORD_SETTING_LOCAL].string,
-			0,
-			&TEXT_FONT),
 };
 
 
@@ -112,11 +83,15 @@ static FormBasePriv form_base_priv= {
 	.dlgProc = formPasswordProc,
 	.dlgInitParam = &DlgInitParam,
 
-	.fontKeyboard = &BUTTON_FONT,
-	.initCtrlLabers =  formInitCtrlLabers,
-	.initCtrlButtons =  formInitCtrlButtons,
-	.initCtrlEdits =  formInitCtrlEdits,
-	.initPara =  formInitPara,
+	.initCtrlLabers =  NULL,
+	.initCtrlButtons =  initCtrlButtons,
+	.initCtrlEdits =  NULL,
+	.initPara =  initPara,
+};
+
+static MgCtrlButton otp_controls[] = {
+	{IDC_BUTTON_MANAGE,			0,"BUTTON_MANAGE",132,422,212,49,btManagePress}, // 后台管理系统
+	{IDC_BUTTON_EXIT,			0,"BUTTON_EXIT",392,205,51,48,btExitPress}, // 退出
 };
 
 static FormBase* form_base = NULL;
@@ -125,22 +100,7 @@ static int current_edit;
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief updateReminder 更新按键提示语言
- *
- * @param hwnd
- * @param string
- */
-/* ----------------------------------------------------------------*/
-static void updateReminder(HWND hwnd,char *string)
-{
-	SendMessage(hwnd, MSG_UPDATE_REMINDER,
-			0,
-			(LPARAM)string);
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief editNotify 编辑框回调函数，用于获得焦点时设置光标位置
+ * @brief btManagePress 获取设备ID按钮
  *
  * @param hwnd
  * @param id
@@ -148,50 +108,7 @@ static void updateReminder(HWND hwnd,char *string)
  * @param add_data
  */
 /* ----------------------------------------------------------------*/
-static void editNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	char text[50];
-	if (nc == EN_SETFOCUS){
-		int ip_len = SendMessage (GetDlgItem(GetParent(hwnd),id), MSG_GETTEXT, 50,  (LPARAM)text);
-		SendMessage (GetDlgItem(GetParent(hwnd),id), EM_SETCARETPOS, 0, ip_len);
-	} else if (nc == EN_KILLFOCUS) {
-		current_edit = id;
-	}
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief unBrokenNotify 单击报警图片静态控件回调函数
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void unBrokenNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	enable_unbroken ^= 1;
-	if (enable_unbroken){
-		SendMessage(GetDlgItem(GetParent(hwnd), IDC_LB_ENABLE_UBROEKN_IMG),
-				STM_SETIMAGE, (WPARAM)&Bmp_icon_button_check, 0);
-	} else {
-		SendMessage(GetDlgItem(GetParent(hwnd), IDC_LB_ENABLE_UBROEKN_IMG),
-				STM_SETIMAGE, (WPARAM)&Bmp_icon_button_uncheck, 0);
-	}
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief btGetID 获取设备ID按钮
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void btGetID(HWND hwnd, int id, int nc, DWORD add_data)
+static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
@@ -199,7 +116,7 @@ static void btGetID(HWND hwnd, int id, int nc, DWORD add_data)
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief btSave 保存按钮
+ * @brief btExitPress 保存按钮
  *
  * @param hwnd
  * @param id
@@ -207,7 +124,7 @@ static void btGetID(HWND hwnd, int id, int nc, DWORD add_data)
  * @param add_data
  */
 /* ----------------------------------------------------------------*/
-static void btSave(HWND hwnd, int id, int nc, DWORD add_data)
+static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
@@ -215,97 +132,38 @@ static void btSave(HWND hwnd, int id, int nc, DWORD add_data)
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief btBack 返回按钮
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void btBack(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief alarmNotify 单击报警图片静态控件回调函数
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void alarmNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	enable_alarm_door ^= 1;
-	if (enable_alarm_door){
-		SendMessage(GetDlgItem(GetParent(hwnd), IDC_LB_ENABLE_ALARM_DOOR_IMG),
-				STM_SETIMAGE, (WPARAM)&Bmp_icon_button_check, 0);
-		ShowWindow(GetDlgItem(GetParent(hwnd), IDC_LB_ALARM_DOOR),SW_SHOWNORMAL);
-		ShowWindow(GetDlgItem(GetParent(hwnd), IDC_EDIT_ALAMR_DOOR),SW_SHOWNORMAL);
-	} else {
-		SendMessage(GetDlgItem(GetParent(hwnd), IDC_LB_ENABLE_ALARM_DOOR_IMG),
-				STM_SETIMAGE, (WPARAM)&Bmp_icon_button_uncheck, 0);
-		ShowWindow(GetDlgItem(GetParent(hwnd), IDC_LB_ALARM_DOOR),SW_HIDE);
-		ShowWindow(GetDlgItem(GetParent(hwnd), IDC_EDIT_ALAMR_DOOR),SW_HIDE);
-	}
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief formInitCtrlLabers 初始化Laber控件
+ * @brief initCtrlButtons 初始化button控件
  *
  * @param hDlg
  */
 /* ----------------------------------------------------------------*/
-static void formInitCtrlLabers(HWND hDlg)
+static void initCtrlButtons(HWND hDlg)
 {
 	int i;
-	for (i=IDC_LB_TITLE;i<=IDC_LB_ALARM_DOOR; i++){
-		SetWindowElementAttr(GetDlgItem(hDlg,i), WE_FGC_WINDOW,MY_WHIGHT);
-	}
-	SetWindowElementAttr(GetDlgItem(hDlg,IDC_LB_REMINDER), WE_FGC_WINDOW,MY_RED);
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief formInitCtrlEdits 初始化Edit控件
- *
- * @param hDlg
- */
-/* ----------------------------------------------------------------*/
-static void formInitCtrlEdits(HWND hDlg)
-{
-	int i;
-	for (i=IDC_EDIT_IP;i<=IDC_EDIT_ALAMR_DOOR; i++){
-		SetWindowElementAttr(GetDlgItem(hDlg,i), WE_FGC_WINDOW,MY_BLACK);
-		SendDlgItemMessage(hDlg,i, EM_LIMITTEXT, 20, 0L);
-		SetNotificationCallback (GetDlgItem(hDlg,i), editNotify);
+	char image_path[128] = {0};
+    printf("[%s]\n", __FUNCTION__);
+	for (i=0; i<NELEMENTS(otp_controls); i++) {
+        otp_controls[i].display = 1;
+		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",otp_controls[i].img_name);
+        bmpLoad(&otp_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s2.JPG",otp_controls[i].img_name);
+        bmpLoad(&otp_controls[i].image_press, image_path);
+		createSkinButton(hDlg,
+				otp_controls[i].idc,
+				otp_controls[i].x,
+				otp_controls[i].y,
+				otp_controls[i].w,
+				otp_controls[i].h,
+				&otp_controls[i].image_normal,
+				&otp_controls[i].image_press,
+				otp_controls[i].display,
+				otp_controls[i].notif_proc);
 	}
 }
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief formInitCtrlButtons 初始化button控件
- *
- * @param hDlg
- */
-/* ----------------------------------------------------------------*/
-static void formInitCtrlButtons(HWND hDlg)
-{
-	SetNotificationCallback (GetDlgItem(hDlg,IDC_LB_ENABLE_ALARM_DOOR_IMG), alarmNotify);
-	SetNotificationCallback (GetDlgItem(hDlg,IDC_LB_ENABLE_ALARM_DOOR), alarmNotify);
-	SetNotificationCallback (GetDlgItem(hDlg,IDC_LB_ENABLE_UBROEKN_IMG), unBrokenNotify);
-	SetNotificationCallback (GetDlgItem(hDlg,IDC_LB_ENABLE_UBROEKN), unBrokenNotify);
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief formInitPara 初始化参数
+ * @brief initPara 初始化参数
  *
  * @param hDlg
  * @param message
@@ -313,9 +171,10 @@ static void formInitCtrlButtons(HWND hDlg)
  * @param lParam
  */
 /* ----------------------------------------------------------------*/
-static void formInitPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
+static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	char buf[128];
+    /*
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_IP),Public.cLocalIP);
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_MASK),Public.cNetMask);
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_GATEWAY),Public.cGateWay);
@@ -339,6 +198,7 @@ static void formInitPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 		SendMessage(GetDlgItem(hDlg, IDC_LB_ENABLE_UBROEKN_IMG),
 				STM_SETIMAGE, (WPARAM)&Bmp_icon_button_check, 0);
 	}
+    */
 }
 
 /* ----------------------------------------------------------------*/
@@ -355,33 +215,6 @@ static void formInitPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 /* ----------------------------------------------------------------*/
 static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-	switch (message)
-	{
-		case MSG_INITDIALOG:
-			enable_alarm_door = Public.EnableAlarmDoor;
-			enable_unbroken = Public.bUnbrokenUse;
-			break;
-
-		case MSG_TIMER:
-			{
-				if (wParam != IDC_TIMER_GETID) {
-					break;
-				}
-				char buf[128];
-				KillTimer(hDlg,IDC_TIMER_GETID);
-				if(Public.dwDevIDTemp != Public.dwDevID) {
-					updateReminder(hDlg,Word[WORD_GET_DEVICE_ID_SUCCESS].string);
-					sprintf(buf,"%llx",Public.dwDevIDTemp);
-					SetWindowText(GetDlgItem(hDlg,IDC_LB_IMEI_ADD),buf);
-				} else {
-					updateReminder(hDlg,Word[WORD_GET_DEVICE_ID_FAIL].string);
-				}
-			} break;
-
-		default:
-			break;
-	}
-
 	if (form_base->baseProc(form_base,hDlg, message, wParam, lParam) == 0) {
 		return 0;
 	}
@@ -405,7 +238,7 @@ int createFormPassword(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = Bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg_system1;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

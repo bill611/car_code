@@ -42,6 +42,7 @@
 	#define DBG_P( x... )
 #endif
 
+#define SIZE_CONFIG(x) x, sizeof(x) - 1
 
 #define Ver_Major	1
 #define Ver_Minor	0
@@ -208,9 +209,7 @@ void publicInit(void)
 	//获取时间作为起始包发送编号
 	PacketID = (unsigned)time(NULL);
 
-	Public.WatchDog_fd = -2;
 
-	Public.initTouchIrq = publicInitTouchIrq;
 
 	memset(&Screen,0,sizeof(SCREEN_FORM));
 	Screen.Add = screenAddForm;
@@ -218,9 +217,18 @@ void publicInit(void)
 	Screen.Find = screenFindForm;
 	Screen.ReturnMain = screenReturnMainForm;
 
+    sprintf(Public.build_date,"%s", __DATE__);
+	Public.WatchDog_fd = -2;
+    Public.SoftVer.Major = Ver_Major;      
+    Public.SoftVer.Minor = Ver_Minor;      
+    Public.SoftVer.Release = Ver_Release;  
+    Public.SoftVer.Reserve = Ver_Reserve;  
+
     Public.saveConfig = saveConfig;
     Public.getConfigInt = getConfigInt;
     Public.getConfigChar = getConfigChar;
+	Public.initTouchIrq = publicInitTouchIrq;
+
 
 	hFile = LoadEtcFile("config.ini");
 

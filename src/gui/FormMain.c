@@ -40,15 +40,11 @@
 	#define DBG_P( x... )
 #endif
 
+#define BMP_LOCAL_PATH "res/image/main_page/"
 
 enum {
 	IDC_ADVERTISEMENT = 20, // 广告
 };
-
-typedef struct _BmpLocation {
-	BITMAP 	*bmp;
-	char 	*location;
-}BmpLocation;
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
@@ -57,8 +53,8 @@ static BITMAP bmp_bkg1; // 背景1
 static BITMAP bmp_bkg2; // 背景2
 
 static BmpLocation bmp_load[] = {
-	{&bmp_bkg1, "res/image/bmp_bkg1.JPG"},
-	{&bmp_bkg2, "res/image/bmp_bkg2.JPG"},
+	{&bmp_bkg1, "res/image/bkg1.JPG"},
+	{&bmp_bkg2, "res/image/bkg2.JPG"},
 };
 
 
@@ -93,40 +89,6 @@ static HWND hwnd_main = HWND_INVALID;
 static FormMainTimers *timers_tbl;
 static int (*mainAppProc)(HWND hWnd, int message, WPARAM wParam, LPARAM lParam);
 static char *(*listboxHandle)(HWND hwnd, int id, int nc, DWORD add_data);
-
-/* ---------------------------------------------------------------------------*/
-/**
- * @brief formMainBmpLoad 装载图片资源
- *
- * @param bmp 图片结构
- * @param num 图片数目
- */
-/* ---------------------------------------------------------------------------*/
-static void formMainBmpLoad(BmpLocation *bmp,int num)
-{
-	int i;
-	for (i=0; i<num; i++) {
-		if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, bmp[i].location)){
-			printf ("LoadBitmap(%s)fail.\n",bmp[i].location);
-		}
-	}
-}
-
-/* ---------------------------------------------------------------------------*/
-/**
- * @brief formMainBmpRelease 释放图片资源
- *
- * @param bmp 图片结构
- * @param num 图片数目
- */
-/* ---------------------------------------------------------------------------*/
-static void formMainBmpRelease(BmpLocation *bmp,int num)
-{
-	int i;
-	for (i=0; i<num; i++) {
-		UnloadBitmap(bmp[i].bmp);
-	}
-}
 
 /* ---------------------------------------------------------------------------*/
 /**
@@ -202,7 +164,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
     switch (id) {
         case IDC_SYSTEM:
             {
-                
+                createFormPassword(hwnd);               
             } break;
     
         default:
@@ -254,12 +216,10 @@ static void formMainCreateControl(HWND hWnd)
 		opt_11_controls[i].w = 118;
 		opt_11_controls[i].h = 122;
 		opt_11_controls[i].notif_proc = optControlsNotify;
-		sprintf(image_path,"res/image/main_page/%s.JPG",opt_11_controls[i].img_name);
-		if (LoadBitmap (HDC_SCREEN, &opt_11_controls[i].image_normal, image_path))
-			printf ("LoadBitmap(%s)fail.\n",image_path);
-		sprintf(image_path,"res/image/main_page/%s2.JPG",opt_11_controls[i].img_name);
-		if (LoadBitmap (HDC_SCREEN, &opt_11_controls[i].image_press, image_path))
-			printf ("LoadBitmap(%s)fail.\n",image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",opt_11_controls[i].img_name);
+        bmpLoad(&opt_11_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s2.JPG",opt_11_controls[i].img_name);
+        bmpLoad(&opt_11_controls[i].image_press, image_path);
 		createSkinButton(hWnd,
 				opt_11_controls[i].idc,
 				opt_11_controls[i].x,
@@ -300,7 +260,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				hwnd_main = Screen.hMainWnd = hWnd;
 				clearFramebuffer();
 				// 装载图片
-				formMainBmpLoad(bmp_load,NELEMENTS(bmp_load));
+				bmpsLoad(bmp_load,NELEMENTS(bmp_load));
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 
@@ -381,7 +341,7 @@ static int formMainLoop(void)
 	MyButtonControlCleanup();
     MainWindowThreadCleanup (Screen.hMainWnd);
 	hwnd_main = Screen.hMainWnd = 0;
-	formMainBmpRelease(bmp_load,NELEMENTS(bmp_load));
+	bmpsRelease(bmp_load,NELEMENTS(bmp_load));
 	return 0;
 }
 

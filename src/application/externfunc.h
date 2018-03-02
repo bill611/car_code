@@ -28,7 +28,6 @@
 #include "commongdi.h"
 #include "MyButton.h"
 #include "MyDialog.h"
-#include "Mylistbox.h"
 #include "FormMain.h"
 
 // include for app

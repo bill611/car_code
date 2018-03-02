@@ -806,3 +806,45 @@ int PostMainWindowMessage(unsigned int Msg,unsigned int wParam,unsigned int lPar
 	return SendNotifyMessage(Screen.hMainWnd,Msg,wParam,lParam);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief bmpsLoad 装载图片资源
+ *
+ * @param bmp 图片结构
+ * @param num 图片数目
+ */
+/* ---------------------------------------------------------------------------*/
+void bmpsLoad(BmpLocation *bmp,int num)
+{
+	int i;
+	for (i=0; i<num; i++) {
+		if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, bmp[i].location))
+			printf ("LoadBitmap(%s)fail.\n",bmp[i].location);
+	}
+}
+
+void bmpLoad(BITMAP *bmp,char *path)
+{
+    if (LoadBitmap (HDC_SCREEN,bmp, path))
+        printf ("LoadBitmap(%s)fail.\n",path);
+}
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief bmpsRelease 释放图片资源
+ *
+ * @param bmp 图片结构
+ * @param num 图片数目
+ */
+/* ---------------------------------------------------------------------------*/
+void bmpsRelease(BmpLocation *bmp,int num)
+{
+	int i;
+	for (i=0; i<num; i++) {
+		UnloadBitmap(bmp[i].bmp);
+	}
+}
+void bmpRelease(BITMAP *bmp)
+{
+    UnloadBitmap(bmp);
+}
+
