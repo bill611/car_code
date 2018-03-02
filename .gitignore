@@ -1,0 +1,12 @@
+*.swp
+obj
+out
+update
+cscope*
+tags
+*.mk
+res
+config.*
+.ycm*
+v
+libs

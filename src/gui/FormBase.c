@@ -1,0 +1,124 @@
+/*
+ * =============================================================================
+ *
+ *       Filename:  FormBase.c
+ *
+ *    Description:  设置类基本窗口框架
+ *
+ *        Version:  1.0
+ *        Created:  2016-02-19 15:22:58
+ *       Revision:  1.0
+ *
+ *         Author:  xubin
+ *        Company:  Taichuan
+ *
+ * =============================================================================
+ */
+/* ---------------------------------------------------------------------------*
+ *                      include head files
+ *----------------------------------------------------------------------------*/
+
+#include "commongdi.h"
+#include "externfunc.h"
+#include "FormBase.h"
+/* ---------------------------------------------------------------------------*
+ *                  extern variables declare
+ *----------------------------------------------------------------------------*/
+
+/* ---------------------------------------------------------------------------*
+ *                  internal functions declare
+ *----------------------------------------------------------------------------*/
+
+/* ---------------------------------------------------------------------------*
+ *                        macro define
+ *----------------------------------------------------------------------------*/
+#if DBG_FORM_BASE > 0
+	#define DBG_P( x... ) printf( x )
+#else
+	#define DBG_P( x... )
+#endif
+
+#define IDC_FORM_BASE_TIMER 		0
+
+/* ---------------------------------------------------------------------------*
+ *                      variables define
+ *----------------------------------------------------------------------------*/
+
+static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case MSG_INITDIALOG:
+			{
+				Screen.Add(hDlg,this->priv->name);
+				this->auto_close_time = FORM_SETTING_ONTIME;
+				if (this->priv->initCtrlLabers)
+					this->priv->initCtrlLabers(hDlg);
+				if (this->priv->initCtrlButtons)
+					this->priv->initCtrlButtons(hDlg);
+				if (this->priv->initCtrlEdits)
+					this->priv->initCtrlEdits(hDlg);
+				if (this->priv->initPara)
+					this->priv->initPara(hDlg,message,wParam,lParam);
+				SetTimer(hDlg,IDC_FORM_BASE_TIMER,TIME_1S);
+			} return CONTINUE;
+
+		case MSG_LBUTTONDOWN:
+			{
+				this->auto_close_time = FORM_SETTING_ONTIME;
+				screensaverStart(LCD_ON);
+			} return CONTINUE;
+
+		case MSG_TIMER:
+			{
+				if (wParam != IDC_FORM_BASE_TIMER){
+					return CONTINUE;
+				}
+				if (this->auto_close_time > 0) {
+					DBG_P("[%s]time:%d\n", __FILE__,this->auto_close_time);
+					if (--this->auto_close_time == 0) {
+						SendNotifyMessage(hDlg,MSG_CLOSE,0,0);
+					}
+				}
+			} return CONTINUE;
+
+		case MSG_ERASEBKGND:
+			{
+				if (this->priv->bmp_bkg != NULL) {
+					DrawBackground(hDlg,
+						   	(HDC)wParam,
+						   	(const RECT*)lParam, this->priv->bmp_bkg);
+				}
+			} return STOP;
+
+		case MSG_CLOSE:
+			{
+				KillTimer (hDlg,IDC_FORM_BASE_TIMER);
+				DestroyMainWindow (hDlg);
+				MainWindowThreadCleanup (hDlg);
+			} return STOP;
+
+		case MSG_DESTROY:
+			{
+				Screen.Del(hDlg);
+				DestroyAllControls(hDlg);
+				// free(this->priv);
+				// free(this);
+				// this = NULL;
+			} return STOP;
+
+		default:
+			return CONTINUE;
+	}
+}
+
+FormBase * formBaseCreate(FormBasePriv *priv)
+{
+	FormBase *this = (FormBase *) calloc (1,sizeof(FormBase));
+	this->priv = (FormBasePriv *) calloc (1,sizeof(FormBasePriv));
+
+	this->priv = priv;
+	this->baseProc = formBaseProc;
+	return this;
+}
+
