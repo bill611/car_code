@@ -129,6 +129,7 @@ void ErrorLog(int ecode,const char *fmt,...)
 
 int GetLocalIP(char *IP,char *NetMask,char *MAC)
 {
+#ifndef PC
 	struct ifreq ifr;
 	int sock;
 	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -158,6 +159,7 @@ int GetLocalIP(char *IP,char *NetMask,char *MAC)
    return 1;
 error:
 	close(sock);
+#endif
 	return 0;
 }
 //---------------------------------------------------------------------------
@@ -747,6 +749,7 @@ int GetFilesNum(char *pPathDir,void (*func)(void *))
 /* ----------------------------------------------------------------*/
 void clearFramebuffer(void)
 {
+#ifndef PC
 	int fd = -1;
 	unsigned int VpostWidth=0, VpostHeight=0,VpostBpp=0;
 	unsigned int g_fb_vaddress=0;
@@ -780,6 +783,7 @@ void clearFramebuffer(void)
 		munmap((void *)g_fb_vaddress, g_u32VpostBufMapSize);
 
 	close(fd);
+#endif
 
 }
 

@@ -39,7 +39,7 @@ extern "C" {
 		HWND idc;		// 控件ID
 		uint8_t op_code;  	// 设备操作
 		char *img_name; 	// 常态图片名字,不带扩展名,完整路径由循环赋值
-		int16_t x,y,h,w;
+		int16_t x,y,w,h;
 		NOTIFPROC notif_proc; 	// 回调函数
 		uint8_t display; 	// 0不显示 1显示
 		uint8_t device_id;	// 设备编号

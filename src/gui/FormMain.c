@@ -26,6 +26,7 @@
 /* ---------------------------------------------------------------------------*
  *                  extern variables declare
  *----------------------------------------------------------------------------*/
+extern int createFormVersion(HWND hMainWnd);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -164,7 +165,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
     switch (id) {
         case IDC_SYSTEM:
             {
-                createFormPassword(hwnd);               
+                createFormVersion(GetParent(hwnd));               
             } break;
     
         default:
@@ -190,6 +191,21 @@ static void updateControls(HWND hWnd)
 		} else {
 			ShowWindow(hWnd,SW_HIDE);
 		}
+	}
+}
+static void showPreset(HWND hWnd)
+{
+	int i,k;
+	for (i=0,k=0; i<NELEMENTS(opt_11_controls); i++) {
+        opt_11_controls[i].x = 25 + (i % 4)*114;
+        opt_11_controls[i].y = 96 + (i / 4)*123;
+        SendMessage(GetDlgItem(hWnd,i), MSG_MYBUTTON_SET_SELECT_MODE, 0, 0);
+        ShowWindow(hWnd,SW_SHOWNORMAL);
+        MoveWindow(hWnd,
+                opt_11_controls[i].x,
+                opt_11_controls[i].y,
+                opt_11_controls[i].w,
+                opt_11_controls[i].h,TRUE);
 	}
 }
 /* ---------------------------------------------------------------------------*/
@@ -273,6 +289,16 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				DrawBackground(hWnd,
 					   	(HDC)wParam,
 					   	(const RECT*)lParam,&bmp_bkg1);
+			} return 0;
+
+		case MSG_MAIN_SHOW_PRESET:
+			{
+                showPreset(hWnd);
+			} return 0;
+
+		case MSG_MAIN_SHOW_NORMAL:
+			{
+                updateControls(hWnd);
 			} return 0;
 
 		case MSG_MAIN_TIMER_START:

@@ -44,10 +44,6 @@
 
 #define SIZE_CONFIG(x) x, sizeof(x) - 1
 
-#define Ver_Major	1
-#define Ver_Minor	0
-#define Ver_Release	0
-#define Ver_Reserve	0
 
 /* ----------------------------------------------------------------*
  *                      variables define
@@ -83,6 +79,7 @@ static EtcValueInt etc_value_int[]={
 };
 
 static EtcValueChar etc_value_char[]={
+{"Public",	"PASSWORD",         SIZE_CONFIG(g_config.password),	"0000"},
 };
 
 //--------------------------------------------------------------------------
@@ -217,12 +214,7 @@ void publicInit(void)
 	Screen.Find = screenFindForm;
 	Screen.ReturnMain = screenReturnMainForm;
 
-    sprintf(Public.build_date,"%s", __DATE__);
 	Public.WatchDog_fd = -2;
-    Public.SoftVer.Major = Ver_Major;      
-    Public.SoftVer.Minor = Ver_Minor;      
-    Public.SoftVer.Release = Ver_Release;  
-    Public.SoftVer.Reserve = Ver_Reserve;  
 
     Public.saveConfig = saveConfig;
     Public.getConfigInt = getConfigInt;
@@ -269,8 +261,7 @@ void publicInit(void)
 
 	Screen.Width = SCR_WIDTH;
 	Screen.Height = SCR_HEIGHT;
-	printf("Version :V%d.%d.%d.%d\n", 
-			Ver_Major,Ver_Minor,Ver_Release,Ver_Reserve);
+	printf("Version :%s\n",CODE_VERSION); 
 }
 //--------------------------------------------------------------------------
 void publicDestroy(void)

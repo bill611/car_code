@@ -30,6 +30,7 @@ typedef struct {
     /** table of we_attrs */
     const WINDOW_ELEMENT_ATTR* we_attrs;
 
+	PLOGFONT *font;
 }MY_CTRLDATA;
 
 typedef MY_CTRLDATA* PMY_CTRLDATA;

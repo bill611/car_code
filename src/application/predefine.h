@@ -115,7 +115,7 @@
 	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
 
 #define EDIT_PSD(x,y,w,h,id,caption,dwAddData,font)  \
-{CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_VISIBLE|WS_BORDER|ES_CENTER|WS_TABSTOP,\
+{CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_VISIBLE|ES_CENTER|WS_TABSTOP,\
 	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
 
 #define EDIT_PSD_L(x,y,w,h,id,caption,dwAddData,font)  \
@@ -219,32 +219,6 @@
 #define ENTERFUNCTION
 #define EXITFUNCTION
 #define PRINTF( x... )  printf( x )
-#define DBG_MAIN 				0
-#define DBG_CALL_VIEW 			0
-#define DBG_ICON_DLG			0
-#define DBG_GET_PWD				0
-#define DBG_PASSWORD			0
-#define DBG_MENU				0
-#define DBG_PUBLIC				0
-#define DBG_INFO				0
-#define DBG_MYMIXER				0
-#define DBG_UPDATE				0
-#define	DBG_MESSAGE				0
-#define	DBG_MPEG4				0
-#define	DBG_DOWN				0
-#define DBG_SOCKETREAD 			0
-#define DBG_SETTING 			0
-#define DBG_SETTING_USER		0
-#define DBG_NETSETTIN			0
-#define DBG_MEDIA				0
-#define DBG_ADVER				0
-#define DBG_UART_DEAL			1
-#define DBG_ATCP				0
-#define DBG_FORM_MAIN			0
-#define DBG_MACHINE				0
-#define DBG_VIDEO_TRANS			0
-#define DBG_TOPMSG				0
-#define DBG_FORM_BASE			0
 
 //-----------------------------------------------------------------------
 #endif

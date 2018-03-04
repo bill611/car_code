@@ -3,8 +3,8 @@
 
 #include "communication.h"
 #include "UDPServer.h"
-#define MAX_CENTERNUM	4	// 协议规定的管理中心数量
-#define MAX_MKJNUM		9	// 协议规定的门口机数量8, 多留一个给户门口机
+
+#define CODE_VERSION	"V1.0.0.0"
 
 typedef struct _FORMCLASS
 {
@@ -89,14 +89,11 @@ enum {
 
 typedef struct _ConfigFile {
    int device_main_controls[IDC_NUM];
+   char password[32];
 }ConfigFile;
 
 typedef struct _PUBLIC_DATA
 {
-	//程序版本信息
-	TVersion SoftVer;				//软件版本号
-    char build_date[32];
-
     int LCDLight;
 	int ScrSaversTimer;		// 屏幕保护计数
 

@@ -41,9 +41,6 @@ extern "C" {
 		MY_DLGTEMPLATE *dlgInitParam;
 		int (*dlgProc)(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 
-		void (*initCtrlLabers)(HWND hwnd);
-		void (*initCtrlButtons)(HWND hwnd);
-		void (*initCtrlEdits)(HWND hwnd);
 		void (*initPara)(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 	}FormBasePriv;
 

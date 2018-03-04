@@ -1,7 +1,7 @@
 /*
  * =============================================================================
  *
- *       Filename:  FormPassword.c
+ *       Filename:  FormVersion.c
  *
  *    Description:  输入密码界面
  *
@@ -21,21 +21,21 @@
 #include "protocol.h"
 #include "commongdi.h"
 #include "FormBase.h"
-#include "FormMain.h"
 #include "predefine.h"
 
 /* ---------------------------------------------------------------------------*
  *                  extern variables declare
  *----------------------------------------------------------------------------*/
+extern int createFormPassword(HWND hMainWnd);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
-static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
+static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
+static void initCtrlButtons(HWND hDlg);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 
-static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data);
 static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
@@ -47,47 +47,27 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/system2/"
+#define BMP_LOCAL_PATH "res/image/system1/"
 enum {
-	IDC_BUTTON_0,
-	IDC_BUTTON_1,
-	IDC_BUTTON_2,
-	IDC_BUTTON_3,
-	IDC_BUTTON_4,
-	IDC_BUTTON_5,
-	IDC_BUTTON_6,
-	IDC_BUTTON_7,
-	IDC_BUTTON_8,
-	IDC_BUTTON_9,
-	IDC_BUTTON_CLEAR,
-	IDC_BUTTON_DELET,
+	IDC_BUTTON_MANAGE,
 	IDC_BUTTON_EXIT,
-	IDC_BUTTON_CONFIRM,
-
-	IDC_LABER_ERR,
-	IDC_BUTTON_ERR_CONFIRM,
-
-	IDC_EDIT_PASSWORD,
+	IDC_LABER_VERSION,
+	IDC_LABER_DATE,
 };
 
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg_system2; // 背景
-static BITMAP bmp_err; // 错误框
-static BITMAP bmp_err_confirm; // 错误框确定
-static BITMAP bmp_err_confirm1; // 错误框确定按下
+static BITMAP bmp_bkg_system1; // 背景
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg_system2, BMP_LOCAL_PATH"bkg_system2.JPG"},
-    {&bmp_err, BMP_LOCAL_PATH"ERROR.JPG"},
-    {&bmp_err_confirm, BMP_LOCAL_PATH"ERROR_CONFIRM.JPG"},
-    {&bmp_err_confirm1, BMP_LOCAL_PATH"ERROR_CONFIRM2.JPG"},
+    {&bmp_bkg_system1, BMP_LOCAL_PATH"bkg_system1.JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
-    EDIT_PSD(195,286,180,20,IDC_EDIT_PASSWORD,"",0,NULL),
+    STATIC_LB_L(178,333,200,30,IDC_LABER_VERSION,"",0,NULL),
+    STATIC_LB_L(178,376,200,30,IDC_LABER_DATE,"",0,NULL),
 };
 
 
@@ -105,34 +85,22 @@ static MY_DLGTEMPLATE DlgInitParam =
 };
 
 static FormBasePriv form_base_priv= {
-	.name = "Fpwd",
-	.dlgProc = formPasswordProc,
+	.name = "Fver",
+	.dlgProc = formVersionProc,
 	.dlgInitParam = &DlgInitParam,
 	.initPara =  initPara,
 };
 
 static MgCtrlButton otp_controls[] = {
-	{IDC_BUTTON_0,	0,"0",294,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_1,	0,"1",79,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_2,	0,"2",134,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_3,	0,"3",187,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_4,	0,"4",241,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_5,	0,"5",294,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_6,	0,"6",79,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_7,	0,"7",134,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_8,	0,"8",187,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_9,	0,"9",241,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_CLEAR,	0,"CLEAR",349,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_DELET,	0,"DELET",349,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_EXIT,	0,"EXIT",243,450,114,48,btExitPress},
-	{IDC_BUTTON_CONFIRM,0,"CONFIRM",119,450,114,48,btConfirmPress},
+	{IDC_BUTTON_MANAGE,	0,"BUTTON_MANAGE",132,422,212,49,btManagePress}, // 后台管理系统
+	{IDC_BUTTON_EXIT,	0,"BUTTON_EXIT",392,205,51,48,btExitPress}, // 退出
 };
 
 static FormBase* form_base = NULL;
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief btKyeboardNumPress 获取设备ID按钮
+ * @brief btManagePress 获取设备ID按钮
  *
  * @param hwnd
  * @param id
@@ -140,36 +108,13 @@ static FormBase* form_base = NULL;
  * @param add_data
  */
 /* ----------------------------------------------------------------*/
-static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data)
+static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (id >= IDC_BUTTON_0 && id <= IDC_BUTTON_9) {
-        char buf[4];
-        sprintf(buf,"%d",id);
-        SendMessage (GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-                MSG_CHAR, buf[0], 0L);
-    } else if (id == IDC_BUTTON_CLEAR) 
-        SetWindowText(GetDlgItem(GetParent (hwnd),IDC_EDIT_PASSWORD),"");
-    else if (id == IDC_BUTTON_DELET)
-        SendMessage (GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-                MSG_CHAR, '\b', 0L);
+    createFormPassword(GetParent(hwnd));
 }
 
-static void showErrInfo(HWND hwnd,BOOL type)
-{
-    if (type) {
-        ShowWindow(GetDlgItem (hwnd, IDC_LABER_ERR),
-                SW_SHOWNORMAL);
-        ShowWindow(GetDlgItem (hwnd, IDC_BUTTON_ERR_CONFIRM),
-                SW_SHOWNORMAL);
-    } else {
-        ShowWindow(GetDlgItem (hwnd, IDC_LABER_ERR),
-                SW_HIDE);
-        ShowWindow(GetDlgItem (hwnd, IDC_BUTTON_ERR_CONFIRM),
-                SW_HIDE);
-    } 
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief btExitPress 保存按钮
@@ -186,29 +131,6 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 		return;
     ShowWindow(GetParent(hwnd),SW_HIDE);
 }
-static void btErrConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    showErrInfo(GetParent (hwnd),FALSE);
-	SetWindowText(GetDlgItem(GetParent (hwnd),IDC_EDIT_PASSWORD),"");
-}
-
-static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    char buf[32] = {0};
-    GetWindowText(GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-            buf,sizeof(buf));
-    if (strcmp(buf,g_config.password) == 0) {
-        // HWND Form = Screen.Find(form_base_priv.name);
-        ShowWindow(GetParent(hwnd),SW_HIDE);
-        // SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_PRESET, 0, 0);
-    } else {
-        showErrInfo(GetParent (hwnd),TRUE);
-    }
-}
 
 /* ----------------------------------------------------------------*/
 /**
@@ -224,10 +146,10 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
 	char image_path[128] = {0};
-	HWND hCtrl;
-    printf("[%s]\n", __FUNCTION__);
+    printf("create %s\n",__FILE__);
     bmpsLoad(bmp_load,NELEMENTS(bmp_load));
-	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
+	SetWindowText(GetDlgItem(hDlg,IDC_LABER_VERSION),CODE_VERSION);
+	SetWindowText(GetDlgItem(hDlg,IDC_LABER_DATE),__DATE__);
 	for (i=0; i<NELEMENTS(otp_controls); i++) {
         otp_controls[i].display = 1;
 		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",otp_controls[i].img_name);
@@ -245,27 +167,11 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				otp_controls[i].display,
 				otp_controls[i].notif_proc);
 	}
-    CreateWindowEx2 (CTRL_STATIC, "",
-            WS_CHILD|SS_BITMAP,
-            WS_EX_TRANSPARENT,
-            IDC_LABER_ERR,
-            95,254,296,177,
-            hDlg, NULL, NULL,
-            (DWORD)&bmp_err);
-    createSkinButton(hDlg,
-            IDC_BUTTON_ERR_CONFIRM,
-            184,365,118,49,
-            &bmp_err_confirm,
-            &bmp_err_confirm1,
-            1,
-            btErrConfirmPress);
-    ShowWindow(GetDlgItem (hDlg, IDC_BUTTON_ERR_CONFIRM),
-            SW_HIDE);
 }
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief formPasswordProc 窗口回调函数
+ * @brief formVersionProc 窗口回调函数
  *
  * @param hDlg
  * @param message
@@ -275,7 +181,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
  * @return
  */
 /* ----------------------------------------------------------------*/
-static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
+static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	if (form_base->baseProc(form_base,hDlg, message, wParam, lParam) == 0) {
 		return 0;
@@ -286,21 +192,21 @@ static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief createFormPassword 创建窗口
+ * @brief createFormVersion 创建窗口
  *
  * @param hMainWnd
  *
  * @returns
  */
 /* ----------------------------------------------------------------*/
-int createFormPassword(HWND hMainWnd)
+int createFormVersion(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg_system2;
+		form_base_priv.bmp_bkg = &bmp_bkg_system1;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

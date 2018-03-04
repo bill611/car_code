@@ -52,12 +52,6 @@ static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LP
 			{
 				Screen.Add(hDlg,this->priv->name);
 				this->auto_close_time = FORM_SETTING_ONTIME;
-				if (this->priv->initCtrlLabers)
-					this->priv->initCtrlLabers(hDlg);
-				if (this->priv->initCtrlButtons)
-					this->priv->initCtrlButtons(hDlg);
-				if (this->priv->initCtrlEdits)
-					this->priv->initCtrlEdits(hDlg);
 				if (this->priv->initPara)
 					this->priv->initPara(hDlg,message,wParam,lParam);
 				SetTimer(hDlg,IDC_FORM_BASE_TIMER,TIME_1S);
@@ -77,7 +71,7 @@ static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LP
 				if (this->auto_close_time > 0) {
 					DBG_P("[%s]time:%d\n", __FILE__,this->auto_close_time);
 					if (--this->auto_close_time == 0) {
-						SendNotifyMessage(hDlg,MSG_CLOSE,0,0);
+                        ShowWindow(hDlg,SW_HIDE);
 					}
 				}
 			} return CONTINUE;
