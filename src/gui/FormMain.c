@@ -27,10 +27,13 @@
  *                  extern variables declare
  *----------------------------------------------------------------------------*/
 extern int createFormVersion(HWND hMainWnd);
+extern void formVersionLoadBmp(void);
+extern void formPasswordLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
+static void formMainLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -41,7 +44,9 @@ extern int createFormVersion(HWND hMainWnd);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/main_page/"
+typedef void (*InitBmpFunc)(void) ;
+
+#define BMP_LOCAL_PATH "res/image/主页/"
 
 enum {
 	IDC_ADVERTISEMENT = 20, // 广告
@@ -54,8 +59,8 @@ static BITMAP bmp_bkg1; // 背景1
 static BITMAP bmp_bkg2; // 背景2
 
 static BmpLocation bmp_load[] = {
-	{&bmp_bkg1, "res/image/bkg1.JPG"},
-	{&bmp_bkg2, "res/image/bkg2.JPG"},
+	{&bmp_bkg1, "res/image/背景.JPG"},
+	{&bmp_bkg2, "res/image/背景-2.JPG"},
 };
 
 
@@ -65,27 +70,35 @@ static BmpLocation bmp_load[] = {
  */
 /* ---------------------------------------------------------------------------*/
 static MgCtrlButton opt_11_controls[] = {
-	{IDC_CHAIR_ELE,			0x84,"CHAIR_ELE"}, //电动座椅
-	{IDC_CHAIR_SECRETARY,	0xab,"CHAIR_SECRETARY"}, //秘书椅
-	{IDC_CHAIR_ROT,			0x83,"CHAIR_ROT"}, //旋转座椅
-	{IDC_CURTAIN,			0xad,"CURTAIN"}, //窗帘
-	{IDC_SCREEN_GLASS,		0xaa,"SCREEN_GLASS"}, //玻璃屏
-	{IDC_SCREEN_TV,			0xa3,"SCREEN_TV"}, //电视屏
-	{IDC_CD,				0xaf,"CD"}, //CD
-	{IDC_DVD,				0x8e,"DVD"}, //DVD
-	{IDC_MONITOR,			0x82,"MONITOR"}, //监控
-	{IDC_DOOR,				0x81,"DOOR"}, //车门
-	{IDC_BED_ELE,			0x85,"BED_ELE"}, //电动床
-	{IDC_SATV,				0x83,"SATV"}, //卫星电视
-	{IDC_SKYLIGHT,			0x86,"SKYLIGHT"}, //天窗
-	{IDC_LIGHT,				0xa2,"LIGHT"}, //灯光
-	{IDC_PROJECTION,		0x80,"PROJECTION"}, //屏幕投影
-	{IDC_TABLE,				0x87,"TABLE"}, //桌板
-	{IDC_A1,				0x88,"A1"}, //A1
-	{IDC_A2,				0x89,"A2"}, //A2
-	{IDC_WALN,				0,"WALN"}, //WALN
-	{IDC_SYSTEM,			0,"SYSTEM"}, //系统
+	{IDC_CHAIR_ELE,			0x84,"电动座椅",25,96}, //电动座椅
+	{IDC_CHAIR_SECRETARY,	0xab,"秘书椅",139,96}, //秘书椅
+	{IDC_CHAIR_ROT,			0x83,"旋转座椅",254,96}, //旋转座椅
+	{IDC_CURTAIN,			0xad,"窗帘",367,96}, //窗帘
+	{IDC_SCREEN_GLASS,		0xaa,"玻璃屏",25,219}, //玻璃屏
+	{IDC_SCREEN_TV,			0xa3,"电视屏幕",139,219}, //电视屏
+	{IDC_CD,				0xaf,"CD",254,219}, //CD
+	{IDC_DVD,				0x8e,"DVD",367,219}, //DVD
+	{IDC_MONITOR,			0x82,"监控",25,340}, //监控
+	{IDC_DOOR,				0x81,"车门",139,340}, //车门
+	{IDC_BED_ELE,			0x85,"电动床",254,340}, //电动床
+	{IDC_SATV,				0x83,"卫星电视",367,340}, //卫星电视
+	{IDC_SKYLIGHT,			0x86,"天窗",25,461}, //天窗
+	{IDC_LIGHT,				0xa2,"灯光",139,461}, //灯光
+	{IDC_PROJECTION,		0x80,"屏幕投影",254,461}, //屏幕投影
+	{IDC_TABLE,				0x87,"桌板",367,461}, //桌板
+	{IDC_A1,				0x88,"A1",123,123}, //A1
+	{IDC_A2,				0x89,"A2",123,123}, //A2
+	{IDC_WALN,				0,"WLAN",25,584}, //WALN
+	{IDC_SYSTEM,			0,"系统",139,584}, //系统
 };
+
+static InitBmpFunc loadBmps[] =
+{
+    formMainLoadBmp,
+    formVersionLoadBmp,
+	formPasswordLoadBmp,
+};
+
 static HWND hwnd_main = HWND_INVALID;
 static FormMainTimers *timers_tbl;
 static int (*mainAppProc)(HWND hWnd, int message, WPARAM wParam, LPARAM lParam);
@@ -165,9 +178,9 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
     switch (id) {
         case IDC_SYSTEM:
             {
-                createFormVersion(GetParent(hwnd));               
+                createFormVersion(GetParent(hwnd));
             } break;
-    
+
         default:
             break;
     }
@@ -218,11 +231,10 @@ static void showPreset(HWND hWnd)
 static void formMainCreateControl(HWND hWnd)
 {
 	HWND hCtrl;
-	int i,k;
+	int i,k = 0;
 	char image_path[128] = {0};
 	for (i=0; i<NELEMENTS(opt_11_controls); i++) {
         opt_11_controls[i].display = g_config.device_main_controls[i];
-
 		if (opt_11_controls[i].display) {
 			k++;
 			opt_11_controls[i].x = 25 + ((k-1) % 4)*114;
@@ -232,23 +244,44 @@ static void formMainCreateControl(HWND hWnd)
 		opt_11_controls[i].w = 118;
 		opt_11_controls[i].h = 122;
 		opt_11_controls[i].notif_proc = optControlsNotify;
-		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",opt_11_controls[i].img_name);
-        bmpLoad(&opt_11_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s2.JPG",opt_11_controls[i].img_name);
-        bmpLoad(&opt_11_controls[i].image_press, image_path);
-		createSkinButton(hWnd,
-				opt_11_controls[i].idc,
-				opt_11_controls[i].x,
-				opt_11_controls[i].y,
-				opt_11_controls[i].w,
-				opt_11_controls[i].h,
-				&opt_11_controls[i].image_normal,
-				&opt_11_controls[i].image_press,
-				opt_11_controls[i].display,
-				opt_11_controls[i].notif_proc);
+        createSkinButton(hWnd,
+                opt_11_controls[i].idc,
+                opt_11_controls[i].x,
+                opt_11_controls[i].y,
+                opt_11_controls[i].w,
+                opt_11_controls[i].h,
+                &opt_11_controls[i].image_normal,
+                &opt_11_controls[i].image_press,
+                opt_11_controls[i].display,
+                opt_11_controls[i].notif_proc);
 	}
 }
 
+static void formMainLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
+	for (i=0; i<NELEMENTS(opt_11_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_11_controls[i].img_name,
+                opt_11_controls[i].x,
+                opt_11_controls[i].y);
+        bmpLoad(&opt_11_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_11_controls[i].img_name,
+                opt_11_controls[i].x,
+                opt_11_controls[i].y);
+        bmpLoad(&opt_11_controls[i].image_press, image_path);
+	}
+}
+
+static void fromLoadBmps(void)
+{
+    int i;
+    for (i=0; i<NELEMENTS(loadBmps); i++) {
+        loadBmps[i](); 
+    } 
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainProc 窗口回调函数
@@ -272,11 +305,11 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 	{
 		case MSG_CREATE:
 			{
+                int i;
 				Screen.Add(hWnd,"TFrmMain");
 				hwnd_main = Screen.hMainWnd = hWnd;
-				clearFramebuffer();
-				// 装载图片
-				bmpsLoad(bmp_load,NELEMENTS(bmp_load));
+				// 装载所有图片
+				fromLoadBmps();           
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 

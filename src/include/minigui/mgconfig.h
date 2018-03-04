@@ -338,7 +338,7 @@
 #define _MGFONT_BMPF 1
 
 /* Define if support TrueType font based on FreeType2 */
-/* #undef _MGFONT_FT2 */
+#define _MGFONT_FT2 1
 
 /* Define if support QPF font */
 /* #undef _MGFONT_QPF */
@@ -353,7 +353,7 @@
 /* #undef _MGFONT_TTF */
 
 /* Define if include ttf cache */
-/* #undef _MGFONT_TTF_CACHE */
+#define _MGFONT_TTF_CACHE 1
 
 /* Define if support UPF font */
 #define _MGFONT_UPF 1
@@ -623,7 +623,7 @@
 #define _MGLIB_SUFFIX "ths"
 
 /* Define if compile max ttf cahce number for 10 (default value) */
-/* #undef _MGMAX_TTF_CACHE */
+#define _MGMAX_TTF_CACHE 10
 
 /* Define if include About MiniGUI Dialog Box */
 /* #undef _MGMISC_ABOUTDLG */
@@ -650,7 +650,7 @@
 #define _MGTIMER_UNIT_10MS 1
 
 /* Define if compile max ttf cahce size for 256k */
-/* #undef _MGTTF_CACHE_SIZE */
+#define _MGTTF_CACHE_SIZE 256
 
 /* Define if use own implementation of malloc functions */
 /* #undef _MGUSE_OWN_MALLOC */

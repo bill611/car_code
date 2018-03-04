@@ -91,22 +91,48 @@ static void paint(HWND hWnd,HDC hdc)
     PCONTROL    pCtrl;
     pCtrl = Control (hWnd);
 	GetClientRect (hWnd, &rcClient);
-	// printf("[%s]t:%d,b:%d,l:%d,r:%d\n",__FUNCTION__,rcClient.top,rcClient.bottom,rcClient.left,rcClient.right);
+    // printf("[%s]t:%d,b:%d,l:%d,r:%d\n",__FUNCTION__,rcClient.top,rcClient.bottom,rcClient.left,rcClient.right);
 
 	if (pCtrl->dwAddData2) {
 		ButtonCtrlInfo* pInfo = (ButtonCtrlInfo*)(pCtrl->dwAddData2);
 
 		if (pInfo->select.mode) {
-			FillBoxWithBitmap(hdc,rcClient.left,rcClient.top,pInfo->image_normal->bmWidth,pInfo->image_normal->bmHeight,pInfo->image_normal);
+			FillBoxWithBitmap(hdc,
+                    rcClient.left,
+                    rcClient.top,
+                    pInfo->image_normal->bmWidth,
+                    pInfo->image_normal->bmHeight,
+                    pInfo->image_normal);
 			if(pInfo->select.state == BUT_STATE_SELECT) 
-				FillBoxWithBitmap(hdc,rcClient.left + 80,rcClient.top + 79,bmp_button_select.bmWidth,bmp_button_select.bmHeight,&bmp_button_select);
+				FillBoxWithBitmap(hdc,
+                        rcClient.left + 80,
+                        rcClient.top + 79,
+                        bmp_button_select.bmWidth,
+                        bmp_button_select.bmHeight,
+                        &bmp_button_select);
 			else
-				FillBoxWithBitmap(hdc,rcClient.left + 80,rcClient.top + 79,bmp_button_select.bmWidth,bmp_button_select.bmHeight,&bmp_button_unselect);
+				FillBoxWithBitmap(hdc,
+                        rcClient.left + 80,
+                        rcClient.top + 79,
+                        bmp_button_select.bmWidth,
+                        bmp_button_select.bmHeight,
+                        &bmp_button_unselect);
 		} else {
-			if(pInfo->state == BUT_NORMAL)
-                FillBoxWithBitmap(hdc,rcClient.left,rcClient.top,pInfo->image_normal->bmWidth,pInfo->image_normal->bmHeight,pInfo->image_normal);
+            if(pInfo->state == BUT_NORMAL) {
+                FillBoxWithBitmap(hdc,
+                        rcClient.left,
+                        rcClient.top,
+                        pInfo->image_normal->bmWidth,
+                        pInfo->image_normal->bmHeight,
+                        pInfo->image_normal);
+            }
 			else 
-                FillBoxWithBitmap(hdc,rcClient.left,rcClient.top,pInfo->image_press->bmWidth,pInfo->image_press->bmHeight,pInfo->image_press);
+                FillBoxWithBitmap(hdc,
+                        rcClient.left,
+                        rcClient.top,
+                        pInfo->image_press->bmWidth,
+                        pInfo->image_press->bmHeight,
+                        pInfo->image_press);
 			
 		}
 	}
@@ -231,6 +257,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
         ReleaseCapture ();
 		if(!(dwStyle & BS_CHECKBOX)) {
 			pInfo->state = BUT_NORMAL;
+#ifdef PC
 			if (pInfo->select.mode == 0)
 				NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
 			else {
@@ -239,6 +266,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 				else
 					pInfo->select.state = BUT_STATE_SELECT;
 			}
+#endif
 			InvalidateRect (hwnd, NULL, FALSE);
 		}
 		// if (dwStyle & SS_NOTIFY) {
@@ -323,10 +351,10 @@ void createSkinButton(HWND hWnd,int id ,
 	pInfo.state = BUT_NORMAL;
 	pInfo.select.state = select_state;
 	if (bmp_button_select.bmBits == NULL) {
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/func_select/button_select.JPG"))
-			printf ("LoadBitmap(%s)fail.\n","button_select.JPG");
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/func_select/button_unselect.JPG"))
-			printf ("LoadBitmap(%s)fail.\n","button_unselect.JPG");
+		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/选择功能/01(x105，y175).JPG"))
+			printf ("LoadBitmap(%s)fail.\n","01(x105，y175).JPG");
+		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/选择功能/01-2(x105，y175).JPG"))
+			printf ("LoadBitmap(%s)fail.\n","01-2(x105，y175).JPG");
 
 	}
 	if (pInfo.select.state == BUT_STATE_SELECT)

@@ -42,12 +42,13 @@ DEPS = $(patsubst %.c, ${OBJ_DIR}/%.d, $(notdir ${SRC}))
 # LIB_DIR = \
 		  # $(COMPILER_PATH)/lib
 
-XLINKER = -Xlinker "-(" -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread  -Xlinker "-)"
+# XLINKER = -Xlinker "-(" -lts -lfreetype -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread  -Xlinker "-)"
 
 export CC LIB_DIR CFLAGS OBJ_DIR INC_DIR DEPS
 # $@：表示目标文件，$^：表示所有的依赖文件，$<：表示第一个依赖文件，$?：表示比目标还要新的依赖文件列表
 all: make_C ${BIN_TARGET}
 	@cp ${BIN_TARGET} $(MAKEROOT)/../nand/nand1-2
+	@cp ${BIN_TARGET} ~/work/arm_share/nand2
 
 make_C:
 	@mkdir -p ${BIN_DIR}

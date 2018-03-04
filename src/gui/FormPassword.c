@@ -47,7 +47,7 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/system2/"
+#define BMP_LOCAL_PATH "res/image/系统-2/"
 enum {
 	IDC_BUTTON_0,
 	IDC_BUTTON_1,
@@ -81,9 +81,9 @@ static BITMAP bmp_err_confirm1; // 错误框确定按下
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_system2, BMP_LOCAL_PATH"bkg_system2.JPG"},
-    {&bmp_err, BMP_LOCAL_PATH"ERROR.JPG"},
-    {&bmp_err_confirm, BMP_LOCAL_PATH"ERROR_CONFIRM.JPG"},
-    {&bmp_err_confirm1, BMP_LOCAL_PATH"ERROR_CONFIRM2.JPG"},
+    {&bmp_err, BMP_LOCAL_PATH"密码错误提示框（X95，Y254）.JPG"},
+    {&bmp_err_confirm, BMP_LOCAL_PATH"确定（X184,Y365）.JPG"},
+    {&bmp_err_confirm1, BMP_LOCAL_PATH"确定亮（X184,Y365）.JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -94,8 +94,8 @@ static MY_CTRLDATA ChildCtrls [] = {
 static MY_DLGTEMPLATE DlgInitParam =
 {
     WS_NONE,
-//   WS_EX_AUTOSECONDARYDC,
-    WS_EX_NONE,
+    WS_EX_AUTOSECONDARYDC,
+    // WS_EX_NONE,
     0,0,SCR_WIDTH,SCR_HEIGHT,
     "",
     0, 0,       //menu and icon is null
@@ -111,7 +111,7 @@ static FormBasePriv form_base_priv= {
 	.initPara =  initPara,
 };
 
-static MgCtrlButton otp_controls[] = {
+static MgCtrlButton opt_controls[] = {
 	{IDC_BUTTON_0,	0,"0",294,385,50,52,btKyeboardNumPress},
 	{IDC_BUTTON_1,	0,"1",79,328,50,52,btKyeboardNumPress},
 	{IDC_BUTTON_2,	0,"2",134,328,50,52,btKyeboardNumPress},
@@ -122,10 +122,10 @@ static MgCtrlButton otp_controls[] = {
 	{IDC_BUTTON_7,	0,"7",134,385,50,52,btKyeboardNumPress},
 	{IDC_BUTTON_8,	0,"8",187,385,50,52,btKyeboardNumPress},
 	{IDC_BUTTON_9,	0,"9",241,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_CLEAR,	0,"CLEAR",349,328,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_DELET,	0,"DELET",349,385,50,52,btKyeboardNumPress},
-	{IDC_BUTTON_EXIT,	0,"EXIT",243,450,114,48,btExitPress},
-	{IDC_BUTTON_CONFIRM,0,"CONFIRM",119,450,114,48,btConfirmPress},
+	{IDC_BUTTON_CLEAR,	0,"全部消除",349,328,50,52,btKyeboardNumPress},
+	{IDC_BUTTON_DELET,	0,"消除",349,385,50,52,btKyeboardNumPress},
+	{IDC_BUTTON_EXIT,	0,"取消",243,450,114,48,btExitPress},
+	{IDC_BUTTON_CONFIRM,0,"确定",119,450,114,48,btConfirmPress},
 };
 
 static FormBase* form_base = NULL;
@@ -223,27 +223,20 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-	char image_path[128] = {0};
 	HWND hCtrl;
-    printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
-	for (i=0; i<NELEMENTS(otp_controls); i++) {
-        otp_controls[i].display = 1;
-		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",otp_controls[i].img_name);
-        bmpLoad(&otp_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s2.JPG",otp_controls[i].img_name);
-        bmpLoad(&otp_controls[i].image_press, image_path);
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+        opt_controls[i].display = 1;
 		createSkinButton(hDlg,
-				otp_controls[i].idc,
-				otp_controls[i].x,
-				otp_controls[i].y,
-				otp_controls[i].w,
-				otp_controls[i].h,
-				&otp_controls[i].image_normal,
-				&otp_controls[i].image_press,
-				otp_controls[i].display,
-				otp_controls[i].notif_proc);
+				opt_controls[i].idc,
+				opt_controls[i].x,
+				opt_controls[i].y,
+				opt_controls[i].w,
+				opt_controls[i].h,
+				&opt_controls[i].image_normal,
+				&opt_controls[i].image_press,
+				opt_controls[i].display,
+				opt_controls[i].notif_proc);
 	}
     CreateWindowEx2 (CTRL_STATIC, "",
             WS_CHILD|SS_BITMAP,
@@ -284,6 +277,22 @@ static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
+void formPasswordLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s（X%d,Y%d）.JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s亮（X%d,Y%d）.JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_press, image_path);
+	}
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormPassword 创建窗口
@@ -297,6 +306,7 @@ int createFormPassword(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
+        SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;

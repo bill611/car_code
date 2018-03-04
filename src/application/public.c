@@ -56,30 +56,30 @@ unsigned int PacketID;
 ConfigFile g_config;
 
 static EtcValueInt etc_value_int[]={
-{"MainPageDevice",	"CHAIR_ELE",      &g_config.device_main_controls[0],	1},
-{"MainPageDevice",	"CHAIR_SECRETARY",&g_config.device_main_controls[1],	1},
-{"MainPageDevice",	"CHAIR_ROT",      &g_config.device_main_controls[2],	1},
-{"MainPageDevice",	"CURTAIN",        &g_config.device_main_controls[3],	1},
-{"MainPageDevice",	"SCREEN_GLASS",   &g_config.device_main_controls[4],	1},
-{"MainPageDevice",	"SCREEN_TV",      &g_config.device_main_controls[5],	1},
-{"MainPageDevice",	"CD",             &g_config.device_main_controls[6],	1},
-{"MainPageDevice",	"DVD",            &g_config.device_main_controls[7],	1},
-{"MainPageDevice",	"MONITOR",        &g_config.device_main_controls[8],	1},
-{"MainPageDevice",	"DOOR",           &g_config.device_main_controls[9],	1},
-{"MainPageDevice",	"BED_ELE",        &g_config.device_main_controls[10],	1},
-{"MainPageDevice",	"SATV",           &g_config.device_main_controls[11],	1},
-{"MainPageDevice",	"SKYLIGHT",       &g_config.device_main_controls[12],	1},
-{"MainPageDevice",	"LIGHT",          &g_config.device_main_controls[13],	1},
-{"MainPageDevice",	"PROJECTION",     &g_config.device_main_controls[14],	1},
-{"MainPageDevice",	"TABLE",          &g_config.device_main_controls[15],	1},
-{"MainPageDevice",	"A1",             &g_config.device_main_controls[16],	0},
-{"MainPageDevice",	"A2",             &g_config.device_main_controls[17],	0},
-{"MainPageDevice",	"WALN",           &g_config.device_main_controls[18],	1},
-{"MainPageDevice",	"SYSTEM",         &g_config.device_main_controls[19],	1},
+{"MainPageDevice",	"电动座椅", &g_config.device_main_controls[0],	1},
+{"MainPageDevice",	"秘书椅",   &g_config.device_main_controls[1],	1},
+{"MainPageDevice",	"旋转座椅", &g_config.device_main_controls[2],	1},
+{"MainPageDevice",	"窗帘",     &g_config.device_main_controls[3],	1},
+{"MainPageDevice",	"玻璃屏",   &g_config.device_main_controls[4],	1},
+{"MainPageDevice",	"电视屏幕", &g_config.device_main_controls[5],	1},
+{"MainPageDevice",	"CD",       &g_config.device_main_controls[6],	1},
+{"MainPageDevice",	"DVD",      &g_config.device_main_controls[7],	1},
+{"MainPageDevice",	"监控",     &g_config.device_main_controls[8],	1},
+{"MainPageDevice",	"车门",     &g_config.device_main_controls[9],	1},
+{"MainPageDevice",	"电动床",   &g_config.device_main_controls[10],	1},
+{"MainPageDevice",	"卫星电视", &g_config.device_main_controls[11],	1},
+{"MainPageDevice",	"天窗",     &g_config.device_main_controls[12],	1},
+{"MainPageDevice",	"灯光",     &g_config.device_main_controls[13],	1},
+{"MainPageDevice",	"屏幕投影", &g_config.device_main_controls[14],	1},
+{"MainPageDevice",	"桌板",     &g_config.device_main_controls[15],	1},
+{"MainPageDevice",	"A1",       &g_config.device_main_controls[16],	0},
+{"MainPageDevice",	"A2",       &g_config.device_main_controls[17],	0},
+{"MainPageDevice",	"WALN",     &g_config.device_main_controls[18],	1},
+{"MainPageDevice",	"系统",     &g_config.device_main_controls[19],	1},
 };
 
 static EtcValueChar etc_value_char[]={
-{"Public",	"PASSWORD",         SIZE_CONFIG(g_config.password),	"0000"},
+{"Public",	"系统密码",         SIZE_CONFIG(g_config.password),	"0000"},
 };
 
 //--------------------------------------------------------------------------
@@ -170,7 +170,9 @@ static HWND screenFindForm(const char *Class)
 /* ---------------------------------------------------------------------------*/
 static void publicInitTouchIrq(void)
 {
+#ifndef PC
 	ExcuteCmd(1,"cat","/sys/ft5x0x/touch_dev",NULL);	
+#endif
 }
 static int saveConfig(void)
 {

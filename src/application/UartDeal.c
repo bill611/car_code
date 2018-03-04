@@ -325,9 +325,11 @@ UartDeal *uartDealCreate(HWND hWnd)
 		return NULL;
 	This->hWnd = hWnd;
 	This->uart = Create_UartServer(hWnd);
-	// if(This->uart->Open(This->uart,1,9600)==0) {
-		// printf("Err:com1 open fail!\n");
-	// }
+#ifndef PC
+    if(This->uart->Open(This->uart,0,9600)==0) {
+        printf("Err:com0 open fail!\n");
+    }
+#endif
 
 	This->ToSingleChip = ToSingleChip;
 	This->FromSingleChip =  FromSingleChip;

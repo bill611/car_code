@@ -47,7 +47,7 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/system1/"
+#define BMP_LOCAL_PATH "res/image/系统-1/"
 enum {
 	IDC_BUTTON_MANAGE,
 	IDC_BUTTON_EXIT,
@@ -74,8 +74,8 @@ static MY_CTRLDATA ChildCtrls [] = {
 static MY_DLGTEMPLATE DlgInitParam =
 {
     WS_NONE,
-//   WS_EX_AUTOSECONDARYDC,
-    WS_EX_NONE,
+    WS_EX_AUTOSECONDARYDC,
+    // WS_EX_NONE,
     0,0,SCR_WIDTH,SCR_HEIGHT,
     "",
     0, 0,       //menu and icon is null
@@ -91,9 +91,9 @@ static FormBasePriv form_base_priv= {
 	.initPara =  initPara,
 };
 
-static MgCtrlButton otp_controls[] = {
-	{IDC_BUTTON_MANAGE,	0,"BUTTON_MANAGE",132,422,212,49,btManagePress}, // 后台管理系统
-	{IDC_BUTTON_EXIT,	0,"BUTTON_EXIT",392,205,51,48,btExitPress}, // 退出
+static MgCtrlButton opt_controls[] = {
+	{IDC_BUTTON_MANAGE,	0,"后台管理系统",132,422,212,49,btManagePress}, // 后台管理系统
+	{IDC_BUTTON_EXIT,	0,"退出",392,205,51,48,btExitPress}, // 退出
 };
 
 static FormBase* form_base = NULL;
@@ -145,27 +145,20 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-	char image_path[128] = {0};
-    printf("create %s\n",__FILE__);
-    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_VERSION),CODE_VERSION);
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_DATE),__DATE__);
-	for (i=0; i<NELEMENTS(otp_controls); i++) {
-        otp_controls[i].display = 1;
-		sprintf(image_path,BMP_LOCAL_PATH"%s.JPG",otp_controls[i].img_name);
-        bmpLoad(&otp_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s2.JPG",otp_controls[i].img_name);
-        bmpLoad(&otp_controls[i].image_press, image_path);
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+        opt_controls[i].display = 1;
 		createSkinButton(hDlg,
-				otp_controls[i].idc,
-				otp_controls[i].x,
-				otp_controls[i].y,
-				otp_controls[i].w,
-				otp_controls[i].h,
-				&otp_controls[i].image_normal,
-				&otp_controls[i].image_press,
-				otp_controls[i].display,
-				otp_controls[i].notif_proc);
+				opt_controls[i].idc,
+				opt_controls[i].x,
+				opt_controls[i].y,
+				opt_controls[i].w,
+				opt_controls[i].h,
+				&opt_controls[i].image_normal,
+				&opt_controls[i].image_press,
+				opt_controls[i].display,
+				opt_controls[i].notif_proc);
 	}
 }
 
@@ -199,6 +192,24 @@ static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
  * @returns
  */
 /* ----------------------------------------------------------------*/
+void formVersionLoadBmp(void)
+{
+    int i;
+	char image_path[128] = {0};
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_press, image_path);
+    }
+}
+
 int createFormVersion(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
