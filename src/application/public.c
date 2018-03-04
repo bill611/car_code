@@ -124,7 +124,12 @@ static BOOL screenDelForm(HWND hWnd)
 	}
 	return FALSE;
 }
-//--------------------------------------------------------------------------
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief screenReturnMainForm 回到主界面
+ */
+/* ---------------------------------------------------------------------------*/
 static void screenReturnMainForm(void)
 {
 	int FormCnt=0;
@@ -133,13 +138,13 @@ static void screenReturnMainForm(void)
 	form = Screen.head;
 	Forms = (HWND *)calloc(sizeof(HWND),Screen.Count);
 	while(form && FormCnt<Screen.Count) {
-		//留下主窗口、呼叫对讲窗口和状态窗口
 		if(strcmp(form->Class,"TFrmMain"))
 			Forms[FormCnt++] = form->hWnd;
 		form = form->next;
 	}
 	while(FormCnt) {
-		SendNotifyMessage(Forms[FormCnt-1],MSG_CLOSE,0,-1);
+        ShowWindow(Forms[FormCnt-1],SW_HIDE);
+		// SendNotifyMessage(Forms[FormCnt-1],MSG_CLOSE,0,-1);
 		FormCnt--;
 	}
 	free(Forms);
@@ -185,6 +190,7 @@ static int saveConfig(void)
                     etc_value_int[i].key,
                     buf);
     }
+    sync();
         
     return 1;
 }

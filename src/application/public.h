@@ -84,11 +84,11 @@ enum {
 	IDC_A2, //A2
 	IDC_WALN, //WALN
 	IDC_SYSTEM, //系统
-    IDC_NUM,
+    IDC_MAIN_NUM,
 };
 
 typedef struct _ConfigFile {
-   int device_main_controls[IDC_NUM];
+   int device_main_controls[IDC_MAIN_NUM];
    char password[32];
 }ConfigFile;
 

@@ -29,10 +29,16 @@
 extern int createFormVersion(HWND hMainWnd);
 extern void formVersionLoadBmp(void);
 extern void formPasswordLoadBmp(void);
+extern void formPresetLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
+static void btMainPagePress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btVoulumReducePress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btVoulumAddPress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btMutePress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btClosePress(HWND hwnd, int id, int nc, DWORD add_data);
 static void formMainLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
@@ -49,14 +55,17 @@ typedef void (*InitBmpFunc)(void) ;
 #define BMP_LOCAL_PATH "res/image/主页/"
 
 enum {
-	IDC_ADVERTISEMENT = 20, // 广告
+    IDC_MAIN_PAGE = IDC_MAIN_NUM,  // 主页
+    IDC_VOLUEM_REDUCE, // 音量减少
+    IDC_VOLUEM_ADD, // 音量增加
+    IDC_MUTE,  // 静音
+    IDC_CLOSE,  // 关闭
 };
-
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg1; // 背景1
-static BITMAP bmp_bkg2; // 背景2
+BITMAP bmp_bkg1; // 背景1
+BITMAP bmp_bkg2; // 背景2
 
 static BmpLocation bmp_load[] = {
 	{&bmp_bkg1, "res/image/背景.JPG"},
@@ -92,11 +101,19 @@ static MgCtrlButton opt_11_controls[] = {
 	{IDC_SYSTEM,			0,"系统",139,584}, //系统
 };
 
-static InitBmpFunc loadBmps[] =
-{
+static MgCtrlButton opt_toolbar_controls[] = {
+	{IDC_MAIN_PAGE,		0xd1,"主页",9,714,93,63,btMainPagePress},
+	{IDC_VOLUEM_REDUCE,	0xb4,"声音-",102,714,92,63,btVoulumReducePress},
+	{IDC_VOLUEM_ADD,	0xc4,"声音+",285,714,91,63,btVoulumAddPress},
+	{IDC_MUTE,			0xb0,"静音",194,714,91,63,btMutePress},
+	{IDC_CLOSE,			0,"关闭",376,714,94,63,btClosePress},
+};
+
+static InitBmpFunc loadBmps[] = {
     formMainLoadBmp,
     formVersionLoadBmp,
 	formPasswordLoadBmp,
+    formPresetLoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -187,40 +204,33 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 }
 
 
-static void updateControls(HWND hWnd)
+static void showNormal(HWND hWnd)
 {
 	int i,k;
+    HWND ctrl;
 	for (i=0,k=0; i<NELEMENTS(opt_11_controls); i++) {
-		if (opt_11_controls[i].display) {
+        ctrl = GetDlgItem(hWnd,opt_11_controls[i].idc);
+        SendMessage(ctrl, MSG_MYBUTTON_SET_SELECT_MODE, 0, 0);
+		if (g_config.device_main_controls[i]) {
 			k++;
 			opt_11_controls[i].x = 25 + ((k-1) % 4)*114;
 			opt_11_controls[i].y = 96 + ((k-1) / 4)*123;
-			ShowWindow(hWnd,SW_SHOWNORMAL);
-			MoveWindow(hWnd,
+			ShowWindow(ctrl,SW_SHOWNORMAL);
+			MoveWindow(ctrl,
 					opt_11_controls[i].x,
 					opt_11_controls[i].y,
 					opt_11_controls[i].w,
 					opt_11_controls[i].h,TRUE);
 		} else {
-			ShowWindow(hWnd,SW_HIDE);
+			ShowWindow(ctrl,SW_HIDE);
 		}
 	}
-}
-static void showPreset(HWND hWnd)
-{
-	int i,k;
-	for (i=0,k=0; i<NELEMENTS(opt_11_controls); i++) {
-        opt_11_controls[i].x = 25 + (i % 4)*114;
-        opt_11_controls[i].y = 96 + (i / 4)*123;
-        SendMessage(GetDlgItem(hWnd,i), MSG_MYBUTTON_SET_SELECT_MODE, 0, 0);
-        ShowWindow(hWnd,SW_SHOWNORMAL);
-        MoveWindow(hWnd,
-                opt_11_controls[i].x,
-                opt_11_controls[i].y,
-                opt_11_controls[i].w,
-                opt_11_controls[i].h,TRUE);
+	for (i=0; i<NELEMENTS(opt_toolbar_controls); i++) {
+        ctrl = GetDlgItem(hWnd,opt_toolbar_controls[i].idc);
+        ShowWindow(ctrl,SW_SHOWNORMAL);
 	}
 }
+
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainCreateControl 创建控件
@@ -234,8 +244,7 @@ static void formMainCreateControl(HWND hWnd)
 	int i,k = 0;
 	char image_path[128] = {0};
 	for (i=0; i<NELEMENTS(opt_11_controls); i++) {
-        opt_11_controls[i].display = g_config.device_main_controls[i];
-		if (opt_11_controls[i].display) {
+		if (g_config.device_main_controls[i]) {
 			k++;
 			opt_11_controls[i].x = 25 + ((k-1) % 4)*114;
 			opt_11_controls[i].y = 96 + ((k-1) / 4)*123;
@@ -252,35 +261,92 @@ static void formMainCreateControl(HWND hWnd)
                 opt_11_controls[i].h,
                 &opt_11_controls[i].image_normal,
                 &opt_11_controls[i].image_press,
-                opt_11_controls[i].display,
+                g_config.device_main_controls[i],
+                0,
                 opt_11_controls[i].notif_proc);
+	}
+	for (i=0; i<NELEMENTS(opt_toolbar_controls); i++) {
+		opt_toolbar_controls[i].device_id = 0x11;
+        createSkinButton(hWnd,
+                opt_toolbar_controls[i].idc,
+                opt_toolbar_controls[i].x,
+                opt_toolbar_controls[i].y,
+                opt_toolbar_controls[i].w,
+                opt_toolbar_controls[i].h,
+                &opt_toolbar_controls[i].image_normal,
+                &opt_toolbar_controls[i].image_press,
+                1,
+                0,
+                opt_toolbar_controls[i].notif_proc);
 	}
 }
 
-static void formMainLoadBmp(void)
+static void bmpsMainButtonLoad(MgCtrlButton *controls,int num)
 {
 	int i;
 	char image_path[128] = {0};
+    MgCtrlButton *p;
+	for (i=0; i<num; i++) {
+        p = controls + i;
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_press, image_path);
+	}
+
+}
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief formMainLoadBmp 加载主界面图片
+ */
+/* ---------------------------------------------------------------------------*/
+static void formMainLoadBmp(void)
+{
+	int i;
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(bmp_load,NELEMENTS(bmp_load));
-	for (i=0; i<NELEMENTS(opt_11_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_11_controls[i].img_name,
-                opt_11_controls[i].x,
-                opt_11_controls[i].y);
-        bmpLoad(&opt_11_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_11_controls[i].img_name,
-                opt_11_controls[i].x,
-                opt_11_controls[i].y);
-        bmpLoad(&opt_11_controls[i].image_press, image_path);
-	}
+    bmpsMainButtonLoad(opt_11_controls,NELEMENTS(opt_11_controls));
+    bmpsMainButtonLoad(opt_toolbar_controls,NELEMENTS(opt_toolbar_controls));
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief fromLoadBmps 加载各个窗口的图片
+ */
+/* ---------------------------------------------------------------------------*/
 static void fromLoadBmps(void)
 {
     int i;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
         loadBmps[i](); 
     } 
+}
+
+static void btMainPagePress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+    SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
+}
+
+static void btVoulumReducePress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+
+}
+
+static void btVoulumAddPress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+    
+}
+static void btMutePress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+    
+}
+static void btClosePress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+    
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -324,14 +390,10 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 					   	(const RECT*)lParam,&bmp_bkg1);
 			} return 0;
 
-		case MSG_MAIN_SHOW_PRESET:
-			{
-                showPreset(hWnd);
-			} return 0;
-
 		case MSG_MAIN_SHOW_NORMAL:
 			{
-                updateControls(hWnd);
+                Screen.ReturnMain();
+                showNormal(hWnd);
 			} return 0;
 
 		case MSG_MAIN_TIMER_START:

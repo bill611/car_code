@@ -23,8 +23,7 @@ extern "C" {
 
 #define MSG_MAIN_TIMER_START	    (MSG_USER + 1)
 #define MSG_MAIN_TIMER_STOP	        (MSG_USER + 2)
-#define MSG_MAIN_SHOW_PRESET	    (MSG_USER + 3)
-#define MSG_MAIN_SHOW_NORMAL	    (MSG_USER + 4)
+#define MSG_MAIN_SHOW_NORMAL	    (MSG_USER + 3)
 
 #define FORM_MAIN_KEY_DELETE 	KEYBOARD_FUNC1
 #define FORM_MAIN_KEY_CALL  	KEYBOARD_FUNC2
@@ -68,6 +67,8 @@ extern "C" {
 			void (*keyboardHandle)(unsigned int,int),
 			char * (*listboxNotify)(HWND , int , int , DWORD ),
 			FormMainTimers *timers_table);
+    extern BITMAP bmp_bkg1; // 背景1
+    extern BITMAP bmp_bkg2; // 背景2
 
 #ifdef __cplusplus
 }

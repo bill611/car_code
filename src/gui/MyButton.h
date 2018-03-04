@@ -44,10 +44,11 @@ typedef struct {
 BOOL RegisterMyButtonControl (void);
 void MyButtonControlCleanup (void);
 
-void createSkinButton(HWND hWnd,int id ,
+HWND createSkinButton(HWND hWnd,int id ,
 		int x, int y, int w, int h,
 		BITMAP *image_normal,BITMAP *image_press,
-		int select_state,
+		int display,
+		int mode,
 		NOTIFPROC notif_proc);
 #ifdef __cplusplus
 }

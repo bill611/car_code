@@ -1,11 +1,11 @@
 /*
  * =============================================================================
  *
- *       Filename:  FormVersion.c
+ *       Filename:  FormPreSet.c
  *
  *    Description:  输入密码界面
  *
- *        Version:  1.0
+ *        Preset:  1.0
  *        Created:  2018-03-01 23:32:41
  *       Revision:  none
  *
@@ -21,6 +21,7 @@
 #include "protocol.h"
 #include "commongdi.h"
 #include "FormBase.h"
+#include "FormMain.h"
 #include "predefine.h"
 
 /* ---------------------------------------------------------------------------*
@@ -31,12 +32,12 @@ extern int createFormPassword(HWND hMainWnd);
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
-static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
+static int formPresetProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void initCtrlButtons(HWND hDlg);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 
-static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -47,27 +48,23 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/系统-1/"
+#define BMP_LOCAL_PATH "res/image/选择功能/"
 enum {
-	IDC_BUTTON_MANAGE,
-	IDC_BUTTON_EXIT,
-	IDC_LABER_VERSION,
-	IDC_LABER_DATE,
+    IDC_CONFIRM = IDC_WALN, // 功能选择确认
+    IDC_CANCEL, // 功能选择取消
 };
 
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg_system1; // 背景
+static BITMAP bmp_bkg_select; // 选择功能界面背景
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg_system1, BMP_LOCAL_PATH"bkg_system1.JPG"},
+    {&bmp_bkg_select, BMP_LOCAL_PATH"选择功能背景.JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
-    STATIC_LB_L(178,333,200,30,IDC_LABER_VERSION,"",0,NULL),
-    STATIC_LB_L(178,376,200,30,IDC_LABER_DATE,"",0,NULL),
 };
 
 
@@ -85,53 +82,34 @@ static MY_DLGTEMPLATE DlgInitParam =
 };
 
 static FormBasePriv form_base_priv= {
-	.name = "Fver",
-	.dlgProc = formVersionProc,
+	.name = "Fselect",
+	.dlgProc = formPresetProc,
 	.dlgInitParam = &DlgInitParam,
 	.initPara =  initPara,
 };
 
 static MgCtrlButton opt_controls[] = {
-	{IDC_BUTTON_MANAGE,	0,"后台管理系统",132,422,212,49,btManagePress}, // 后台管理系统
-	{IDC_BUTTON_EXIT,	0,"退出",392,205,51,48,btExitPress}, // 退出
+	{IDC_CONFIRM,		0,"确认",103,720,115,58,btConfirmPress},
+	{IDC_CANCEL,		0,"取消",261,720,115,58,btCancelPress},
 };
 
 static FormBase* form_base = NULL;
 
-/* ----------------------------------------------------------------*/
-/**
- * @brief btManagePress 获取设备ID按钮
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data)
+static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
-		return;
-    createFormPassword(GetParent(hwnd));
+    int i;
+    for (i=0; i<IDC_WALN; i++) {
+        g_config.device_main_controls[i] =
+            SendMessage(GetDlgItem (GetParent (hwnd), i),
+                    MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
+        Public.saveConfig();
+    }
+    SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 }
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief btExitPress 保存按钮
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
+static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
-		return;
-    ShowWindow(GetParent(hwnd),SW_HIDE);
+    SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 }
-
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -145,8 +123,7 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-	SetWindowText(GetDlgItem(hDlg,IDC_LABER_VERSION),CODE_VERSION);
-	SetWindowText(GetDlgItem(hDlg,IDC_LABER_DATE),__DATE__);
+    HWND ctrl;
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		createSkinButton(hDlg,
 				opt_controls[i].idc,
@@ -159,11 +136,21 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				1, 0,
 				opt_controls[i].notif_proc);
 	}
+    for (i=0; i<IDC_WALN; i++) {
+		HWND hCtrl = createSkinButton(hDlg,
+				i,
+				25 + (i % 4)*114,
+				96 + (i / 4)*123,
+				118,
+				122,
+				NULL,NULL, g_config.device_main_controls[i],1,NULL);
+        ShowWindow(hCtrl,SW_SHOWNORMAL);
+    }
 }
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief formVersionProc 窗口回调函数
+ * @brief formPresetProc 窗口回调函数
  *
  * @param hDlg
  * @param message
@@ -173,7 +160,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
  * @return
  */
 /* ----------------------------------------------------------------*/
-static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
+static int formPresetProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	if (form_base->baseProc(form_base,hDlg, message, wParam, lParam) == 0) {
 		return 0;
@@ -184,14 +171,14 @@ static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief createFormVersion 创建窗口
+ * @brief createFormPreSet 创建窗口
  *
  * @param hMainWnd
  *
  * @returns
  */
 /* ----------------------------------------------------------------*/
-void formVersionLoadBmp(void)
+void formPresetLoadBmp(void)
 {
     int i;
 	char image_path[128] = {0};
@@ -209,14 +196,14 @@ void formVersionLoadBmp(void)
     }
 }
 
-int createFormVersion(HWND hMainWnd)
+int createFormPreSet(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg_system1;
+		form_base_priv.bmp_bkg = &bmp_bkg_select;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

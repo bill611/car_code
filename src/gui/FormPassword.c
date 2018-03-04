@@ -202,9 +202,7 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
     GetWindowText(GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
             buf,sizeof(buf));
     if (strcmp(buf,g_config.password) == 0) {
-        // HWND Form = Screen.Find(form_base_priv.name);
-        ShowWindow(GetParent(hwnd),SW_HIDE);
-        // SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_PRESET, 0, 0);
+        createFormPreSet(GetParent (hwnd));
     } else {
         showErrInfo(GetParent (hwnd),TRUE);
     }
@@ -226,7 +224,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	HWND hCtrl;
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
-        opt_controls[i].display = 1;
 		createSkinButton(hDlg,
 				opt_controls[i].idc,
 				opt_controls[i].x,
@@ -235,7 +232,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				opt_controls[i].h,
 				&opt_controls[i].image_normal,
 				&opt_controls[i].image_press,
-				opt_controls[i].display,
+				1, 0,
 				opt_controls[i].notif_proc);
 	}
     CreateWindowEx2 (CTRL_STATIC, "",
@@ -250,7 +247,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
             184,365,118,49,
             &bmp_err_confirm,
             &bmp_err_confirm1,
-            1,
+            1, 0,
             btErrConfirmPress);
     ShowWindow(GetDlgItem (hDlg, IDC_BUTTON_ERR_CONFIRM),
             SW_HIDE);
@@ -281,6 +278,7 @@ void formPasswordLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(bmp_load,NELEMENTS(bmp_load));
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		sprintf(image_path,BMP_LOCAL_PATH"%s（X%d,Y%d）.JPG",opt_controls[i].img_name,
@@ -307,6 +305,7 @@ int createFormPassword(HWND hMainWnd)
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
         SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
+        showErrInfo(Form,FALSE);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;

@@ -97,12 +97,6 @@ static void paint(HWND hWnd,HDC hdc)
 		ButtonCtrlInfo* pInfo = (ButtonCtrlInfo*)(pCtrl->dwAddData2);
 
 		if (pInfo->select.mode) {
-			FillBoxWithBitmap(hdc,
-                    rcClient.left,
-                    rcClient.top,
-                    pInfo->image_normal->bmWidth,
-                    pInfo->image_normal->bmHeight,
-                    pInfo->image_normal);
 			if(pInfo->select.state == BUT_STATE_SELECT) 
 				FillBoxWithBitmap(hdc,
                         rcClient.left + 80,
@@ -125,8 +119,7 @@ static void paint(HWND hWnd,HDC hdc)
                         pInfo->image_normal->bmWidth,
                         pInfo->image_normal->bmHeight,
                         pInfo->image_normal);
-            }
-			else 
+            } else 
                 FillBoxWithBitmap(hdc,
                         rcClient.left,
                         rcClient.top,
@@ -192,7 +185,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		return pInfo->select.state;
 
     case MSG_MYBUTTON_SET_SELECT_MODE:
-		pInfo->select.mode = 1;
+		pInfo->select.mode = (int)wParam;
 		InvalidateRect (hwnd, NULL, TRUE);
 		return 0;
 
@@ -284,6 +277,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		if (PtInRect ((PRECT) &(pCtrl->cl), x, y))
         {
 			// playButtonSound();
+            printf("mode:%d,id:%d\n",pInfo->select.mode,pCtrl->id );
 			if (pInfo->select.mode == 0)
 				NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
 			else {
@@ -333,29 +327,30 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
  * @param x,y,w,h 坐标
  * @param image_normal 正常图片
  * @param image_press  按下图片
- * @param select_state 是否显示 0不显示 1显示
+ * @param display 是否显示 0不显示 1显示
+ * @param mode 是否为选择模式 0非选择 1选择
  * @param notif_proc   回调函数
  */
 /* ---------------------------------------------------------------------------*/
-void createSkinButton(HWND hWnd,int id ,
+HWND createSkinButton(HWND hWnd,int id ,
 		int x, int y, int w, int h,
 		BITMAP *image_normal,BITMAP *image_press,
-		int select_state,
+		int display,
+		int mode,
 		NOTIFPROC notif_proc)
 {
 	HWND hCtrl;
 	ButtonCtrlInfo pInfo;
 	pInfo.image_normal = image_normal;
 	pInfo.image_press = image_press;
-	pInfo.select.mode = 0;
+	pInfo.select.mode = mode;
 	pInfo.state = BUT_NORMAL;
-	pInfo.select.state = select_state;
+	pInfo.select.state = display;
 	if (bmp_button_select.bmBits == NULL) {
 		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/选择功能/01(x105，y175).JPG"))
 			printf ("LoadBitmap(%s)fail.\n","01(x105，y175).JPG");
 		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/选择功能/01-2(x105，y175).JPG"))
 			printf ("LoadBitmap(%s)fail.\n","01-2(x105，y175).JPG");
-
 	}
 	if (pInfo.select.state == BUT_STATE_SELECT)
 		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_CHILD,WS_EX_TRANSPARENT,
@@ -366,6 +361,7 @@ void createSkinButton(HWND hWnd,int id ,
 	if(notif_proc) {
 		SetNotificationCallback (hCtrl, notif_proc);
 	}
+    return hCtrl;
 }
 
 
