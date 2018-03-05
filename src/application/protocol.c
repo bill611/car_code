@@ -21,12 +21,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "externfunc.h"
+#include "UDPServer.h"
 #include "UartDeal.h"
+#include "debug.h"
 #include "protocol.h"
 
 /* ---------------------------------------------------------------------------*
  *                  extern variables declare
  *----------------------------------------------------------------------------*/
+extern uint32_t getDiffSysTick(uint64_t new,uint64_t old);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -204,12 +207,23 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 
 //------------协议B,UDP协议---end
 
+#define VAILDTIME 	(5000)				//5秒
+
+typedef struct _PacketsID {
+	char IP[16];
+	u16 id;
+	u16 dwTick;		//时间
+}PacketsID;
+
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
 DevToCom *pro_com;
 DevToApp *pro_app;
 static int online_state;  //联机状态 0非联机 1联机
+static int packet_pos;
+static PacketsID packets_id[10];
+
 // udp控制命令到串口命令的转换表
 const st_udp2com udp2com[] = {
 	// udp-tag, udp-data, com-device, com-opcode
@@ -527,9 +541,49 @@ static void proCheckStateCmd(unsigned char *data,int leng)
 	Screen.foreachForm(MSG_UPDATESTATUS,0,0);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proUdpFilter 判断Udp数据是否为重发
+ *
+ * @param ABinding
+ * @param AData
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
+{
+	int i;
+	unsigned int dwTick;
+	//回复数据包
+    printf("[%s]%s\n", __FUNCTION__,ABinding->IP);
+	if(AData->Size != sizeof(st_set))
+        return 0;
+    st_set *data = (st_set *)AData->Data[0];
+    //判断包是否重发
+    dwTick = GetTickCount();
+    for(i=0;i<10;i++) {
+        if (strcmp(ABinding->IP,packets_id[i].IP) == 0
+                && data->id == packets_id[i].id 
+                && (getDiffSysTick(dwTick,packets_id[i].dwTick) < VAILDTIME)) {
+            saveLog("Packet ID %d is already receive!\n",packets_id[i].id);
+            return 0;
+        }
+    }
+
+	//保存ID
+    sprintf(packets_id[packet_pos].IP,"%s",ABinding->IP);
+	packets_id[packet_pos].id = *(int*)AData->Data;
+	packets_id[packet_pos].dwTick = dwTick;
+	packet_pos = (++packet_pos) % 10;
+    return 1;    
+}
+
 static void udpSocketRead(SocketHandle *ABinding,SocketPacket *AData)
 {
-	COMMUNICATION * head = (COMMUNICATION *)AData->Data;
+    if (proUdpFilter(ABinding,AData) == 0)
+        return;
+	// COMMUNICATION * head = (COMMUNICATION *)AData->Data;
 
 	// DBG_P("[%s]:IP:%s,Cmd=0x%04x\n",__FUNCTION__,ABinding->IP,head->Type);
 }

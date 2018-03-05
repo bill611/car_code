@@ -142,16 +142,13 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 			{
 				// 初始化公共参数
 				publicInit();
+				initProtocol();
 				// 创建UDP监控
-				UdpServer = TUDPServer_Create(hWnd,pro_app->getRecivePort());
-				if(UdpServer == NULL) {
-					printf("Create UpdServer fail\n");
-				}
-
+                udpServerInit(pro_app->udpSocketRead,
+                        7800);//pro_app->getRecivePort());
 				// 串口对象
 				uart = uartDealCreate(hWnd);
 
-				initProtocol();
 				// GPIO操作对象
 				Mygpio = myGpioPrivCreate(gpiotbl);
 				Mygpio->Init(Mygpio);
@@ -162,13 +159,6 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				WatchDogOpen();
 				Public.initTouchIrq();
 			} return 1;
-
-		case MSG_SOCKETREAD:
-			{
-				pro_app->udpSocketRead((SocketHandle*)wParam,(SocketPacket*)lParam);
-				free((SocketHandle*)wParam);
-				free((SocketPacket*)lParam);
-			} return 0;
 
 		case MSG_SERIALPORT:
 			{

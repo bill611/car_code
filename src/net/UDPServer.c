@@ -24,6 +24,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include "commongdi.h"
+#include "debug.h"
 #include "queue.h"
 #include "UDPServer.h"
 
@@ -38,20 +39,17 @@
 /* ---------------------------------------------------------------------------*
  *                        macro define
  *----------------------------------------------------------------------------*/
-typedef struct UDPTHREADOPS {
+#define UDP_PACKET_MAX 1000		//UDP包最大长度
+#define closesocket close
+
+typedef struct _UdpThreadOps {
 	unsigned int Handle;         //接收信息的窗口包柄
 	int m_socket;       //套接字
 	int port;           //端口号
 	int Terminated;     //是否中止线程
-}*PUDPTHREADOPS;
+}UdpThreadOps;
 
-typedef struct {
-	u_long IP;
-	unsigned int ID;
-	unsigned int dwTick;		//时间
-}PACKETSID;
-
-typedef struct _udpSendLists {
+typedef struct _UdpSendLists {
 	char IP[16];
 	int Port;
 	void *pData;
@@ -61,26 +59,44 @@ typedef struct _udpSendLists {
 	unsigned int hWnd;
 	CallBackUDP Func;
 	void *CallBackData;
-} udpSendLists;
+} UdpSendLists;
 
-typedef struct _udp_serverPriv {
+typedef struct _UdpServerPriv {
 	pthread_t m_pthread;		//线程号
 	pthread_mutex_t mutex;		//队列控制互斥信号
-	udpSendLists Lists[MAXLIST];
+	UdpSendLists Lists[MAXLIST];
 	int ListCnt;
-	struct UDPTHREADOPS * control;
-}udp_serverPriv;
+	struct _UdpThreadOps * control;
+}UdpServerPriv;
 
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static TUDPServer *udp_server; 
-static PACKETSID PacketsID[10];
-static int PacketPos;          
+TUDPServer *udp_server;
 static Queue *udp_socket_queue;
 
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief getDiffSysTick 计算32位差值
+ *
+ * @param new
+ * @param old
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
+uint32_t getDiffSysTick(uint64_t new,uint64_t old)
+{
+    uint32_t diff;
+    if (new >= old)
+        diff = new - old;
+    else
+        diff = 0XFFFFFFFF - old + new;
+    return diff;
+
+}
 
 /* ---------------------------------------------------------------------------*/
 /**
@@ -126,25 +142,31 @@ static void udpServerPostMessage(int handle,
 	udp_socket_queue->post(udp_socket_queue,&socket_data);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerProcRetPacket 接收发送结果
+ *
+ * @param This
+ * @param ID
+ */
+/* ---------------------------------------------------------------------------*/
 static void udpServerProcRetPacket(TUDPServer* This,unsigned int ID)
 {
 	int i;
 	pthread_mutex_lock (&This->priv->mutex);		//加锁
 	for(i=0;i<MAXLIST;i++) {
-		udpSendLists *pList = &This->priv->Lists[i];
+		UdpSendLists *pList = &This->priv->Lists[i];
 		if(!pList->pData)
 			continue;
-		COMMUNICATION * pHead = (COMMUNICATION*)pList->pData;
-        if(pHead->ID != ID) {
-            DBG_LOG("continue,pHead->ID:%d,ID:%d\n",pHead->ID,ID );
-			continue;
-        }
+		// COMMUNICATION * pHead = (COMMUNICATION*)pList->pData;
+        // if(pHead->ID != ID) {
+            // saveLog("continue,pHead->ID:%d,ID:%d\n",pHead->ID,ID );
+			// continue;
+        // }
 		//对方成功接收
-		// if(pList->hWnd)
-			// MyPostMessage(pList->hWnd,MSG_SENDMSG,MSG_SENDSUCCESS,(LPARAM)pList->CallBackData);
-		/* else */ if(pList->Func)
+		if(pList->Func)
 			pList->Func(MSG_SENDSUCCESS,pList->CallBackData);
-        DBG_LOG("send success:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
+        saveLog("send success:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
 		free(pList->pData);
 		pList->pData = NULL;
 		This->priv->ListCnt--;
@@ -152,27 +174,36 @@ static void udpServerProcRetPacket(TUDPServer* This,unsigned int ID)
 	}
 	pthread_mutex_unlock (&This->priv->mutex);		//解锁
 }
-//---------------------------------------------------------------------------
-static void udpServerProcTask(TUDPServer* This)
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerTaskSend 发送task任务
+ *
+ * @param This
+ */
+/* ---------------------------------------------------------------------------*/
+static void udpServerTaskSend(TUDPServer* This,DWORD *dwLastTick)
 {
 	int i;
+    DWORD dwTick = udpServerGetTickCount();
+    if(getDiffSysTick(dwTick,*dwLastTick) <= TASKTIMEOUT)
+        return;
+    *dwLastTick = dwTick;
+
 	pthread_mutex_lock (&This->priv->mutex);		//加锁
 	for(i=0;i<MAXLIST;i++) {
-		udpSendLists *pList = &This->priv->Lists[i];
+		UdpSendLists *pList = &This->priv->Lists[i];
 		if(!pList->pData)
 			continue;
-		if(pList->SendTimes<pList->Times) {
-			//重发送次数未超时
+		if(pList->SendTimes < pList->Times) {
+			// 重发指定次数
 			This->SendBuffer(This,pList->IP,pList->Port,pList->pData,pList->Size);
-			// printf("[UDPSend] IP=%s,Port=%d,Size=%d\n", pList->IP,pList->Port,pList->Size);
 			pList->SendTimes++;
-            DBG_LOG("times:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
+            saveLog("times:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
 		} else {
-            DBG_LOG("send time out:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
-			//发送次数超时
-			// if(pList->hWnd)
-				// MyPostMessage(pList->hWnd,MSG_SENDMSG,MSG_SENDTIMEOUT,0);
-			/* else */ if(pList->Func)
+            saveLog("send time out:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
+			// 重发指定次数后失败
+			if(pList->Func)
 				pList->Func(MSG_SENDTIMEOUT,pList->CallBackData);
 			free(pList->pData);
 			pList->pData = NULL;
@@ -185,48 +216,15 @@ static void udpServerProcTask(TUDPServer* This)
 //---------------------------------------------------------------------------
 //  UDP Server监听数据线程
 //---------------------------------------------------------------------------
-static void udpServerProcUdpRecvData(TUDPServer* This,
+static void udpServerRecvData(TUDPServer* This,
 		SocketPacket *AData,
 		struct sockaddr_in *from,
 		int fromlen)
 {
-	int i;
-    char *pTmp;
 	SocketHandle *ABinding;
-	PUDPTHREADOPS control = This->priv->control;
-	unsigned int dwTick;
+	UdpThreadOps *control = This->priv->control;
 
-	//回复数据包
-	if(AData->Size>12) {
-		sendto(control->m_socket,AData->Data,4,0,(struct sockaddr*)from,fromlen);
-	} else if(AData->Size==4) {
-		//4个字节为对方返回的应答包
-		udpServerProcRetPacket(This,*(unsigned int *)AData->Data);
-		free(AData);
-		return;
-	}
-	
-	dwTick = udpServerGetTickCount();
-	//排除WAP转发通讯程序的协议,目前无法分辨第一个字节为0xA5并且长度为12或13的数据包
-	if(AData->Size>=12) { // || ((unsigned char*)AData->Data)[0]!=0xA5) {
-		//判断包是否重发
-		for(i=0;i<10;i++) {
-			if((from->IPDATA == PacketsID[i].IP && AData->Size>4) &&
-				(*(unsigned int*)AData->Data == PacketsID[i].ID) &&
-				(getDiffSysTick(dwTick,PacketsID[i].dwTick) < VAILDTIME)) {
-				DBG_LOG("Packet ID %d is already receive!\n",PacketsID[i].ID);
-				free(AData);
-				return;
-			}
-		}
-	}
-	//保存ID
-	PacketsID[PacketPos].IP = from->IPDATA;
-	PacketsID[PacketPos].ID = *(int*)AData->Data;
-	PacketsID[PacketPos].dwTick = dwTick;
-	PacketPos = (++PacketPos) % 10;
-    
-	ABinding = (SocketHandle*)malloc(sizeof(SocketHandle));
+	ABinding = (SocketHandle*)calloc(1,sizeof(SocketHandle));
     if(ABinding == NULL) {
         free(AData);
 		printf("udp server No Memory alloc ABinding\n");
@@ -234,17 +232,26 @@ static void udpServerProcUdpRecvData(TUDPServer* This,
     }
     memset(ABinding,0,sizeof(SocketHandle));
     ABinding->Port = htons(from->sin_port);
-    pTmp = inet_ntoa(from->sin_addr);
+    char *pTmp = inet_ntoa(from->sin_addr);
 	if(pTmp)
 		strcpy(ABinding->IP,pTmp);
 	udpServerPostMessage(control->Handle,ABinding,AData);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerThread udp服务线程
+ *
+ * @param ThreadData
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
 static void * udpServerThread(void *ThreadData)
 {
 //	socklen_t addrlen;
 	TUDPServer *This = (TUDPServer *)ThreadData;
-	PUDPTHREADOPS control = This->priv->control;
+	UdpThreadOps *control = This->priv->control;
 	struct timeval timeout;
 	fd_set fdR;
 	DWORD dwLastTick = udpServerGetTickCount();
@@ -255,73 +262,53 @@ static void * udpServerThread(void *ThreadData)
 		timeout.tv_sec=0;
 		timeout.tv_usec=50000;		//50ms
         usleep(10000);
-        char *err = "select -1 ,handle by u";
 		switch (select(control->m_socket+1, &fdR,NULL, NULL, &timeout))
-		{
-		case -1:
-			/*error handled by u; */
-            DBG_LOG("select -1 ,handle by u\n");
-			This->SendBuffer(This,Public.center_msg[0].IP,UDPSERVER_PORT,err,strlen(err));
-			// goto error; 20180111 xb 不能退出，
-            break;
-		case 0:
-			{
-				DWORD dwTick = udpServerGetTickCount();
-                // DBG_LOG("select 0,dwTick:%d,dwLastTick:%d,diff:%d,\n",
-                    // dwTick,  dwLastTick,(dwTick - dwLastTick)  );
-				if(getDiffSysTick(dwTick,dwLastTick) > TASKTIMEOUT) {
-					udpServerProcTask(This);
-					dwLastTick = dwTick;
-				}
-			}
-			break;
-		default: 
-			if(FD_ISSET(control->m_socket,&fdR)) {
-				//socket 可读
-				struct sockaddr_in from;
-				//pBuf 前4个字节用于保存UDP包长
-				SocketPacket *AData = (SocketPacket *)malloc(UDP_PACKET_MAX);
-				int fromlen = sizeof(struct sockaddr_in);
-				memset(&from,0,sizeof(from));
-				if(AData == NULL) {
-					DBG_LOG("UDP Server No Memory alloc\n");
-					break;
-				}
-                AData->Size=recvfrom(control->m_socket,
-                        AData->Data,
-                        UDP_PACKET_MAX-4,
-                        MSG_NOSIGNAL,
-                        (struct sockaddr*)&from,
-                        (socklen_t *)&fromlen);
-				if(AData->Size > 0) {
-					udpServerProcUdpRecvData(This,AData,&from,fromlen);
-				} else {
-					free(AData);
-				}
-			} else {
-				udpServerDelayMs(1);
-			}
-
-			do {
-				DWORD dwTick = udpServerGetTickCount();
-				if(getDiffSysTick(dwTick,dwLastTick) > TASKTIMEOUT) {
-                    DBG_LOG("select default,dwTick:%d,dwLastTick:%d,diff:%d,\n",
-                            dwTick,  dwLastTick,dwTick - dwLastTick  );
-					udpServerProcTask(This);
-					dwLastTick = dwTick;
-				}
-			} while(0);
-			break;
-		}
+        {
+            case -1:
+                saveLog("udp server select err!\n");
+                // This->SendBuffer(This,Public.center_msg[0].IP,UDPSERVER_PORT,err,strlen(err));
+                // goto error; 20180111 xb 不能退出，
+                break;
+            case 0: // 未收到数据，udp服务发送task任务，间隔时间 TASKTIMEOUT
+                udpServerTaskSend(This,&dwLastTick);
+                break;
+            default:  // 收到数据，处理数据
+                if(FD_ISSET(control->m_socket,&fdR)) {
+                    struct sockaddr_in from;
+                    SocketPacket *AData = (SocketPacket *)calloc(1,UDP_PACKET_MAX);
+                    int fromlen = sizeof(struct sockaddr_in);
+                    memset(&from,0,sizeof(from));
+                    if(AData == NULL) {
+                        saveLog("UDP Server No Memory alloc\n");
+                        break;
+                    }
+                    AData->Size=recvfrom(control->m_socket,
+                            AData->Data,
+                            UDP_PACKET_MAX-4,
+                            MSG_NOSIGNAL,
+                            (struct sockaddr*)&from,
+                            (socklen_t *)&fromlen);
+                    if(AData->Size > 0) {
+                        printf("1111111\n");
+                        udpServerRecvData(This,AData,&from,fromlen);
+                    } else {
+                        free(AData);
+                    }
+                } else
+                    udpServerDelayMs(1);
+                //为防止接收阻塞发送任务，同时也继续发送task任务,
+                udpServerTaskSend(This,&dwLastTick);
+                break;
+        }
 	}
 error:
-	DBG_LOG("UDP Server Thread Exit\n");
+	saveLog("UDP Server Thread Exit\n");
 	control->Terminated = 1;
 	free(control);
 	pthread_exit(NULL);
 	return NULL;
 }
-//---------------------------------------------------------------------------
+
 static void udpServerDestroy(TUDPServer *This)
 {
 	This->priv->control->Terminated = 1;
@@ -333,18 +320,31 @@ static int udpServerGetSocket(TUDPServer *This)
 {
 	return This->priv->control->m_socket;
 }
-//---------------------------------------------------------------------------
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerSendBuffer 直接发送数据
+ *
+ * @param This
+ * @param IP
+ * @param port
+ * @param pBuf
+ * @param size
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
 static int udpServerSendBuffer(TUDPServer *This,const char *IP,int port,const void *pBuf,int size)
 {
     struct sockaddr_in *p;
 	struct sockaddr addr;
 	struct hostent *hostaddr;
     if(This->priv->control->m_socket<0) {
-        DBG_LOG("m_socket:%d\n",This->priv->control->m_socket );
+        saveLog("m_socket:%d\n",This->priv->control->m_socket );
 		return -1;
     }
     if(IP[0]==0 || port==0) {
-        DBG_LOG("IP:%s:%d\n",IP,port );
+        saveLog("IP:%s:%d\n",IP,port );
 		return -2;
     }
     memset(&addr,0,sizeof(addr));
@@ -354,7 +354,7 @@ static int udpServerSendBuffer(TUDPServer *This,const char *IP,int port,const vo
 	if(IP[0]<'0' || IP[0]>'9') {
 		hostaddr = gethostbyname(IP);
         if(!hostaddr) {
-            DBG_LOG("ERR hostaddr,IP:%s\n",IP );
+            saveLog("ERR hostaddr,IP:%s\n",IP );
 			return -3;
         }
 		memcpy(&p->sin_addr,hostaddr->h_addr,hostaddr->h_length);
@@ -362,18 +362,32 @@ static int udpServerSendBuffer(TUDPServer *This,const char *IP,int port,const vo
 		p->sin_addr.s_addr = inet_addr(IP);
 		if(		   (p->sin_addr.s_addr == INADDR_NONE)
 				&& (strcmp(IP,"255.255.255.255") != 0)   ) {
-            DBG_LOG("ERR INADDR_NONE,IP:%s\n",IP );
+            saveLog("ERR INADDR_NONE,IP:%s\n",IP );
 			return -4;
 		}
 	}
 	return sendto(This->priv->control->m_socket,
 			(char*)pBuf,
-			size,			
+			size,
 			MSG_NOSIGNAL,
 			&addr,
 			sizeof(struct sockaddr_in));
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerRecvBuffer 接收数据
+ *
+ * @param This
+ * @param pBuf
+ * @param size
+ * @param TimeOut
+ * @param from
+ * @param fromlen
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
 static int udpServerRecvBuffer(TUDPServer *This,void *pBuf,int size,int TimeOut,
 						  void * from,int * fromlen)
 {
@@ -412,8 +426,22 @@ static int udpServerTerminated(TUDPServer *This)
 {
 	return This->priv->control->Terminated;
 }
-//---------------------------------------------------------------------------
-//添加任务
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerAddTask 通过添加任务发送数据
+ *
+ * @param This
+ * @param IP
+ * @param Port
+ * @param pData
+ * @param Size
+ * @param Times
+ * @param hWnd
+ * @param Func
+ * @param CallBackData
+ */
+/* ---------------------------------------------------------------------------*/
 static void udpServerAddTask(TUDPServer* This,
 		const char *IP,
 		int Port,
@@ -425,8 +453,8 @@ static void udpServerAddTask(TUDPServer* This,
 		void *CallBackData)
 {
 	int idx;
-    while(This->priv->ListCnt>MAXLIST) {
-        DBG_LOG("Server task out!! cnt:%d\n",This->priv->ListCnt );
+    while(This->priv->ListCnt > MAXLIST) {
+        saveLog("Server task out!! cnt:%d\n",This->priv->ListCnt );
 		udpServerDelayMs(100);
     }
 	pthread_mutex_lock (&This->priv->mutex);		//加锁
@@ -437,7 +465,7 @@ static void udpServerAddTask(TUDPServer* This,
 	}
 	//添加任务
 	if(idx<MAXLIST) {
-		This->priv->Lists[idx].pData = malloc(Size);
+		This->priv->Lists[idx].pData = calloc(1,Size);
 		memcpy(This->priv->Lists[idx].pData,pData,Size);
 		strcpy(This->priv->Lists[idx].IP,IP);
 		This->priv->Lists[idx].Port = Port;
@@ -448,20 +476,28 @@ static void udpServerAddTask(TUDPServer* This,
 		This->priv->Lists[idx].Func = Func;
 		This->priv->Lists[idx].CallBackData = CallBackData;
 		This->priv->ListCnt++;
-        DBG_LOG("add task id:%d,cnt:%d\n",idx,This->priv->ListCnt );
+        saveLog("add task id:%d,cnt:%d\n",idx,This->priv->ListCnt );
     } else {
-        DBG_LOG("ERR idx:%d\n",idx );
+        saveLog("ERR idx:%d\n",idx );
     }
 	pthread_mutex_unlock (&This->priv->mutex);		//解锁
 }
-//---------------------------------------------------------------------------
-//删除任务
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerKillTask删除任务
+ *
+ * @param This
+ * @param IP
+ * @param Port
+ */
+/* ---------------------------------------------------------------------------*/
 static void udpServerKillTask(TUDPServer* This,const char *IP,int Port)
 {
 	int i;
 	pthread_mutex_lock (&This->priv->mutex);		//加锁
 	for(i=0;i<MAXLIST;i++) {
-		udpSendLists *pList = &This->priv->Lists[i];
+		UdpSendLists *pList = &This->priv->Lists[i];
 		if(pList->pData && strcmp(pList->IP,IP)==0 && pList->Port==Port) {
 			free(pList->pData);
 			pList->pData = NULL;
@@ -471,9 +507,16 @@ static void udpServerKillTask(TUDPServer* This,const char *IP,int Port)
 	pthread_mutex_unlock (&This->priv->mutex);		//解锁
 }
 
-//---------------------------------------------------------------------------
-//创建一个线程，监听指定的端口
-//---------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerCreate 创建一个线程，监听指定的端口
+ *
+ * @param Handle
+ * @param Port
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
 static TUDPServer* udpServerCreate(unsigned int Handle,int Port)
 {
 	int ret;
@@ -486,17 +529,17 @@ static TUDPServer* udpServerCreate(unsigned int Handle,int Port)
     TUDPServer* This;
 	This = (TUDPServer *)calloc(1,sizeof(TUDPServer));
     if(This==NULL) {
-		DBG_LOG("alloc UDPServer memory failt!\n");
+		saveLog("alloc UDPServer memory failt!\n");
 	   	goto error;
 	}
-	This->priv = (udp_serverPriv*)calloc(1,sizeof(udp_serverPriv));
+	This->priv = (UdpServerPriv*)calloc(1,sizeof(UdpServerPriv));
     if(This->priv==NULL) {
-		DBG_LOG("alloc udp priv memory fail!\n");
+		saveLog("alloc udp priv memory fail!\n");
 	   	goto error;
 	}
-	This->priv->control =(struct UDPTHREADOPS*)calloc(1,sizeof(struct UDPTHREADOPS));
+	This->priv->control =(struct _UdpThreadOps*)calloc(1,sizeof(struct _UdpThreadOps));
     if(This->priv->control==NULL) {
-		DBG_LOG("alloc control memory fail!\n");
+		saveLog("alloc control memory fail!\n");
 	   	goto error;
 	}
 	This->priv->control->Handle = Handle;
@@ -516,19 +559,19 @@ static TUDPServer* udpServerCreate(unsigned int Handle,int Port)
 	//初始化套接字
 	This->priv->control->m_socket=socket(AF_INET,SOCK_DGRAM,0);
 	if(This->priv->control->m_socket < 0) {
-		DBG_LOG("UDP Server init socket failed!\n");
+		saveLog("UDP Server init socket failed!\n");
 		goto error;
 	}
 	ret = setsockopt(This->priv->control->m_socket,SOL_SOCKET,SO_BROADCAST,(char*)&opt,sizeof(opt));
 	if(ret!=0) {
-		DBG_LOG("setsockopt server error %d\n",ret);
+		saveLog("setsockopt server error %d\n",ret);
 	}
 	//绑定套接字
 	local_addr.sin_family = AF_INET;
 	local_addr.sin_port = htons(Port);
 	local_addr.sin_addr.s_addr = INADDR_ANY;
 	if(bind(This->priv->control->m_socket, (struct sockaddr *)&local_addr, sizeof(struct sockaddr))<0) {
-		DBG_LOG("bind to port failed!\n");
+		saveLog("bind to port failed!\n");
         closesocket(This->priv->control->m_socket);
 		goto error;
 	}
@@ -560,24 +603,43 @@ error:
     return NULL;
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpSocketReadThread 侦听端口数据接收线程
+ *
+ * @param arg
+ *
+ * @returns
+ */
+/* ---------------------------------------------------------------------------*/
 static void *udpSocketReadThread(void *arg)
 {
 	UdpSocket socket_data;
 	// 阻塞状态 不需要延时
 	while (1) {
 		udp_socket_queue->get(udp_socket_queue,&socket_data);
-		tcUdpSocketRead(socket_data.ABinding,socket_data.AData);
+        if (udp_server->udpSocketRead)
+            udp_server->udpSocketRead(socket_data.ABinding,socket_data.AData);
 		free(socket_data.ABinding);
 		free(socket_data.AData);
 	}
 }
 
-void udpServerInit(int port)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief udpServerInit 初始化udp服务
+ *
+ * @param port 侦听端口
+ */
+/* ---------------------------------------------------------------------------*/
+void udpServerInit(void (*udpSocketRead)(SocketHandle *ABinding,SocketPacket *AData),
+        int port)
 {
     pthread_t m_pthread;		//线程号
 	pthread_attr_t threadAttr1;			//线程属性
 
 	udp_server = udpServerCreate(0,port);
+	udp_server->udpSocketRead = udpSocketRead;
 	udp_socket_queue = queueCreate("udp_socket",QUEUE_BLOCK,sizeof(UdpSocket));
 
 	pthread_attr_init(&threadAttr1);		//附加参数

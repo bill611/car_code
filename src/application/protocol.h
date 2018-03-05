@@ -44,11 +44,11 @@ extern "C" {
 	}DevToCom;
 
 	typedef struct _DevToApp {
+        void (*udpSocketRead)(struct _SocketHandle *ABinding,struct _SocketPacket *AData);
 		int (*getRecivePort)(void);  // 获取接收端口
 		int (*getSendPort)(void);  // 获取接收端口
 		void (*getStatus)(void);  // 发送获取状态命令
 		void (*sendOpt)(int device,int opt);  // 发送操作命令
-		void (*udpSocketRead)(struct _SocketHandle *ABinding,struct _SocketPacket *AData); // 接收UDP协议
 	}DevToApp;
 
 	extern DevToCom *pro_com;

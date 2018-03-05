@@ -20,13 +20,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
+#include <stdint.h>
 
 #define MSG_SENDSUCCESS	 1		//wParam
 #define MSG_SENDTIMEOUT	 2		//wParam
 
 #define IPDATA sin_addr.s_addr
 
-#define VAILDTIME 	(5000)				//5√Î
 #define TASKTIMEOUT (200)//(30)			//300ms
 #define MAXLIST 	(50)
 
@@ -48,9 +48,9 @@ extern "C" {
 
 	typedef void (*CallBackUDP)(int Ret,void *CallBackData);
 
-	struct _udp_serverPriv;
+	struct _UdpServerPriv;
 	typedef struct _TUDPServer {
-		struct _udp_serverPriv *priv;
+		struct _UdpServerPriv *priv;
 		void (* Destroy)(struct _TUDPServer *This);
 		int (* GetSocket)(struct _TUDPServer *This);
 		int (* Terminated)(struct _TUDPServer *This);
@@ -60,10 +60,16 @@ extern "C" {
 		void (*AddTask)(struct _TUDPServer *This,const char *IP,int Port,void *pData,int Size,int Times,
 				unsigned int hWnd,CallBackUDP Func,void *CallBackData);
 		void (*KillTask)(struct _TUDPServer *This,const char *IP,int Port);
+        
+
+        void (*udpSocketRead)(SocketHandle *ABinding,SocketPacket *AData);
 	} TUDPServer;
 
 
-	void udpServerInit(int port);
+    extern uint32_t getDiffSysTick(uint64_t new,uint64_t old);
+    void udpServerInit(void (*udpSocketRead)(SocketHandle *ABinding,SocketPacket *AData),
+            int port);
+    extern TUDPServer *udp_server;
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */

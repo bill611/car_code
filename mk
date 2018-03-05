@@ -7,7 +7,7 @@ if [ "$#" == 0 ]; then
 STRIP = arm-linux-strip $(BIN_TARGET)
 LIB_DIR += $(MAKEROOT)/src/libs
 INC_DIR += $(MAKEROOT)/src/include
-XLINKER = -Xlinker "-(" -lts -lfreetype -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread  -Xlinker "-)"
+XLINKER = -Xlinker "-(" -lts -lfreetype -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread -lrt -Xlinker "-)"
 COMPILE = $(CC) -muclibc -o $@ $(OBJ) ${addprefix -L,${LIB_DIR}} ${XLINKER}
 CFLAGS = -muclibc -c -DWATCHDOG_DEBUG -O2' > evn.mk
 echo '
@@ -19,7 +19,7 @@ else
 STRIP=
 LIB_DIR += /usr/local/lib 
 LIB_DIR += /usr/lib/x86_64-linux-gnu
-XLINKER = -Xlinker "-(" -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread  -Xlinker "-)"
+XLINKER = -Xlinker "-(" -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread -lrt -Xlinker "-)"
 COMPILE = $(CC) -g -o $@ $(OBJ) ${addprefix -L,${LIB_DIR}} ${XLINKER}
 CFLAGS = -g -DPC -DWATCHDOG_DEBUG -c -O0' > evn.mk
 echo '

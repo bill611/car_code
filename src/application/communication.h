@@ -14,7 +14,6 @@
 #define TRYSENDTIMES 3
 
 //UDP每包最长的长度
-#define UDP_PACKET_MAX 1000		//UDP包最大长度
 
 #define UDPSERVER_PORT 7800		//远端UDP服务端口号
 #define UDPLOCAL_PORT  7800		//本机UDP服务端口号

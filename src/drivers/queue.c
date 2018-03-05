@@ -46,7 +46,9 @@
 #define QUEUE_LOCK()   pthread_mutex_lock(&This->priv->mutex)
 #define QUEUE_UNLOCK() pthread_mutex_unlock(&This->priv->mutex)
 
+#ifndef saveLog
 #define saveLog( ... ) printf( __VA_ARGS__ )
+#endif
 typedef struct _QueuePriv {
 	QueueType type;
 	unsigned int size;
