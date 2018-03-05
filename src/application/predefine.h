@@ -33,10 +33,6 @@
 #define DISP_STANDY_ONTIME      10 // 清空提示栏的时间 10s
 #define KEY_PRESS_TIME      10 // 按键超时时间
 
-#define MSG_KEYBOARD		 	(MSG_USER + 500)
-#define MSG_SERIALPORT		 	(MSG_USER + 501)
-
-
 /* ----------------------------------------------------------------*/
 /**
  * @brief 格式化创建static控件

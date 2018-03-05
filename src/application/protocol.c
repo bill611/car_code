@@ -18,6 +18,10 @@
  *                      include head files
  *----------------------------------------------------------------------------*/
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "externfunc.h"
+#include "UartDeal.h"
 #include "protocol.h"
 
 /* ---------------------------------------------------------------------------*
@@ -64,9 +68,9 @@ typedef struct{
 	u8 order;
 
 	/*
-	   第7座椅加热状态：0关闭，1开启
-	   第6座椅制冷状态：0关闭，1开启
-	   第5、4位按摩状态：00关闭，01腿部，10背部，11全身
+	   bit7座椅加热状态：0关闭，1开启
+	   bit6座椅制冷状态：0关闭，1开启
+	   bit5、4位按摩状态：00关闭，01腿部，10背部，11全身
 	   */
 	u8 leftSeat;
 	u8 rightSeat;
@@ -203,6 +207,9 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
+DevToCom *pro_com;
+DevToApp *pro_app;
+static int online_state;  //联机状态 0非联机 1联机
 // udp控制命令到串口命令的转换表
 const st_udp2com udp2com[] = {
 	// udp-tag, udp-data, com-device, com-opcode
@@ -440,3 +447,119 @@ const st_udp2com udp2com[] = {
 	{0x06B0,0x00,0x09,0x83},
 };
 
+static void proComSendOpt(int device,int opt)
+{
+	if (device == 0)
+		return;
+	uart->SndData[0] = device;	
+	uart->SndData[1] = opt;	
+	uart->ToSingleChip(uart,2);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proInitComThread 上电每100ms发送一次联机命令
+ *
+ * @param arg
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static void* proInitComThread(void *arg)
+{
+	while (online_state == 0) {
+		uart->SndData[0] = COM_HEAD;	
+		uart->SndData[1] = COM_ORDER_CONNECT;	
+		unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
+		uart->SndData[2] = check;	
+		uart->ToSingleChip(uart,3);
+		usleep(100000);
+	}
+	return NULL;
+}
+
+static int proGetOnline(void)
+{
+	return online_state ;
+}
+
+static int proGetRecivePort(void)
+{
+	return LOCAL_PORT;
+}
+
+static int proGetSendPort(void)
+{
+	return REMOTE_PORT;	
+}
+
+static void proCheckOnlineCmd(unsigned char *data,int leng)
+{
+	if (leng != 3)
+		return;
+	if (data[0] == COM_HEAD
+			&& data[1] == COM_ORDER_CONNECT) {
+		unsigned char check = (unsigned char)(COM_HEAD + COM_ORDER_CONNECT); 
+		if (data[2] == check)	 {
+			online_state = 1;
+			// 联机后发送获取状态命令
+			uart->SndData[0] = COM_HEAD;	
+			uart->SndData[1] = COM_ORDER_STATUS;	
+			unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
+			uart->SndData[2] = check;	
+			uart->ToSingleChip(uart,3);
+		}
+	}
+}
+
+static void proCheckStateCmd(unsigned char *data,int leng)
+{
+	if (leng != sizeof(st_status))
+		return;
+	st_status *status = (st_status *)data;
+	Public.leftSeat = status->leftSeat;
+	Public.rightSeat = status->rightSeat;
+	Public.mute = status->mute;
+	Public.light1 = status->light1;
+	Public.light2 = status->light2;
+	Public.light3 = status->light3;
+	Public.tvPower = status->tvPower;
+	Screen.foreachForm(MSG_UPDATESTATUS,0,0);
+}
+
+static void udpSocketRead(SocketHandle *ABinding,SocketPacket *AData)
+{
+	COMMUNICATION * head = (COMMUNICATION *)AData->Data;
+
+	// DBG_P("[%s]:IP:%s,Cmd=0x%04x\n",__FUNCTION__,ABinding->IP,head->Type);
+}
+
+void initProtocol(void)
+{
+	pro_com = (DevToCom *)calloc(1,sizeof(DevToCom));
+	pro_app = (DevToApp *)calloc(1,sizeof(DevToApp));
+	online_state = 0;
+	pro_com->sendOpt = proComSendOpt;
+	pro_com->getOnline = proGetOnline;
+	pro_com->checkOnlineCmd = proCheckOnlineCmd;
+	pro_com->checkStateCmd = proCheckStateCmd;
+
+	pro_app->getSendPort = proGetSendPort;
+	pro_app->getRecivePort = proGetRecivePort;
+	pro_app->udpSocketRead = udpSocketRead;
+
+
+#ifdef PC
+	return;
+#endif
+	pthread_t id;
+	pthread_attr_t  attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
+	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
+	int ret = pthread_create(&id,&attr,proInitComThread,NULL);
+	if(ret) {
+		printf("proInitComThread() pthread failt,Error code:%d\n",ret);
+	}
+	pthread_attr_destroy(&attr);
+}

@@ -25,6 +25,7 @@
 #include "cliprect.h"
 #include "internals.h"
 #include "ctrlclass.h"
+#include "commongdi.h"
 
 
 /* ----------------------------------------------------------------*
@@ -91,12 +92,11 @@ static void paint(HWND hWnd,HDC hdc)
     PCONTROL    pCtrl;
     pCtrl = Control (hWnd);
 	GetClientRect (hWnd, &rcClient);
-    // printf("[%s]t:%d,b:%d,l:%d,r:%d\n",__FUNCTION__,rcClient.top,rcClient.bottom,rcClient.left,rcClient.right);
 
 	if (pCtrl->dwAddData2) {
 		ButtonCtrlInfo* pInfo = (ButtonCtrlInfo*)(pCtrl->dwAddData2);
 
-		if (pInfo->select.mode) {
+		if (pInfo->select.mode == 1) {
 			if(pInfo->select.state == BUT_STATE_SELECT) 
 				FillBoxWithBitmap(hdc,
                         rcClient.left + 80,
@@ -111,15 +111,30 @@ static void paint(HWND hWnd,HDC hdc)
                         bmp_button_select.bmWidth,
                         bmp_button_select.bmHeight,
                         &bmp_button_unselect);
-		} else {
-            if(pInfo->state == BUT_NORMAL) {
+		} else if (pInfo->select.mode == 2){
+			if(pInfo->select.state == BUT_STATE_SELECT) 
+                FillBoxWithBitmap(hdc,
+                        rcClient.left,
+                        rcClient.top,
+                        pInfo->image_press->bmWidth,
+                        pInfo->image_press->bmHeight,
+                        pInfo->image_press);
+            else 
                 FillBoxWithBitmap(hdc,
                         rcClient.left,
                         rcClient.top,
                         pInfo->image_normal->bmWidth,
                         pInfo->image_normal->bmHeight,
                         pInfo->image_normal);
-            } else 
+		} else {
+            if(pInfo->state == BUT_NORMAL)
+                FillBoxWithBitmap(hdc,
+                        rcClient.left,
+                        rcClient.top,
+                        pInfo->image_normal->bmWidth,
+                        pInfo->image_normal->bmHeight,
+                        pInfo->image_normal);
+            else 
                 FillBoxWithBitmap(hdc,
                         rcClient.left,
                         rcClient.top,
@@ -184,15 +199,17 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
     case MSG_MYBUTTON_GET_SELECT_STATE:
 		return pInfo->select.state;
 
+    case MSG_MYBUTTON_SET_SELECT_STATE:
+		if ((int)wParam)
+			pInfo->select.state = BUT_STATE_SELECT;
+		else
+			pInfo->select.state = BUT_STATE_UNSELECT;
+		InvalidateRect (hwnd, NULL, TRUE);
+
     case MSG_MYBUTTON_SET_SELECT_MODE:
 		pInfo->select.mode = (int)wParam;
 		InvalidateRect (hwnd, NULL, TRUE);
 		return 0;
-
-    // case MSG_LBUTTONDBLCLK:
-        // if (dwStyle & SS_NOTIFY)
-            // NotifyParent (hwnd, pCtrl->id, STN_DBLCLK);
-        // break;
 
 	case MSG_ENABLE:
 		if (wParam && (dwStyle & WS_DISABLED)) {
@@ -207,20 +224,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 			return 0;
 		InvalidateRect (hwnd, NULL, TRUE);
 		return 0;
-	// case BM_GETCHECK:
-		// if(dwStyle & BS_CHECKBOX) {
-			// return pInfo->state==BUT_CLICK;
-		// }
-		// return 0;
-	// case BM_SETCHECK:
-		// if(dwStyle & BS_CHECKBOX) {
-			// if(wParam)
-				// pInfo->state = BUT_CLICK;
-			// else
-				// pInfo->state = BUT_NORMAL;
-			// InvalidateRect (hwnd, NULL, FALSE);
-		// }
-		// return 0;
+
     case MSG_LBUTTONDOWN:
         if (GetCapture () == hwnd)
             break;
@@ -293,24 +297,6 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		}
 		break;
 	}
-	// case MSG_KEYDOWN:
-		// switch(LOWORD(wParam))
-		// {
-		// case SCANCODE_CURSORUP:
-			// break;
-		// case SCANCODE_CURSORDOWN:
-			// break;
-		// default:
-			// break;
-		// }
-		// break;
-    // case MSG_FONTCHANGED:
-        // InvalidateRect (hwnd, NULL, FALSE);
-        // return 0;
-    // case MSG_SETTEXT:
-        // SetWindowCaption (hwnd, (char*)lParam);
-        // InvalidateRect (hwnd, NULL, FALSE);
-        // break;
 	default:
 		break;
     }

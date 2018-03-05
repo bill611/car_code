@@ -7,11 +7,6 @@
     #define BOOL int
 #endif
 
-#ifndef MSG_USER
-	#define MSG_USER 0x0800
-#endif
-#define MSG_UPDATEMSG (MSG_USER+823)
-
 
 enum {UPDATE_FAIL,UPDATE_SUCCESS,UPDATE_POSITION};
 //---------------------------------------------------------------------------

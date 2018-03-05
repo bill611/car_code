@@ -1,6 +1,7 @@
 #ifndef PublicH
 #define PublicH
 
+#include <stdint.h>
 #include "communication.h"
 #include "UDPServer.h"
 
@@ -26,6 +27,7 @@ typedef struct _SCREEN_FORM
 	BOOL (*Del)(HWND hWnd);										//删除窗口
 	HWND (*Find)(const char *Class);							//查找窗口
 	void (*ReturnMain)(void);										//返回主窗口
+	void (*foreachForm)(int iMsg, WPARAM wParam, LPARAM lParam); //遍历所有窗口发送消息
 } SCREEN_FORM,*PSCREEN_FORM;
 extern SCREEN_FORM Screen;
 
@@ -92,11 +94,39 @@ typedef struct _ConfigFile {
    char password[32];
 }ConfigFile;
 
-typedef struct _PUBLIC_DATA
+typedef struct _PublicData
 {
+	/*
+	   bit7座椅加热状态：0关闭，1开启
+	   bit6座椅制冷状态：0关闭，1开启
+	   bit5、4位按摩状态：00关闭，01腿部，10背部，11全身
+	   */
+	uint8_t leftSeat;
+	uint8_t rightSeat;
+
+	uint8_t mute; // 静音状态
+	/*
+bit7:1为ON,0为OFF;
+bit6-4: 1为亮1格,2为亮2格,3为亮3格，4为亮4格,5为亮5格；
+bit3:1为单色显示，0为循环显示；
+bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20秒，6为30秒。
+*/
+	uint8_t light1; // 0~20
+	uint8_t light2; // 0~20
+	uint8_t light3; // 0~20
+
+	/*
+	   高4位：8为电源关闭，9为电源打开  
+	   低4位：0电视上升中，1到顶，2下降中，3到底，5停止
+	   */
+	uint8_t tvPower;
+
+	uint8_t monitor; // 0为非监控状态，1为监控状态
+	uint8_t ucMedia; // 0:cd, 1:dvd, 2:cmmb, 3:satelliteTV
+
+
     int LCDLight;
 	int ScrSaversTimer;		// 屏幕保护计数
-
 	char MAC[20];			//本机MAC地址.
 	char cLocalIP[16];		// 本机IP地址
 	char cNetMask[16];		// 子网掩码
@@ -121,7 +151,5 @@ extern BOOL __mg_ime_minimize;
 extern  PUBLIC_DATA Public;
 extern unsigned int PacketID;
 extern ConfigFile g_config;
-
-#define MSG_REFRESHSTATUS (MSG_USER+100)
 
 #endif

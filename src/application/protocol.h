@@ -36,16 +36,24 @@ extern "C" {
 	// }StCtrl;
 
 	typedef struct _DevToCom {
-		void (*initCom)(void);  // 发送联机命令
 		void (*getStatus)(void);  // 发送获取状态命令
+		int (*getOnline)(void);  // 获取联机状态
+		void (*checkOnlineCmd)(unsigned char *data,int leng);  // 检查是否为联机命令
+		void (*checkStateCmd)(unsigned char *data,int leng);  // 检查是否为获取状态命令
 		void (*sendOpt)(int device,int opt);  // 发送操作命令
 	}DevToCom;
 
 	typedef struct _DevToApp {
+		int (*getRecivePort)(void);  // 获取接收端口
+		int (*getSendPort)(void);  // 获取接收端口
 		void (*getStatus)(void);  // 发送获取状态命令
 		void (*sendOpt)(int device,int opt);  // 发送操作命令
+		void (*udpSocketRead)(struct _SocketHandle *ABinding,struct _SocketPacket *AData); // 接收UDP协议
 	}DevToApp;
 
+	extern DevToCom *pro_com;
+	extern DevToApp *pro_app;
+	void initProtocol(void);
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */

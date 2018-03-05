@@ -100,7 +100,7 @@ static FormBase* form_base = NULL;
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief btManagePress 获取设备ID按钮
+ * @brief btManagePress 打开密码输入窗口
  *
  * @param hwnd
  * @param id
@@ -117,7 +117,7 @@ static void btManagePress(HWND hwnd, int id, int nc, DWORD add_data)
 
 /* ----------------------------------------------------------------*/
 /**
- * @brief btExitPress 保存按钮
+ * @brief btExitPress 退出按钮
  *
  * @param hwnd
  * @param id

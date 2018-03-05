@@ -167,6 +167,25 @@ static HWND screenFindForm(const char *Class)
 	}
 	return 0;
 }
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief screenForeachForm 遍历所有窗口，发送消息
+ *
+ * @param Class
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static void screenForeachForm(int iMsg, WPARAM wParam, LPARAM lParam)
+{
+	int FormCnt=0;
+	PFormClass form;
+	form = Screen.head;
+	while(form && FormCnt<Screen.Count) {
+		SendMessage(form->hWnd,iMsg,wParam,lParam);
+		form = form->next;
+	}
+}
 
 /* ---------------------------------------------------------------------------*/
 /**
@@ -221,6 +240,7 @@ void publicInit(void)
 	Screen.Del = screenDelForm;
 	Screen.Find = screenFindForm;
 	Screen.ReturnMain = screenReturnMainForm;
+	Screen.foreachForm = screenForeachForm;
 
 	Public.WatchDog_fd = -2;
 

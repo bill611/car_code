@@ -34,11 +34,6 @@ extern void formPresetLoadBmp(void);
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
-static void btMainPagePress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btVoulumReducePress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btVoulumAddPress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btMutePress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btClosePress(HWND hwnd, int id, int nc, DWORD add_data);
 static void formMainLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
@@ -102,11 +97,11 @@ static MgCtrlButton opt_11_controls[] = {
 };
 
 static MgCtrlButton opt_toolbar_controls[] = {
-	{IDC_MAIN_PAGE,		0xd1,"主页",9,714,93,63,btMainPagePress},
-	{IDC_VOLUEM_REDUCE,	0xb4,"声音-",102,714,92,63,btVoulumReducePress},
-	{IDC_VOLUEM_ADD,	0xc4,"声音+",285,714,91,63,btVoulumAddPress},
-	{IDC_MUTE,			0xb0,"静音",194,714,91,63,btMutePress},
-	{IDC_CLOSE,			0,"关闭",376,714,94,63,btClosePress},
+	{IDC_MAIN_PAGE,		0xd1,"主页",9,714,93,63},
+	{IDC_VOLUEM_REDUCE,	0xb4,"声音-",102,714,92,63},
+	{IDC_VOLUEM_ADD,	0xc4,"声音+",285,714,91,63},
+	{IDC_MUTE,			0xb0,"静音",194,714,91,63},
+	{IDC_CLOSE,			0,"关闭",376,714,94,63},
 };
 
 static InitBmpFunc loadBmps[] = {
@@ -119,7 +114,6 @@ static InitBmpFunc loadBmps[] = {
 static HWND hwnd_main = HWND_INVALID;
 static FormMainTimers *timers_tbl;
 static int (*mainAppProc)(HWND hWnd, int message, WPARAM wParam, LPARAM lParam);
-static char *(*listboxHandle)(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*/
 /**
@@ -171,28 +165,88 @@ static int formMainTimerProc1s(void)
 	return 0;
 }
 
-/* ---------------------------------------------------------------------------*/
-/**
- * @brief formMainCreateForm 创建窗口
- *
- * @param type
- * @param para
- */
-/* ---------------------------------------------------------------------------*/
-static void formMainCreateForm(FormType type,void *para)
-{
-	switch (type)
-	{
-		default:
-			break;
-	}
-}
-
-
-static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+static void opt11ControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	saveLog("id:%d\n", id);
+	pro_com->sendOpt(opt_11_controls[id].device_id,
+			opt_11_controls[id].op_code);
     switch (id) {
+		case	IDC_CHAIR_ELE:
+			{
+
+			} break;
+		case	IDC_CHAIR_SECRETARY:
+			{
+
+			} break;
+		case	IDC_CHAIR_ROT:
+			{
+
+			} break;
+		case	IDC_CURTAIN:
+			{
+
+			} break;
+		case	IDC_SCREEN_GLASS:
+			{
+
+			} break;
+		case	IDC_SCREEN_TV:
+			{
+
+			} break;
+		case	IDC_CD:
+			{
+
+			} break;
+		case	IDC_DVD:
+			{
+
+			} break;
+		case	IDC_MONITOR:
+			{
+
+			} break;
+		case	IDC_DOOR:
+			{
+
+			} break;
+		case	IDC_BED_ELE:
+			{
+
+			} break;
+		case	IDC_SATV:
+			{
+
+			} break;
+		case	IDC_SKYLIGHT:
+			{
+
+			} break;
+		case	IDC_LIGHT:
+			{
+
+			} break;
+		case	IDC_PROJECTION:
+			{
+
+			} break;
+		case	IDC_TABLE:
+			{
+
+			} break;
+		case	IDC_A1:
+			{
+
+			} break;
+		case	IDC_A2:
+			{
+
+			} break;
+		case	IDC_WALN:
+			{
+
+			} break;
         case IDC_SYSTEM:
             {
                 createFormVersion(GetParent(hwnd));
@@ -203,6 +257,25 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
     }
 }
 
+static void optToolbarsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	saveLog("id:%d\n", id);
+	pro_com->sendOpt(opt_toolbar_controls[id-IDC_MAIN_PAGE].device_id,
+			opt_11_controls[id-IDC_MAIN_PAGE].op_code);
+    switch (id) {
+		case	IDC_MAIN_PAGE:
+			{
+				SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
+			} break;
+		case	IDC_CLOSE:
+			{
+
+			} break;
+
+        default:
+            break;
+    }
+}
 
 static void showNormal(HWND hWnd)
 {
@@ -233,6 +306,18 @@ static void showNormal(HWND hWnd)
 
 /* ---------------------------------------------------------------------------*/
 /**
+ * @brief updateUiMute 更新静音状态
+ */
+/* ---------------------------------------------------------------------------*/
+static void updateUiMute(HWND hWnd)
+{
+	// 更新静音状态
+	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
+			   MSG_MYBUTTON_SET_SELECT_STATE, Public.mute, 0);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
  * @brief formMainCreateControl 创建控件
  *
  * @param hWnd
@@ -252,7 +337,7 @@ static void formMainCreateControl(HWND hWnd)
 		opt_11_controls[i].device_id = 0x11;
 		opt_11_controls[i].w = 118;
 		opt_11_controls[i].h = 122;
-		opt_11_controls[i].notif_proc = optControlsNotify;
+		opt_11_controls[i].notif_proc = opt11ControlsNotify;
         createSkinButton(hWnd,
                 opt_11_controls[i].idc,
                 opt_11_controls[i].x,
@@ -267,6 +352,7 @@ static void formMainCreateControl(HWND hWnd)
 	}
 	for (i=0; i<NELEMENTS(opt_toolbar_controls); i++) {
 		opt_toolbar_controls[i].device_id = 0x11;
+		opt_11_controls[i].notif_proc = optToolbarsNotify;
         createSkinButton(hWnd,
                 opt_toolbar_controls[i].idc,
                 opt_toolbar_controls[i].x,
@@ -279,6 +365,8 @@ static void formMainCreateControl(HWND hWnd)
                 0,
                 opt_toolbar_controls[i].notif_proc);
 	}
+	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
+		   	MSG_MYBUTTON_SET_SELECT_MODE, 2, 0);
 }
 
 static void bmpsMainButtonLoad(MgCtrlButton *controls,int num)
@@ -322,32 +410,10 @@ static void fromLoadBmps(void)
 {
     int i;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
-        loadBmps[i](); 
-    } 
+        loadBmps[i]();
+    }
 }
 
-static void btMainPagePress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-    SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
-}
-
-static void btVoulumReducePress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-
-}
-
-static void btVoulumAddPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-    
-}
-static void btMutePress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-    
-}
-static void btClosePress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-    
-}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainProc 窗口回调函数
@@ -375,10 +441,9 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				Screen.Add(hWnd,"TFrmMain");
 				hwnd_main = Screen.hMainWnd = hWnd;
 				// 装载所有图片
-				fromLoadBmps();           
+				fromLoadBmps();
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
-
 				formMainTimerStart(IDC_TIMER_1S);
 				screensaverStart(LCD_ON);
 			} break;
@@ -420,6 +485,11 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 		case MSG_LBUTTONDOWN:
 			{
 				screensaverStart(LCD_ON);
+			} break;
+
+		case MSG_UPDATESTATUS:
+			{
+				updateUiMute(hWnd);
 			} break;
 
 		case MSG_DESTROY:
@@ -477,12 +547,9 @@ static int formMainLoop(void)
 /* ---------------------------------------------------------------------------*/
 FormMain * formMainCreate(
 		int (*AppProc)(HWND,int,WPARAM,LPARAM),
-		void (*keyboardHandle)(unsigned int,int),
-		char * (*listbHandle)(HWND , int , int , DWORD ),
 		FormMainTimers *timers_table)
 {
     MAINWINCREATE CreateInfo;
-	listboxHandle = listbHandle;
 	mainAppProc = AppProc;
 	timers_tbl = timers_table;
 	RegisterMyButtonControl();
@@ -490,7 +557,7 @@ FormMain * formMainCreate(
     CreateInfo.dwStyle = WS_NONE;
 	CreateInfo.dwExStyle = WS_EX_AUTOSECONDARYDC;
 	// CreateInfo.dwExStyle = WS_EX_NONE;
-    CreateInfo.spCaption = "TC3000";
+    CreateInfo.spCaption = "CarControl";
     CreateInfo.hMenu = 0;
     CreateInfo.hCursor = GetSystemCursor(IDC_ARROW);
     CreateInfo.hIcon = 0;
@@ -516,7 +583,6 @@ FormMain * formMainCreate(
 	this->timerStop = formMainTimerStop;
 	this->timerGetState = formMainTimerGetState;
 	this->timerProc1s = formMainTimerProc1s;
-	this->createForm = formMainCreateForm;
 
 	return this;
 }

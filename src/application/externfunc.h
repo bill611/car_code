@@ -24,13 +24,13 @@
 #include "StateMachine.h"
                             
 // include for gui
-#include "TClassStatus.h"
 #include "commongdi.h"
 #include "MyButton.h"
 #include "MyDialog.h"
 #include "FormMain.h"
 
 // include for app
+#include "debug.h"
 #include "communication.h"
 #include "predefine.h"
 #include "main.h"

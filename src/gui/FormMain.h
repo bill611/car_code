@@ -21,20 +21,6 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-#define MSG_MAIN_TIMER_START	    (MSG_USER + 1)
-#define MSG_MAIN_TIMER_STOP	        (MSG_USER + 2)
-#define MSG_MAIN_SHOW_NORMAL	    (MSG_USER + 3)
-
-#define FORM_MAIN_KEY_DELETE 	KEYBOARD_FUNC1
-#define FORM_MAIN_KEY_CALL  	KEYBOARD_FUNC2
-#define FORM_MAIN_KEY_SWITCH 	KEYBOARD_FUNC3
-
-	typedef enum _FormType {
-		FORM_UPDATE,
-		FORM_UNLOCK,
-		FORM_SETTING,
-	} FormType;
-
 	enum {
 		IDC_TIMER_1S ,	// 1s定时器
 		IDC_TIMER_NUM,
@@ -54,18 +40,12 @@ extern "C" {
 		void (*timerStart)(int idc_timer);
 		void (*timerStop)(int idc_timer);
 		int (*timerGetState)(int idc_timer);
-		unsigned int (*getTextNumber)(char *text_num);
 
-
-
-		void (*createForm)(FormType type,void *para);
 	} FormMain;
 
 
 	FormMain * formMainCreate(
 			int (*AppProc)(HWND,int,WPARAM,LPARAM),
-			void (*keyboardHandle)(unsigned int,int),
-			char * (*listboxNotify)(HWND , int , int , DWORD ),
 			FormMainTimers *timers_table);
     extern BITMAP bmp_bkg1; // 背景1
     extern BITMAP bmp_bkg2; // 背景2

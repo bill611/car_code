@@ -25,7 +25,7 @@ enum {
 };
 
 struct ButtonSelect {
-	int mode; // 0正常模式 1带勾选模式
+	int mode; // 0正常模式 1带勾选模式 2check模式
 	int state;
 };
 
@@ -37,9 +37,6 @@ typedef struct {
 	struct ButtonSelect select; //设置模式时是否勾选
 	int state;		//BUTTON状态
 }ButtonCtrlInfo;
-
-#define MSG_MYBUTTON_GET_SELECT_STATE MSG_USER+1
-#define MSG_MYBUTTON_SET_SELECT_MODE MSG_USER+2
 
 BOOL RegisterMyButtonControl (void);
 void MyButtonControlCleanup (void);

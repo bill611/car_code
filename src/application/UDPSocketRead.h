@@ -27,7 +27,6 @@ extern "C" {
 				struct _SocketPacket *AData);	//呼叫对讲协议处理
 	}UdpCmdRead;
 
-	void udpSocketRead(struct _SocketHandle *ABinding,struct _SocketPacket *AData);
 
 #ifdef __cplusplus
 }

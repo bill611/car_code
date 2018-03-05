@@ -7,10 +7,11 @@
 #endif
 #include "TCPClient.h"
 #include "remotefile.h"
+#include "commongdi.h"
 
 #ifndef WIN32
 #define MyPostMessage SendNotifyMessage
-extern int SendNotifyMessage(unsigned int hWnd,unsigned int Msg,unsigned int wParam,unsigned int lParam);
+// extern int SendNotifyMessage(unsigned int hWnd,unsigned int Msg,unsigned int wParam,unsigned int lParam);
 #else
 extern int MyPostMessage(unsigned int hWnd,unsigned int Msg,unsigned int wParam,unsigned int lParam);
 #endif

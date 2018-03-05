@@ -137,8 +137,12 @@ static int PortOpen(UartServer *This,int com,int baudrate)
 	This->ComNum = com;
 	if(baudrate>=1200)
 		This->comparam.baudrate = baudrate;
+#ifndef PC
 	This->hCom = open(ptty,O_RDWR|O_NOCTTY|O_NONBLOCK|O_NDELAY);
 	This->Set(This);
+#else
+	This->hCom = 1;
+#endif
 	if(This->hWnd) {
 		uartReceiveCreate(This);
 		uartSendCreate(This);
@@ -155,11 +159,11 @@ static void printfbuf(void *pbuf,int size)
 {
 	int i;
 	unsigned char *pData = (unsigned char *)pbuf;
-	printf("SendData  ");
+	saveLog("SendData[%d]  ",size);
 	for(i=0;i<size;i++) {
-		printf("%02x ",pData[i]);
+		saveLog("%02x ",pData[i]);
 	}
-	printf("\n");
+	saveLog("\n");
 }
 #else
 #define printfbuf(pbuf,size)
@@ -170,6 +174,7 @@ static int uartSend(UartServer *This,void *Buf,int datalen)
 	MsgType msg;
 	msg.message_type = 1;
 	msg.cmd.leng = datalen;
+	memset(msg.cmd.send_data,0,sizeof(msg.cmd.send_data));
 	memcpy(msg.cmd.send_data,Buf,msg.cmd.leng);
 	msgsnd(This->msg_id, &msg, sizeof (Command), 0);
 	// printfbuf(msg.cmd.send_data,msg.cmd.leng);
@@ -283,7 +288,7 @@ static void * uartSendThead(UartServer *This)
 	while(!This->Terminated){
 		int ret = msgrcv(This->msg_id, &msg, sizeof(Command), 0, 0);
 		PortSend(This,msg.cmd.send_data,msg.cmd.leng);
-		usleep(500000);
+		usleep(100000);
 	}
 	pthread_exit(NULL);
 }
@@ -298,7 +303,6 @@ static void uartReceiveCreate(PUartServer This)
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&id,&attr,(void *)uartReceiveThead,This);
 	if(ret) {
-		//printf(__FUNCTION__" pthread failt,Error code:%d\n",ret);
 		printf("uartReceiveCreate() pthread failt,Error code:%d\n",ret);
 	}
 	pthread_attr_destroy(&attr);
@@ -314,7 +318,6 @@ static void uartSendCreate(PUartServer This)
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
 	ret = pthread_create(&id,&attr,(void *)uartSendThead,This);
 	if(ret) {
-		//printf(__FUNCTION__" pthread failt,Error code:%d\n",ret);
 		printf("uartReceiveCreate() pthread failt,Error code:%d\n",ret);
 	}
 	pthread_attr_destroy(&attr);

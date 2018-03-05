@@ -92,27 +92,3 @@ static UdpCmdRead udp_cmd_read_handle[] = {
  * @param ABinding
  * @param AData
  */
-void udpSocketRead(SocketHandle *ABinding,SocketPacket *AData)
-{
-	COMMUNICATION * head = (COMMUNICATION *)AData->Data;
-
-	if(AData->Size < sizeof(COMMUNICATION))
-		return;
-
-	if(AData->Size != head->Size) {
-		return;
-	}
-
-	// if(strcmp(Public.pCenterMsg->IP, ABinding->IP) == 0) {
-		// DBG_P("TP_ONLINE:%s\n",ABinding->IP);
-		// Public.CenterOnlineTime = 30;
-	// }
-	unsigned int i;
-	for(i=0; i<NELEMENTS(udp_cmd_read_handle); i++) {
-		if (udp_cmd_read_handle[i].cmd == head->Type) {
-			udp_cmd_read_handle[i].udpCmdProc(ABinding,AData);
-			return;
-		}
-	} 
-	DBG_P("[%s]:IP:%s,Cmd=0x%04x\n",__FUNCTION__,ABinding->IP,head->Type);
-}

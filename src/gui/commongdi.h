@@ -29,6 +29,19 @@ extern "C" {
 
 #include <stdint.h>
 
+	enum {
+		MSG_MYBUTTON_GET_SELECT_STATE = MSG_USER+1,
+		MSG_MYBUTTON_SET_SELECT_MODE,
+		MSG_MYBUTTON_SET_SELECT_STATE,
+		MSG_UPDATEMSG,
+		MSG_SERIALPORT,
+		MSG_UPDATESTATUS,
+		MSG_MAIN_TIMER_START,
+		MSG_MAIN_TIMER_STOP,
+		MSG_MAIN_SHOW_NORMAL,
+		MSG_SOCKETREAD,
+		MSG_SENDMSG,
+	};
     typedef struct _BmpLocation {
         BITMAP 	*bmp;
         char 	*location;

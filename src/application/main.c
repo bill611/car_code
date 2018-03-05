@@ -28,6 +28,7 @@
 #include <signal.h>
 
 #include "externfunc.h"
+#include "protocol.h"
 
 /* ---------------------------------------------------------------------------*
  *                  extern variables declare
@@ -142,7 +143,7 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				// 初始化公共参数
 				publicInit();
 				// 创建UDP监控
-				UdpServer = TUDPServer_Create(hWnd,UDPLOCAL_PORT);
+				UdpServer = TUDPServer_Create(hWnd,pro_app->getRecivePort());
 				if(UdpServer == NULL) {
 					printf("Create UpdServer fail\n");
 				}
@@ -150,6 +151,7 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				// 串口对象
 				uart = uartDealCreate(hWnd);
 
+				initProtocol();
 				// GPIO操作对象
 				Mygpio = myGpioPrivCreate(gpiotbl);
 				Mygpio->Init(Mygpio);
@@ -163,7 +165,7 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 
 		case MSG_SOCKETREAD:
 			{
-				udpSocketRead((SocketHandle*)wParam,(SocketPacket*)lParam);
+				pro_app->udpSocketRead((SocketHandle*)wParam,(SocketPacket*)lParam);
 				free((SocketHandle*)wParam);
 				free((SocketPacket*)lParam);
 			} return 0;
@@ -191,8 +193,6 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 int MiniGUIMain(int argc, const char* argv[])
 {
 	form_main = formMainCreate(mainAppProc,
-			NULL,
-			NULL,
 			timers_table);
 
 	// 检查数据库完整性
