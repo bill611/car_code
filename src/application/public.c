@@ -52,7 +52,6 @@ PUBLIC_DATA Public;
 SCREEN_FORM Screen;
 TUDPClient *udpclient;
 
-unsigned int PacketID;
 ConfigFile g_config;
 
 static EtcValueInt etc_value_int[]={
@@ -230,11 +229,7 @@ static void getConfigChar(char *section,char *key,char *value)
 void publicInit(void)
 {
     int hFile;
-	//获取时间作为起始包发送编号
-	PacketID = (unsigned)time(NULL);
-
-
-
+	
 	memset(&Screen,0,sizeof(SCREEN_FORM));
 	Screen.Add = screenAddForm;
 	Screen.Del = screenDelForm;

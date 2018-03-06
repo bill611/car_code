@@ -34,10 +34,13 @@ extern uint32_t getDiffSysTick(uint64_t new,uint64_t old);
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
+static void proUdpSendStatus(void);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
  *----------------------------------------------------------------------------*/
+#define BIT(x,bit) ((x & (1 << bit)) >> bit)
+#define BIT2(x,bit) ((x & (3 << bit)) >> bit)
 //------------协议A,串口协议
 #define COM_HEAD			0xFE  // 命令头
 #define COM_ORDER_CONNECT	0xFF  // 联机和联机应答命令
@@ -223,6 +226,7 @@ DevToApp *pro_app;
 static int online_state;  //联机状态 0非联机 1联机
 static int packet_pos;
 static PacketsID packets_id[10];
+static u16 packet_id = 0;
 
 // udp控制命令到串口命令的转换表
 const st_udp2com udp2com[] = {
@@ -461,6 +465,14 @@ const st_udp2com udp2com[] = {
 	{0x06B0,0x00,0x09,0x83},
 };
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proComSendOpt 发送操作命令
+ *
+ * @param device 操作码
+ * @param opt 命令
+ */
+/* ---------------------------------------------------------------------------*/
 static void proComSendOpt(int device,int opt)
 {
 	if (device == 0)
@@ -472,14 +484,27 @@ static void proComSendOpt(int device,int opt)
 
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief proInitComThread 上电每100ms发送一次联机命令
+ * @brief proComSendGetStatus 发送获取状态命令
+ */
+/* ---------------------------------------------------------------------------*/
+static void proComSendGetStatus(void)
+{
+	uart->SndData[0] = COM_HEAD;	
+	uart->SndData[1] = COM_ORDER_STATUS;	
+	unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
+	uart->SndData[2] = check;	
+	uart->ToSingleChip(uart,3);
+}
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proComInitThread 上电每100ms发送一次联机命令
  *
  * @param arg
  *
  * @returns 
  */
 /* ---------------------------------------------------------------------------*/
-static void* proInitComThread(void *arg)
+static void* proComInitThread(void *arg)
 {
 	while (online_state == 0) {
 		uart->SndData[0] = COM_HEAD;	
@@ -492,41 +517,75 @@ static void* proInitComThread(void *arg)
 	return NULL;
 }
 
-static int proGetOnline(void)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proUdpGetOnline 获取在线状态
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static int proUdpGetOnline(void)
 {
 	return online_state ;
 }
 
-static int proGetRecivePort(void)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proUdpGetRecivePort 获取接收端口
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static int proUdpGetRecivePort(void)
 {
 	return LOCAL_PORT;
 }
 
-static int proGetSendPort(void)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proUdpGetSendPort 获取发送端口
+ *
+ * @returns 
+ */
+/* ---------------------------------------------------------------------------*/
+static int proUdpGetSendPort(void)
 {
 	return REMOTE_PORT;	
 }
 
-static void proCheckOnlineCmd(unsigned char *data,int leng)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proComCheckOnlineCmd 收到串口数据后，检测是否为联机命令
+ *
+ * @param data
+ * @param leng
+ */
+/* ---------------------------------------------------------------------------*/
+static void proComCheckOnlineCmd(unsigned char *data,int leng)
 {
 	if (leng != 3)
 		return;
-	if (data[0] == COM_HEAD
-			&& data[1] == COM_ORDER_CONNECT) {
+	if (data[0] == COM_HEAD && data[1] == COM_ORDER_CONNECT) {
 		unsigned char check = (unsigned char)(COM_HEAD + COM_ORDER_CONNECT); 
 		if (data[2] == check)	 {
 			online_state = 1;
+			// 联机后发送UDP数据包
+			proUdpSendStatus();
 			// 联机后发送获取状态命令
-			uart->SndData[0] = COM_HEAD;	
-			uart->SndData[1] = COM_ORDER_STATUS;	
-			unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
-			uart->SndData[2] = check;	
-			uart->ToSingleChip(uart,3);
+			proComSendGetStatus();
 		}
 	}
 }
 
-static void proCheckStateCmd(unsigned char *data,int leng)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proComCheckStateCmd 收到串口数据后，检测是否为获取状态命令
+ *
+ * @param data
+ * @param leng
+ */
+/* ---------------------------------------------------------------------------*/
+static void proComCheckStateCmd(unsigned char *data,int leng)
 {
 	if (leng != sizeof(st_status))
 		return;
@@ -538,7 +597,9 @@ static void proCheckStateCmd(unsigned char *data,int leng)
 	Public.light2 = status->light2;
 	Public.light3 = status->light3;
 	Public.tvPower = status->tvPower;
+	Public.monitor = status->monitor;
 	Screen.foreachForm(MSG_UPDATESTATUS,0,0);
+	proUdpSendStatus();
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -556,10 +617,15 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 	int i;
 	unsigned int dwTick;
 	//回复数据包
-    printf("[%s]%s\n", __FUNCTION__,ABinding->IP);
+	// for (i=0; i<AData->Size; i++) {
+		// printf("[%d]%x\n", i,AData->Data[i]);
+	// }
 	if(AData->Size != sizeof(st_set))
         return 0;
-    st_set *data = (st_set *)AData->Data[0];
+    st_set *data = (st_set *)AData->Data;
+	if (data->flagStart != NET_HEAD
+			|| data->flagEnd != NET_END)
+		return 0;
     //判断包是否重发
     dwTick = GetTickCount();
     for(i=0;i<10;i++) {
@@ -574,18 +640,81 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 	//保存ID
     sprintf(packets_id[packet_pos].IP,"%s",ABinding->IP);
 	packets_id[packet_pos].id = *(int*)AData->Data;
-	packets_id[packet_pos].dwTick = dwTick;
-	packet_pos = (++packet_pos) % 10;
+	packets_id[packet_pos++].dwTick = dwTick;
+	packet_pos %= 10;
     return 1;    
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief proUdpSendStatus 发送UDP到APP
+ */
+/* ---------------------------------------------------------------------------*/
+static void proUdpSendStatus(void)
+{
+	st_var data;
+	data.flagStart = NET_HEAD;
+	data.id = packet_id++;
+	data.bConnect = online_state;
+	data.bLeftSeatKey = BIT(Public.leftSeat,6);
+	data.ucLeftSeatHeating = BIT(Public.leftSeat,7);
+	data.ucLeftSeatMassage = BIT2(Public.leftSeat,4);
+
+	data.bRightSeatKey = BIT(Public.rightSeat,6);
+	data.ucRightSeatHeating = BIT(Public.rightSeat,7);
+	data.ucRightSeatMassage = BIT2(Public.rightSeat,4);
+
+	data.ucVolumeCD = Public.mute;
+
+	data.ucLight1 = Public.light1;
+	data.ucLight2 = Public.light2;
+	data.ucLight3 = Public.light3;
+
+	data.ucPowerTV = Public.tvPower;
+
+	data.ucMonitor = Public.monitor;
+	data.flagEnd = NET_END;
+	udp_server->AddTask(udp_server,"255.255.255.255",REMOTE_PORT,
+			&data,sizeof(data),3,0,NULL,NULL);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief checOptCode 检查匹配码
+ *
+ * @param tag
+ * @param data
+ * @param device
+ * @param code
+ */
+/* ---------------------------------------------------------------------------*/
+static int checOptCode(u16 tag,u8 data, u8 *device, u8 *code)
+{
+	int i;	
+	for (i=0; i<NELEMENTS(udp2com); i++) {
+		if (tag == udp2com[i].udpTag && data == udp2com[i].udpData) {
+			*device = udp2com[i].comDevice;
+			*code = udp2com[i].comOpCode;	
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static void udpSocketRead(SocketHandle *ABinding,SocketPacket *AData)
 {
     if (proUdpFilter(ABinding,AData) == 0)
         return;
-	// COMMUNICATION * head = (COMMUNICATION *)AData->Data;
-
-	// DBG_P("[%s]:IP:%s,Cmd=0x%04x\n",__FUNCTION__,ABinding->IP,head->Type);
+    st_set *data = (st_set *)AData->Data;
+	if (data->order == 0) {
+		proComSendGetStatus();
+	} else if (data->order == 1) {
+		u8 device = 0,code = 0;
+		int ret = checOptCode(data->tag,data->data,&device,&code);
+		if (ret == 0)
+			return;
+		proComSendOpt(device,code);
+	}
 }
 
 void initProtocol(void)
@@ -594,12 +723,12 @@ void initProtocol(void)
 	pro_app = (DevToApp *)calloc(1,sizeof(DevToApp));
 	online_state = 0;
 	pro_com->sendOpt = proComSendOpt;
-	pro_com->getOnline = proGetOnline;
-	pro_com->checkOnlineCmd = proCheckOnlineCmd;
-	pro_com->checkStateCmd = proCheckStateCmd;
+	pro_com->getOnline = proUdpGetOnline;
+	pro_com->checkOnlineCmd = proComCheckOnlineCmd;
+	pro_com->checkStateCmd = proComCheckStateCmd;
 
-	pro_app->getSendPort = proGetSendPort;
-	pro_app->getRecivePort = proGetRecivePort;
+	pro_app->getSendPort = proUdpGetSendPort;
+	pro_app->getRecivePort = proUdpGetRecivePort;
 	pro_app->udpSocketRead = udpSocketRead;
 
 
@@ -611,9 +740,9 @@ void initProtocol(void)
 	pthread_attr_init(&attr);
 	pthread_attr_setscope(&attr,PTHREAD_SCOPE_SYSTEM);
 	pthread_attr_setdetachstate(&attr,PTHREAD_CREATE_DETACHED);
-	int ret = pthread_create(&id,&attr,proInitComThread,NULL);
+	int ret = pthread_create(&id,&attr,proComInitThread,NULL);
 	if(ret) {
-		printf("proInitComThread() pthread failt,Error code:%d\n",ret);
+		printf("proComInitThread() pthread failt,Error code:%d\n",ret);
 	}
 	pthread_attr_destroy(&attr);
 }

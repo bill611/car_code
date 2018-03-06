@@ -205,6 +205,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		else
 			pInfo->select.state = BUT_STATE_UNSELECT;
 		InvalidateRect (hwnd, NULL, TRUE);
+		return 0;
 
     case MSG_MYBUTTON_SET_SELECT_MODE:
 		pInfo->select.mode = (int)wParam;
@@ -255,14 +256,13 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		if(!(dwStyle & BS_CHECKBOX)) {
 			pInfo->state = BUT_NORMAL;
 #ifdef PC
-			if (pInfo->select.mode == 0)
-				NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
-			else {
+			if (pInfo->select.mode){
 				if (pInfo->select.state == BUT_STATE_SELECT) 
 					pInfo->select.state = BUT_STATE_UNSELECT;
 				else
 					pInfo->select.state = BUT_STATE_SELECT;
 			}
+			NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
 #endif
 			InvalidateRect (hwnd, NULL, FALSE);
 		}
@@ -282,14 +282,13 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
         {
 			// playButtonSound();
             printf("mode:%d,id:%d\n",pInfo->select.mode,pCtrl->id );
-			if (pInfo->select.mode == 0)
-				NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
-			else {
+			if (pInfo->select.mode){
 				if (pInfo->select.state == BUT_STATE_SELECT) 
 					pInfo->select.state = BUT_STATE_UNSELECT;
 				else
 					pInfo->select.state = BUT_STATE_SELECT;
 			}
+			NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
 			InvalidateRect (hwnd, NULL, TRUE);
 		} else if(dwStyle & BS_CHECKBOX) {
 			pInfo->state = BUT_NORMAL;
@@ -333,16 +332,16 @@ HWND createSkinButton(HWND hWnd,int id ,
 	pInfo.state = BUT_NORMAL;
 	pInfo.select.state = display;
 	if (bmp_button_select.bmBits == NULL) {
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/选择功能/01(x105，y175).JPG"))
-			printf ("LoadBitmap(%s)fail.\n","01(x105，y175).JPG");
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/选择功能/01-2(x105，y175).JPG"))
+		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/选择功能/01-2(x105，y175).JPG"))
 			printf ("LoadBitmap(%s)fail.\n","01-2(x105，y175).JPG");
+		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/选择功能/01(x105，y175).JPG"))
+			printf ("LoadBitmap(%s)fail.\n","01(x105，y175).JPG");
 	}
 	if (pInfo.select.state == BUT_STATE_SELECT)
-		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_CHILD,WS_EX_TRANSPARENT,
+		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_VISIBLE|WS_CHILD,WS_EX_TRANSPARENT,
 				id,x,y, w, h, hWnd,(DWORD)&pInfo);
 	else
-		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_VISIBLE|WS_CHILD,WS_EX_TRANSPARENT,
+		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_CHILD,WS_EX_TRANSPARENT,
 				id,x,y, w, h, hWnd,(DWORD)&pInfo);
 	if(notif_proc) {
 		SetNotificationCallback (hCtrl, notif_proc);

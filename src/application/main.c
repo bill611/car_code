@@ -145,7 +145,7 @@ static int mainAppProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				initProtocol();
 				// 创建UDP监控
                 udpServerInit(pro_app->udpSocketRead,
-                        7800);//pro_app->getRecivePort());
+                        pro_app->getRecivePort());
 				// 串口对象
 				uart = uartDealCreate(hWnd);
 

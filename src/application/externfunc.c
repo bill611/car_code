@@ -166,28 +166,6 @@ error:
 #endif
 
 //---------------------------------------------------------------------------
-int PingServer(const char *IP)
-{
-	int Success;
-	ASKPACKET ask;
-	COMMUNICATION * pComm = (COMMUNICATION *)malloc(sizeof(COMMUNICATION));
-	pComm->ID = PacketID++;
-	pComm->Size = sizeof(COMMUNICATION);
-	pComm->Type = TP_PING;
-	udpclient->Clear(udpclient);
-	udpclient->SendBuffer(udpclient,IP,SQL_UDP_PORT,pComm,pComm->Size);
-	Success = udpclient->RecvBuffer(udpclient,&ask,sizeof(ASKPACKET),1000,NULL,0);
-	// printf("ip:%s,%d,pComm->ID:%d,id:%d\n",IP,Success,pComm->ID,ask.ID );
-	if(Success==sizeof(ASKPACKET) && ask.ID==pComm->ID) {
-		free(pComm);
-		return TRUE;
-	}
-	else {
-		free(pComm);
-		return FALSE;
-	}
-}
-//---------------------------------------------------------------------------
 // 取当前日期时间
 //---------------------------------------------------------------------------
 char * GetDate(char *cBuf,int Size)

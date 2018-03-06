@@ -20,8 +20,8 @@ enum {
     BUT_DISABLED, // 不启用
 };
 enum {
-    BUT_STATE_SELECT, // 选择状态
 	BUT_STATE_UNSELECT, // 非选择状态
+    BUT_STATE_SELECT, // 选择状态
 };
 
 struct ButtonSelect {

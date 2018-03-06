@@ -27,9 +27,13 @@
  *                  extern variables declare
  *----------------------------------------------------------------------------*/
 extern int createFormVersion(HWND hMainWnd);
+extern int createFormCD(HWND hMainWnd);
+extern int createFormElectricChair(HWND hMainWnd);
 extern void formVersionLoadBmp(void);
 extern void formPasswordLoadBmp(void);
 extern void formPresetLoadBmp(void);
+extern void formCDLoadBmp(void);
+extern void formElectricChairLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -50,7 +54,7 @@ typedef void (*InitBmpFunc)(void) ;
 #define BMP_LOCAL_PATH "res/image/主页/"
 
 enum {
-    IDC_MAIN_PAGE = IDC_MAIN_NUM,  // 主页
+    IDC_MAIN_PAGE = 100,  // 主页
     IDC_VOLUEM_REDUCE, // 音量减少
     IDC_VOLUEM_ADD, // 音量增加
     IDC_MUTE,  // 静音
@@ -68,12 +72,8 @@ static BmpLocation bmp_load[] = {
 };
 
 
-/* ---------------------------------------------------------------------------*/
-/**
- * @brief 设备编号为0x11的控件
- */
-/* ---------------------------------------------------------------------------*/
-static MgCtrlButton opt_11_controls[] = {
+// device 0x11
+static MgCtrlButton opt_controls[] = {
 	{IDC_CHAIR_ELE,			0x84,"电动座椅",25,96}, //电动座椅
 	{IDC_CHAIR_SECRETARY,	0xab,"秘书椅",139,96}, //秘书椅
 	{IDC_CHAIR_ROT,			0x83,"旋转座椅",254,96}, //旋转座椅
@@ -109,6 +109,8 @@ static InitBmpFunc loadBmps[] = {
     formVersionLoadBmp,
 	formPasswordLoadBmp,
     formPresetLoadBmp,
+	formCDLoadBmp,
+	formElectricChairLoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -165,93 +167,51 @@ static int formMainTimerProc1s(void)
 	return 0;
 }
 
-static void opt11ControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	saveLog("id:%d\n", id);
-	pro_com->sendOpt(opt_11_controls[id].device_id,
-			opt_11_controls[id].op_code);
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]%d\n",__FUNCTION__, id);
+	pro_com->sendOpt(opt_controls[id].device_id,
+			opt_controls[id].op_code);
     switch (id) {
-		case	IDC_CHAIR_ELE:
-			{
-
-			} break;
+		case	IDC_CHAIR_ELE: createFormElectricChair(GetParent(hwnd)); break;
 		case	IDC_CHAIR_SECRETARY:
-			{
-
-			} break;
+			break;
 		case	IDC_CHAIR_ROT:
-			{
-
-			} break;
+			break;
 		case	IDC_CURTAIN:
-			{
-
-			} break;
+			break;
 		case	IDC_SCREEN_GLASS:
-			{
-
-			} break;
+			break;
 		case	IDC_SCREEN_TV:
-			{
-
-			} break;
-		case	IDC_CD:
-			{
-
-			} break;
+			break;
+		case	IDC_CD:	createFormCD(GetParent(hwnd)); break;
 		case	IDC_DVD:
-			{
-
-			} break;
+			break;
 		case	IDC_MONITOR:
-			{
-
-			} break;
+			break;
 		case	IDC_DOOR:
-			{
-
-			} break;
+			break;
 		case	IDC_BED_ELE:
-			{
-
-			} break;
+			break;
 		case	IDC_SATV:
-			{
-
-			} break;
+			break;
 		case	IDC_SKYLIGHT:
-			{
-
-			} break;
+			break;
 		case	IDC_LIGHT:
-			{
-
-			} break;
+			break;
 		case	IDC_PROJECTION:
-			{
-
-			} break;
+			break;
 		case	IDC_TABLE:
-			{
-
-			} break;
+			break;
 		case	IDC_A1:
-			{
-
-			} break;
+			break;
 		case	IDC_A2:
-			{
-
-			} break;
+			break;
 		case	IDC_WALN:
-			{
-
-			} break;
-        case IDC_SYSTEM:
-            {
-                createFormVersion(GetParent(hwnd));
-            } break;
-
+			break;
+        case IDC_SYSTEM: createFormVersion(GetParent(hwnd)); break;
         default:
             break;
     }
@@ -259,13 +219,20 @@ static void opt11ControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 
 static void optToolbarsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	saveLog("id:%d\n", id);
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]%d\n",__FUNCTION__, id);
 	pro_com->sendOpt(opt_toolbar_controls[id-IDC_MAIN_PAGE].device_id,
-			opt_11_controls[id-IDC_MAIN_PAGE].op_code);
+			opt_controls[id-IDC_MAIN_PAGE].op_code);
     switch (id) {
 		case	IDC_MAIN_PAGE:
 			{
 				SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
+			} break;
+		case	IDC_MUTE:
+			{
+				Public.mute = SendMessage(GetDlgItem (GetParent (hwnd), id),
+						MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
 			} break;
 		case	IDC_CLOSE:
 			{
@@ -281,19 +248,19 @@ static void showNormal(HWND hWnd)
 {
 	int i,k;
     HWND ctrl;
-	for (i=0,k=0; i<NELEMENTS(opt_11_controls); i++) {
-        ctrl = GetDlgItem(hWnd,opt_11_controls[i].idc);
+	for (i=0,k=0; i<NELEMENTS(opt_controls); i++) {
+        ctrl = GetDlgItem(hWnd,opt_controls[i].idc);
         SendMessage(ctrl, MSG_MYBUTTON_SET_SELECT_MODE, 0, 0);
 		if (g_config.device_main_controls[i]) {
 			k++;
-			opt_11_controls[i].x = 25 + ((k-1) % 4)*114;
-			opt_11_controls[i].y = 96 + ((k-1) / 4)*123;
+			opt_controls[i].x = 25 + ((k-1) % 4)*114;
+			opt_controls[i].y = 96 + ((k-1) / 4)*123;
 			ShowWindow(ctrl,SW_SHOWNORMAL);
 			MoveWindow(ctrl,
-					opt_11_controls[i].x,
-					opt_11_controls[i].y,
-					opt_11_controls[i].w,
-					opt_11_controls[i].h,TRUE);
+					opt_controls[i].x,
+					opt_controls[i].y,
+					opt_controls[i].w,
+					opt_controls[i].h,TRUE);
 		} else {
 			ShowWindow(ctrl,SW_HIDE);
 		}
@@ -302,57 +269,28 @@ static void showNormal(HWND hWnd)
         ctrl = GetDlgItem(hWnd,opt_toolbar_controls[i].idc);
         ShowWindow(ctrl,SW_SHOWNORMAL);
 	}
+	SendMessage(hWnd,MSG_UPDATESTATUS,0,0);
 }
 
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief updateUiMute 更新静音状态
+ * @brief formMainUpdateMute 更新静音状态
  */
 /* ---------------------------------------------------------------------------*/
-static void updateUiMute(HWND hWnd)
+void formMainUpdateMute(HWND hWnd)
 {
+	printf("update:%d\n",Public.mute);
 	// 更新静音状态
 	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
 			   MSG_MYBUTTON_SET_SELECT_STATE, Public.mute, 0);
 }
 
-/* ---------------------------------------------------------------------------*/
-/**
- * @brief formMainCreateControl 创建控件
- *
- * @param hWnd
- */
-/* ---------------------------------------------------------------------------*/
-static void formMainCreateControl(HWND hWnd)
+void formManiCreateToolBar(HWND hWnd)
 {
-	HWND hCtrl;
-	int i,k = 0;
-	char image_path[128] = {0};
-	for (i=0; i<NELEMENTS(opt_11_controls); i++) {
-		if (g_config.device_main_controls[i]) {
-			k++;
-			opt_11_controls[i].x = 25 + ((k-1) % 4)*114;
-			opt_11_controls[i].y = 96 + ((k-1) / 4)*123;
-		}
-		opt_11_controls[i].device_id = 0x11;
-		opt_11_controls[i].w = 118;
-		opt_11_controls[i].h = 122;
-		opt_11_controls[i].notif_proc = opt11ControlsNotify;
-        createSkinButton(hWnd,
-                opt_11_controls[i].idc,
-                opt_11_controls[i].x,
-                opt_11_controls[i].y,
-                opt_11_controls[i].w,
-                opt_11_controls[i].h,
-                &opt_11_controls[i].image_normal,
-                &opt_11_controls[i].image_press,
-                g_config.device_main_controls[i],
-                0,
-                opt_11_controls[i].notif_proc);
-	}
+	int i;	
 	for (i=0; i<NELEMENTS(opt_toolbar_controls); i++) {
 		opt_toolbar_controls[i].device_id = 0x11;
-		opt_11_controls[i].notif_proc = optToolbarsNotify;
+		opt_toolbar_controls[i].notif_proc = optToolbarsNotify;
         createSkinButton(hWnd,
                 opt_toolbar_controls[i].idc,
                 opt_toolbar_controls[i].x,
@@ -367,6 +305,44 @@ static void formMainCreateControl(HWND hWnd)
 	}
 	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
 		   	MSG_MYBUTTON_SET_SELECT_MODE, 2, 0);
+	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
+			   MSG_MYBUTTON_SET_SELECT_STATE, Public.mute, 0);
+}
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief formMainCreateControl 创建控件
+ *
+ * @param hWnd
+ */
+/* ---------------------------------------------------------------------------*/
+static void formMainCreateControl(HWND hWnd)
+{
+	int i,k = 0;
+	char image_path[128] = {0};
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		if (g_config.device_main_controls[i]) {
+			k++;
+			opt_controls[i].x = 25 + ((k-1) % 4)*114;
+			opt_controls[i].y = 96 + ((k-1) / 4)*123;
+		}
+		opt_controls[i].device_id = 0x11;
+		opt_controls[i].w = 118;
+		opt_controls[i].h = 122;
+		opt_controls[i].notif_proc = optControlsNotify;
+        createSkinButton(hWnd,
+                opt_controls[i].idc,
+                opt_controls[i].x,
+                opt_controls[i].y,
+                opt_controls[i].w,
+                opt_controls[i].h,
+                &opt_controls[i].image_normal,
+                &opt_controls[i].image_press,
+                g_config.device_main_controls[i],
+                0,
+                opt_controls[i].notif_proc);
+	}
+	formManiCreateToolBar(hWnd);
 }
 
 static void bmpsMainButtonLoad(MgCtrlButton *controls,int num)
@@ -397,7 +373,7 @@ static void formMainLoadBmp(void)
 	int i;
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(bmp_load,NELEMENTS(bmp_load));
-    bmpsMainButtonLoad(opt_11_controls,NELEMENTS(opt_11_controls));
+    bmpsMainButtonLoad(opt_controls,NELEMENTS(opt_controls));
     bmpsMainButtonLoad(opt_toolbar_controls,NELEMENTS(opt_toolbar_controls));
 }
 
@@ -489,7 +465,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 
 		case MSG_UPDATESTATUS:
 			{
-				updateUiMute(hWnd);
+				formMainUpdateMute(hWnd);
 			} break;
 
 		case MSG_DESTROY:

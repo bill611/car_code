@@ -149,7 +149,6 @@ void publicDestroy(void);
 
 extern BOOL __mg_ime_minimize;
 extern  PUBLIC_DATA Public;
-extern unsigned int PacketID;
 extern ConfigFile g_config;
 
 #endif

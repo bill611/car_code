@@ -150,7 +150,7 @@ static void udpServerPostMessage(int handle,
  * @param ID
  */
 /* ---------------------------------------------------------------------------*/
-static void udpServerProcRetPacket(TUDPServer* This,unsigned int ID)
+/* static void udpServerProcRetPacket(TUDPServer* This,unsigned int ID)
 {
 	int i;
 	pthread_mutex_lock (&This->priv->mutex);		//加锁
@@ -175,6 +175,7 @@ static void udpServerProcRetPacket(TUDPServer* This,unsigned int ID)
 	pthread_mutex_unlock (&This->priv->mutex);		//解锁
 }
 
+*/
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief udpServerTaskSend 发送task任务
@@ -203,8 +204,8 @@ static void udpServerTaskSend(TUDPServer* This,DWORD *dwLastTick)
 		} else {
             saveLog("send time out:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
 			// 重发指定次数后失败
-			if(pList->Func)
-				pList->Func(MSG_SENDTIMEOUT,pList->CallBackData);
+			// if(pList->Func)
+				// pList->Func(MSG_SENDTIMEOUT,pList->CallBackData);
 			free(pList->pData);
 			pList->pData = NULL;
 			This->priv->ListCnt--;
@@ -289,7 +290,6 @@ static void * udpServerThread(void *ThreadData)
                             (struct sockaddr*)&from,
                             (socklen_t *)&fromlen);
                     if(AData->Size > 0) {
-                        printf("1111111\n");
                         udpServerRecvData(This,AData,&from,fromlen);
                     } else {
                         free(AData);
