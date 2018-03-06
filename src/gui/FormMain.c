@@ -345,6 +345,14 @@ static void formMainCreateControl(HWND hWnd)
 	formManiCreateToolBar(hWnd);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief bmpsMainButtonLoad 加载主界面图片
+ *
+ * @param controls
+ * @param num
+ */
+/* ---------------------------------------------------------------------------*/
 static void bmpsMainButtonLoad(MgCtrlButton *controls,int num)
 {
 	int i;
@@ -361,8 +369,8 @@ static void bmpsMainButtonLoad(MgCtrlButton *controls,int num)
                 p->y);
         bmpLoad(&p->image_press, image_path);
 	}
-
 }
+
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainLoadBmp 加载主界面图片
@@ -372,9 +380,9 @@ static void formMainLoadBmp(void)
 {
 	int i;
 	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
-    bmpsMainButtonLoad(opt_controls,NELEMENTS(opt_controls));
-    bmpsMainButtonLoad(opt_toolbar_controls,NELEMENTS(opt_toolbar_controls));
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+    bmpsMainButtonLoad(BMP_LOAD_PARA(opt_controls));
+    bmpsMainButtonLoad(BMP_LOAD_PARA(opt_toolbar_controls));
 }
 
 /* ---------------------------------------------------------------------------*/

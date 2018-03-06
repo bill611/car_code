@@ -203,6 +203,8 @@
 #define NELEMENTS(array)        /* number of elements in an array */ \
 	(sizeof (array) / sizeof ((array) [0]))
 
+#define BMP_LOAD_PARA(x) x,NELEMENTS(x)
+
 #define TIME_1S (10 * 5)
 #define TIME_100MS (TIME_1S / 10)
 

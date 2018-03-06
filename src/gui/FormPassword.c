@@ -279,7 +279,7 @@ void formPasswordLoadBmp(void)
 	int i;
 	char image_path[128] = {0};
 	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(bmp_load,NELEMENTS(bmp_load));
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		sprintf(image_path,BMP_LOCAL_PATH"%s（X%d,Y%d）.JPG",opt_controls[i].img_name,
 				opt_controls[i].x,
