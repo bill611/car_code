@@ -22,6 +22,7 @@
 #include <memory.h>
 
 #include "MyButton.h"
+#include "debug.h"
 #include "cliprect.h"
 #include "internals.h"
 #include "ctrlclass.h"

@@ -40,7 +40,7 @@ extern "C" {
 		MSG_MAIN_TIMER_STOP,
 		MSG_MAIN_SHOW_NORMAL,
 		MSG_SOCKETREAD,
-		MSG_SENDMSG,
+		MSG_ELECTRIC_CHAIR_TYPE,
 	};
     typedef struct _BmpLocation {
         BITMAP 	*bmp;

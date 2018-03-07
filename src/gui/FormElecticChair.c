@@ -35,14 +35,13 @@ extern void formMainUpdateMute(HWND hWnd);
  *----------------------------------------------------------------------------*/
 static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
-static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optLBackrestControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optLLegControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optLCushinControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optRBackrestControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optRLegControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void optRCushinControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -55,8 +54,20 @@ static void optRCushinControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 
 #define BMP_LOCAL_PATH "res/image/电动座椅/"
 enum {
-    CHAIR_LEFT,
-    CHAIR_RIGHT,
+    CHAIR_DIR_LEFT,  // 左座椅
+    CHAIR_DIR_RIGHT, // 右座椅
+};
+
+enum {
+    CHAIR_LEFT,  // 左座椅界面
+    CHAIR_RIGHT, // 右座椅界面
+    CHAIR_ASSIST, //辅助功能界面
+};
+
+enum {
+    CHAIR_BACKREST, // 靠背
+    CHAIR_CUSHIN,  	// 座垫
+    CHAIR_LEG,  	// 腿托
 };
 
 typedef struct _ButtonArray {
@@ -65,15 +76,17 @@ typedef struct _ButtonArray {
 }ButtonArray;
 
 typedef struct _ElecChair {
-    ButtonArray *chair;
+    ButtonArray *array;
+	int num;
 }ElecChair;
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
 static FormBase* form_base = NULL;
-static BITMAP bmp_bkg; 
-static BITMAP bmp_bkg; 
-static int chair_type = CHAIR_LEFT;
+static BITMAP bmp_bkg;
+static int chair_disp_type = CHAIR_LEFT;
+static int chair_dir_type = CHAIR_DIR_LEFT;
+static int chair_mode_type = CHAIR_BACKREST;
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"座椅功能.JPG"},
@@ -105,91 +118,163 @@ static FormBasePriv form_base_priv= {
 
 // device 0x0b
 static MgCtrlButton opt_controls[] = {
-	{0,	0x0,"辅助功能",305,509,119,51},
+	{0,	0x0,"辅助功能",305,509,119,51,optAssistControlsNotify},
 	{0,	0x82,"全收",58,509,60,51},
 	{0,	0x83,"全躺",118,509,59,51},
 	{0,	0x81,"腿托收",240,509,59,51},
 	{0,	0x80,"腿托展开",181,509,59,51},
-	{0,	0x0,"右椅",281,622,114,55},
-	{0,	0x0,"左椅",83,622,113,54},
+	{0,	0x0,"右椅",281,622,114,55,optRightChairControlsNotify},
+	{0,	0x0,"左椅",83,622,113,54,optLeftChairControlsNotify},
 };
 
 // 辅助功能
 static MgCtrlButton opt_assist_controls[] = {
-	{0,	0x88,"按犘打开",116,418,59,46},
-	{0,	0x87,"按犘关闭",60,418,56,46},
-	{0,	0x85,"加热打开",116,325,58,46},
-	{0,	0x84,"加热关闭",59,325,58,46},
-	{0,	0x9a,"制冷打开",116,233,58,47},
-	{0,	0x99,"制冷关闭",59,233,57,47},
+	{0,	0x88,"按犘打开",116,418,59,46,optSingleControlsNotify},
+	{0,	0x87,"按犘关闭",60,418,56,46,optSingleControlsNotify},
+	{0,	0x85,"加热打开",116,325,58,46,optSingleControlsNotify},
+	{0,	0x84,"加热关闭",59,325,58,46,optSingleControlsNotify},
+	{0,	0x9a,"制冷打开",116,233,58,47,optSingleControlsNotify},
+	{0,	0x99,"制冷关闭",59,233,57,47,optSingleControlsNotify},
 };
 
 // 左靠背
 static MgCtrlButton opt_l_backrest_controls[] = {
-	{0,	0x0,"左座椅/左靠背/左靠背部份",348,121,71,81,optLBackrestControlsNotify},
-	{0,	0x8b,"左座椅/左靠背/左靠背向上",258,262,62,67,optLBackrestControlsNotify},
-	{0,	0x8c,"左座椅/左靠背/左靠背向下",139,309,63,66,optLBackrestControlsNotify},
-	{0,	0x9d,"左座椅/左靠背/左头枕向上",146,150,66,62,optLBackrestControlsNotify},
-	{0,	0x9e,"左座椅/左靠背/左头枕向下",126,218,66,65,optLBackrestControlsNotify},
+	{0,	0x0,"左座椅/左靠背/左靠背部份",348,121,71,81,optSwichPartControlsNotify},
+	{0,	0x8b,"左座椅/左靠背/左靠背向上",258,262,62,67},
+	{0,	0x8c,"左座椅/左靠背/左靠背向下",139,309,63,66},
+	{0,	0x9d,"左座椅/左靠背/左头枕向上",146,150,66,62},
+	{0,	0x9e,"左座椅/左靠背/左头枕向下",126,218,66,65},
 };
 
 // 左腿托
 static MgCtrlButton opt_l_leg_controls[] = {
-	{0,	0x0,"左座椅/左腿托/左腿托部份",348,121,71,81,optLLegControlsNotify},
-	{0,	0x93,"左座椅/左腿托/左腿托向上",262,246,66,67,optLLegControlsNotify},
-	{0,	0x94,"左座椅/左腿托/左腿托向下",154,319,64,68,optLLegControlsNotify},
+	{0,	0x0,"左座椅/左腿托/左腿托部份",348,121,71,81,optSwichPartControlsNotify},
+	{0,	0x93,"左座椅/左腿托/左腿托向上",262,246,66,67},
+	{0,	0x94,"左座椅/左腿托/左腿托向下",154,319,64,68},
 };
 
 // 左座垫
 static MgCtrlButton opt_l_cushin_controls[] = {
-	{0,	0x0,"左座椅/左座垫/左座垫部份",348,121,69,81,optLCushinControlsNotify},
-	{0,	0x90,"左座椅/左座垫/左座垫向后",184,288,63,64,optLCushinControlsNotify},
-	{0,	0x8f,"左座椅/左座垫/左座垫向前",266,266,62,64,optLCushinControlsNotify},
-	{0,	0x8d,"左座椅/左座垫/左座垫向上",164,216,66,63,optLCushinControlsNotify},
-	{0,	0x8e,"左座椅/左座垫/左座垫向下",191,359,64,65,optLCushinControlsNotify},
+	{0,	0x0,"左座椅/左座垫/左座垫部份",348,121,69,81,optSwichPartControlsNotify},
+	{0,	0x90,"左座椅/左座垫/左座垫向后",184,288,63,64},
+	{0,	0x8f,"左座椅/左座垫/左座垫向前",266,266,62,64},
+	{0,	0x8d,"左座椅/左座垫/左座垫向上",164,216,66,63},
+	{0,	0x8e,"左座椅/左座垫/左座垫向下",191,359,64,65},
 };
 
 // 右靠背
 static MgCtrlButton opt_r_backrest_controls[] = {
-	{0,	0x0,"右座椅/右靠背/右靠背部份",348,121,71,81,optRBackrestControlsNotify},
-	{0,	0x8b,"右座椅/右靠背/右靠背向上",160,281,63,69,optRBackrestControlsNotify},
-	{0,	0x8c,"右座椅/右靠背/右靠背向下",274,308,69,67,optRBackrestControlsNotify},
-	{0,	0x9d,"右座椅/右靠背/右头枕向上",266,148,70,67,optRBackrestControlsNotify},
-	{0,	0x9e,"右座椅/右靠背/右头枕向下",288,217,67,64,optRBackrestControlsNotify},
+	{0,	0x0,"右座椅/右靠背/右靠背部份",348,121,71,81,optSwichPartControlsNotify},
+	{0,	0x8b,"右座椅/右靠背/右靠背向上",160,281,63,69},
+	{0,	0x8c,"右座椅/右靠背/右靠背向下",274,308,69,67},
+	{0,	0x9d,"右座椅/右靠背/右头枕向上",266,148,70,67},
+	{0,	0x9e,"右座椅/右靠背/右头枕向下",288,217,67,64},
 };
 
 // 右腿托
 static MgCtrlButton opt_r_leg_controls[] = {
-	{0,	0x0,"右座椅/右腿托/右腿托部份",348,121,69,84,optRLegControlsNotify},
-	{0,	0x93,"右座椅/右腿托/右腿托向上",150,245,70,69,optRLegControlsNotify},
-	{0,	0x94,"右座椅/右腿托/右腿托向下",262,319,66,66,optRLegControlsNotify},
+	{0,	0x0,"右座椅/右腿托/右腿托部份",348,121,69,84,optSwichPartControlsNotify},
+	{0,	0x93,"右座椅/右腿托/右腿托向上",150,245,70,69},
+	{0,	0x94,"右座椅/右腿托/右腿托向下",262,319,66,66},
 };
 
 // 右座垫
 static MgCtrlButton opt_r_cushin_controls[] = {
-	{0,	0x0,"右座椅/右座垫/右座垫部份",348,121,69,84,optRCushinControlsNotify},
-	{0,	0x90,"右座椅/右座垫/右座垫向后",233,288,64,65,optRCushinControlsNotify},
-	{0,	0x8f,"右座椅/右座垫/右座垫向前",150,266,66,66,optRCushinControlsNotify},
-	{0,	0x8d,"右座椅/右座垫/右座垫向上",250,215,68,65,optRCushinControlsNotify},
-	{0,	0x8e,"右座椅/右座垫/右座垫向下",224,359,68,64,optRCushinControlsNotify},
+	{0,	0x0,"右座椅/右座垫/右座垫部份",348,121,69,84,optSwichPartControlsNotify},
+	{0,	0x90,"右座椅/右座垫/右座垫向后",233,288,64,65},
+	{0,	0x8f,"右座椅/右座垫/右座垫向前",150,266,66,66},
+	{0,	0x8d,"右座椅/右座垫/右座垫向上",250,215,68,65},
+	{0,	0x8e,"右座椅/右座垫/右座垫向下",224,359,68,64},
 };
-
 
 static ButtonArray chair_l[] = {
-    {opt_l_backrest_controls},
-    {opt_l_leg_controls},
-    {opt_l_cushin_controls},
+	{BMP_LOAD_PARA(opt_l_backrest_controls)},
+	{BMP_LOAD_PARA(opt_l_cushin_controls)},
+	{BMP_LOAD_PARA(opt_l_leg_controls)},
+};
+static ButtonArray chair_r[] = {
+	{BMP_LOAD_PARA(opt_r_backrest_controls)},
+	{BMP_LOAD_PARA(opt_r_cushin_controls)},
+	{BMP_LOAD_PARA(opt_r_leg_controls)},
+};
+static ButtonArray chair_s[] = {
+	{BMP_LOAD_PARA(opt_assist_controls)},
+};
+static ElecChair chair[] = {
+	{BMP_LOAD_PARA(chair_l) },
+	{BMP_LOAD_PARA(chair_r)},
+	{BMP_LOAD_PARA(chair_s)},
 };
 
-static ButtonArray chair_r[] = {
-    {opt_r_backrest_controls},
-    {opt_r_leg_controls},
-    {opt_r_cushin_controls},
-}; 
-
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief updateChairType 更新显示界面模块
+ *
+ * @param hwnd
+ */
+/* ---------------------------------------------------------------------------*/
+static void updateChairType(HWND hwnd)
+{
+	int i,j,k;
+	int display;
+	MgCtrlButton *ctrl;
+	ButtonArray *array;
+    for (i=0; i<NELEMENTS(chair); i++) {
+		for (j=0; j<chair[i].num; j++) {
+			array = chair[i].array + j;
+			for (k=0; k<array->num; k++) {
+				if (i == chair_disp_type && j == chair_mode_type)
+					display = SW_SHOWNORMAL;
+				else
+					display = SW_HIDE;
+				ctrl = array->ctrl + k;
+				ShowWindow(GetDlgItem(hwnd,ctrl->idc), display);
+			}
+		}
+    }
+}
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief sendOptCmd 根据id查找当前触发控件
+ *
+ * @param id 触发控件id
+ *
+ * @returns 控件
+ */
+/* ---------------------------------------------------------------------------*/
+static MgCtrlButton * sendOptCmd(int id)
+{
+	int i,j,k;
+	MgCtrlButton *ctrl;
+	ButtonArray *array;
+    for (i=0; i<NELEMENTS(opt_controls); i++) {
+		if (opt_controls[i].idc == id) {
+			ctrl = &opt_controls[i];
+			goto search_ok;
+		}
+    }
+    for (i=0; i<NELEMENTS(chair); i++) {
+		for (j=0; j<chair[i].num; j++) {
+			array = chair[i].array + j;
+			for (k=0; k<array->num; k++) {
+				ctrl = array->ctrl + k;
+				if (ctrl->idc == id) {
+					goto search_ok;
+				}
+			}
+		}
+    }
+	return NULL;
+search_ok:
+    if (chair_dir_type == CHAIR_DIR_LEFT)
+        pro_com->sendOpt(0x01, ctrl->op_code);
+    else
+        pro_com->sendOpt(0x02, ctrl->op_code);
+	return ctrl;
+}
 /* ----------------------------------------------------------------*/
 /**
- * @brief optControlsNotify
+ * @brief optNoticControlsNotify 弹出提示按键
  *
  * @param hwnd
  * @param id
@@ -197,58 +282,139 @@ static ButtonArray chair_r[] = {
  * @param add_data
  */
 /* ----------------------------------------------------------------*/
-static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	saveLog("id:%d\n", id);
-    if (chair_type == CHAIR_LEFT)
-        pro_com->sendOpt(0x01, opt_controls[id].op_code);
-    else
-        pro_com->sendOpt(0x02, opt_controls[id].op_code);
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+	MgCtrlButton * ctrl = sendOptCmd(id);
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optAssistControlsNotify 辅助功能按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
 static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	saveLog("id:%d\n", id);
-    int i;
-    for (i=0; i<NELEMENTS(opt_assist_controls); i++) {
-        if (opt_assist_controls[i].idc == id)
-            break;
-    }
-    if (chair_type == CHAIR_LEFT)
-        pro_com->sendOpt(0x01, opt_assist_controls[id].op_code);
-    else
-        pro_com->sendOpt(0x02, opt_assist_controls[id].op_code);
-}
-
-static void optLBackrestControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
+	int i,k;
+	MgCtrlButton *ctrl;
+	chair_disp_type = CHAIR_ASSIST;
+	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 
 }
-static void optLLegControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optLeftChairControlsNotify 左椅按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-    
+	if (nc != BN_CLICKED)
+		return;
+	chair_dir_type = CHAIR_DIR_LEFT;
+	chair_disp_type = CHAIR_LEFT;
+	chair_mode_type = CHAIR_BACKREST;
+	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
-static void optLCushinControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optRightChairControlsNotify 右椅按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-    
+	if (nc != BN_CLICKED)
+		return;
+	chair_dir_type = CHAIR_DIR_RIGHT;
+	chair_disp_type = CHAIR_RIGHT;
+	chair_mode_type = CHAIR_BACKREST;
+	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
-static void optRBackrestControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optSwichPartControlsNotify 切换座椅部分按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-    
+	if (nc != BN_CLICKED)
+		return;
+	if (chair_mode_type < CHAIR_LEG)
+		chair_mode_type++;
+	else
+		chair_mode_type = CHAIR_BACKREST;
+	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
-static void optRLegControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optSingleControlsNotify 单次触发按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-    
+	if (nc != BN_CLICKED)
+		return;
+	sendOptCmd(id);
 }
-static void optRCushinControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optMultiControlsNotify 多次触发按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-    
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+	MgCtrlButton * ctrl = sendOptCmd(id);
 }
-static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,
+
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief creatButtonControl 批量创建按键控件
+ *
+ * @param hDlg
+ * @param ctrl
+ * @param num
+ * @param display
+ * @param func
+ */
+/* ---------------------------------------------------------------------------*/
+static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
         void (*func)(HWND hwnd, int id, int nc, DWORD add_data))
 {
     static int k = 0;
@@ -264,7 +430,7 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,
 				p->x, p->y, p->w, p->h,
 				&p->image_normal,
 				&p->image_press,
-				1, 0, p->notif_proc);
+				display, 0, p->notif_proc);
 	}
 }
 /* ----------------------------------------------------------------*/
@@ -279,25 +445,23 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-    chair_l[0].num = NELEMENTS(opt_l_backrest_controls);
-    chair_l[1].num = NELEMENTS(opt_l_leg_controls);
-    chair_l[2].num = NELEMENTS(opt_l_cushin_controls);
-    chair_r[0].num = NELEMENTS(opt_r_backrest_controls);
-    chair_r[1].num = NELEMENTS(opt_r_leg_controls);
-    chair_r[2].num = NELEMENTS(opt_r_cushin_controls);
-    creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),
-            optControlsNotify);
-    creatButtonControl(hDlg,BMP_LOAD_PARA(opt_assist_controls),
-            optAssistControlsNotify);
-    int i;
-    for (i=0; i<NELEMENTS(chair_l); i++) {
-        creatButtonControl(hDlg, chair_l[i].ctrl,chair_l[i].num,
-                chair_l[i].ctrl->notif_proc);
-    } 
-    for (i=0; i<NELEMENTS(chair_r); i++) {
-        creatButtonControl(hDlg, chair_r[i].ctrl,chair_r[i].num,
-                chair_r[i].ctrl->notif_proc);
-    } 
+    creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
+            optNoticControlsNotify);
+    int i,j;
+	int display = 0;
+	ButtonArray *array;
+	MgCtrlButton *ctrl;
+    for (i=0; i<NELEMENTS(chair); i++) {
+		for (j=0; j<chair[i].num; j++) {
+			array = chair[i].array + j;
+			if (i == chair_disp_type && j == chair_mode_type)
+				display = 1;
+			else
+				display = 0;
+			creatButtonControl(hDlg, array->ctrl,array->num,display,
+					optMultiControlsNotify);
+		}
+    }
     formManiCreateToolBar(hDlg);
 }
 
@@ -315,11 +479,16 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 /* ----------------------------------------------------------------*/
 static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
+	printf("message:%x\n",message );
 	switch (message)
 	{
 		case MSG_UPDATESTATUS:
 			{
 				formMainUpdateMute(hDlg);
+			} break;
+		case MSG_ELECTRIC_CHAIR_TYPE:
+			{
+				updateChairType(hDlg);
 			} break;
 		default:
 			break;
@@ -376,7 +545,11 @@ int createFormElectricChair(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
+		chair_disp_type = CHAIR_LEFT;
+		chair_dir_type = CHAIR_DIR_LEFT;
+		chair_mode_type = CHAIR_BACKREST;
 		SendMessage(Form,MSG_UPDATESTATUS,0,0);
+		SendMessage(Form,MSG_ELECTRIC_CHAIR_TYPE,0,0);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
