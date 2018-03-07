@@ -29,11 +29,18 @@
 extern int createFormVersion(HWND hMainWnd);
 extern int createFormCD(HWND hMainWnd);
 extern int createFormElectricChair(HWND hMainWnd);
+extern int createFormSecretaryChair(HWND hMainWnd);
+extern int createFormRotChair(HWND hMainWnd);
+extern int createFormCurtain(HWND hMainWnd);
+
 extern void formVersionLoadBmp(void);
 extern void formPasswordLoadBmp(void);
 extern void formPresetLoadBmp(void);
 extern void formCDLoadBmp(void);
 extern void formElectricChairLoadBmp(void);
+extern void formSecretaryChairLoadBmp(void);
+extern void formRotChairLoadBmp(void);
+extern void formCurtainLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -111,6 +118,9 @@ static InitBmpFunc loadBmps[] = {
     formPresetLoadBmp,
 	formCDLoadBmp,
 	formElectricChairLoadBmp,
+    formSecretaryChairLoadBmp,
+    formRotChairLoadBmp,
+    formCurtainLoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -175,13 +185,14 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	pro_com->sendOpt(opt_controls[id].device_id,
 			opt_controls[id].op_code);
     switch (id) {
-		case	IDC_CHAIR_ELE: createFormElectricChair(GetParent(hwnd)); break;
-		case	IDC_CHAIR_SECRETARY:
-			break;
-		case	IDC_CHAIR_ROT:
-			break;
-		case	IDC_CURTAIN:
-			break;
+		case	IDC_CHAIR_ELE:      createFormElectricChair(GetParent(hwnd)); 
+                                    break;
+		case	IDC_CHAIR_SECRETARY:createFormSecretaryChair(GetParent(hwnd)); 
+                                    break;
+		case	IDC_CHAIR_ROT:      createFormRotChair(GetParent(hwnd)); 
+                                    break;
+		case	IDC_CURTAIN:        createFormCurtain(GetParent(hwnd));
+                                    break;
 		case	IDC_SCREEN_GLASS:
 			break;
 		case	IDC_SCREEN_TV:
