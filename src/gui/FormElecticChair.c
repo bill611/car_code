@@ -255,7 +255,7 @@ static void updateChairType(HWND hwnd)
  * @returns 控件
  */
 /* ---------------------------------------------------------------------------*/
-static MgCtrlButton * sendOptCmd(int id)
+static MgCtrlButton * sendOptCmd(HWND id)
 {
 	int i,j,k;
 	MgCtrlButton *ctrl;

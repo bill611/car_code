@@ -479,6 +479,7 @@ static void proComSendOpt(int device,int opt)
 		return;
 	uart->SndData[0] = device;	
 	uart->SndData[1] = opt;	
+	saveLog("%x,%x\n", device,opt);
 	uart->ToSingleChip(uart,2);
 }
 

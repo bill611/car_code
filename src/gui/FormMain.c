@@ -32,6 +32,18 @@ extern int createFormElectricChair(HWND hMainWnd);
 extern int createFormSecretaryChair(HWND hMainWnd);
 extern int createFormRotChair(HWND hMainWnd);
 extern int createFormCurtain(HWND hMainWnd);
+extern int createFormGlassScreen(HWND hMainWnd);
+extern int createFormTvScreen(HWND hMainWnd);
+extern int createFormDVD(HWND hMainWnd);
+extern int createFormMonitor(HWND hMainWnd);
+extern int createFormDoor(HWND hMainWnd);
+extern int createFormBed(HWND hMainWnd);
+extern int createFormSaTv(HWND hMainWnd);
+extern int createFormSkyLight(HWND hMainWnd);
+extern int createFormLight(HWND hMainWnd);
+extern int createFormProjection(HWND hMainWnd);
+extern int createFormTable(HWND hMainWnd);
+extern int createFormA12(HWND hMainWnd,int type);
 
 extern void formVersionLoadBmp(void);
 extern void formPasswordLoadBmp(void);
@@ -41,6 +53,18 @@ extern void formElectricChairLoadBmp(void);
 extern void formSecretaryChairLoadBmp(void);
 extern void formRotChairLoadBmp(void);
 extern void formCurtainLoadBmp(void);
+extern void formGlassScreenLoadBmp(void);
+extern void formTvScreenLoadBmp(void);
+extern void formDVDLoadBmp(void);
+extern void formMonitorLoadBmp(void);
+extern void formDoorLoadBmp(void);
+extern void formBedLoadBmp(void);
+extern void formSaTvLoadBmp(void);
+extern void formSkyLightLoadBmp(void);
+extern void formLightLoadBmp(void);
+extern void formProjectionLoadBmp(void);
+extern void formTableLoadBmp(void);
+extern void formA12LoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -97,8 +121,8 @@ static MgCtrlButton opt_controls[] = {
 	{IDC_LIGHT,				0xa2,"灯光",139,461}, //灯光
 	{IDC_PROJECTION,		0x80,"屏幕投影",254,461}, //屏幕投影
 	{IDC_TABLE,				0x87,"桌板",367,461}, //桌板
-	{IDC_A1,				0x88,"A1",123,123}, //A1
-	{IDC_A2,				0x89,"A2",123,123}, //A2
+	{IDC_A1,				0x88,"A1",59,584}, //A1
+	{IDC_A2,				0x89,"A2",139,584}, //A2
 	{IDC_WALN,				0,"WLAN",25,584}, //WALN
 	{IDC_SYSTEM,			0,"系统",139,584}, //系统
 };
@@ -121,6 +145,18 @@ static InitBmpFunc loadBmps[] = {
     formSecretaryChairLoadBmp,
     formRotChairLoadBmp,
     formCurtainLoadBmp,
+	formGlassScreenLoadBmp,
+	formTvScreenLoadBmp,
+	formDVDLoadBmp,
+	formMonitorLoadBmp,
+	formDoorLoadBmp,
+	formBedLoadBmp,
+	formSaTvLoadBmp,
+	formSkyLightLoadBmp,
+	formLightLoadBmp,
+	formProjectionLoadBmp,
+	formTableLoadBmp,
+	formA12LoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -181,48 +217,70 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+	HWND parent_hwnd = GetParent(hwnd);
 	saveLog("[%s]%d\n",__FUNCTION__, id);
 	pro_com->sendOpt(opt_controls[id].device_id,
 			opt_controls[id].op_code);
     switch (id) {
-		case	IDC_CHAIR_ELE:      createFormElectricChair(GetParent(hwnd)); 
-                                    break;
-		case	IDC_CHAIR_SECRETARY:createFormSecretaryChair(GetParent(hwnd)); 
-                                    break;
-		case	IDC_CHAIR_ROT:      createFormRotChair(GetParent(hwnd)); 
-                                    break;
-		case	IDC_CURTAIN:        createFormCurtain(GetParent(hwnd));
-                                    break;
+		case	IDC_CHAIR_ELE:
+			createFormElectricChair(parent_hwnd);
+			break;
+		case	IDC_CHAIR_SECRETARY:
+			createFormSecretaryChair(parent_hwnd);
+			break;
+		case	IDC_CHAIR_ROT:
+	  		createFormRotChair(parent_hwnd);
+			break;
+		case	IDC_CURTAIN:
+			createFormCurtain(parent_hwnd);
+			break;
 		case	IDC_SCREEN_GLASS:
+			createFormGlassScreen(parent_hwnd);
 			break;
 		case	IDC_SCREEN_TV:
+			createFormTvScreen(parent_hwnd);
 			break;
-		case	IDC_CD:	createFormCD(GetParent(hwnd)); break;
+		case	IDC_CD:
+			createFormCD(parent_hwnd);
+			break;
 		case	IDC_DVD:
+			createFormDVD(parent_hwnd);
 			break;
 		case	IDC_MONITOR:
+			createFormMonitor(parent_hwnd);
 			break;
 		case	IDC_DOOR:
+			createFormDoor(parent_hwnd);
 			break;
 		case	IDC_BED_ELE:
+			createFormBed(parent_hwnd);
 			break;
 		case	IDC_SATV:
+			createFormSaTv(parent_hwnd);
 			break;
 		case	IDC_SKYLIGHT:
+			createFormSkyLight(parent_hwnd);
 			break;
 		case	IDC_LIGHT:
+			createFormLight(parent_hwnd);
 			break;
 		case	IDC_PROJECTION:
+			createFormProjection(parent_hwnd);
 			break;
 		case	IDC_TABLE:
+			createFormTable(parent_hwnd);
 			break;
 		case	IDC_A1:
+			createFormA12(parent_hwnd,0);
 			break;
 		case	IDC_A2:
+			createFormA12(parent_hwnd,1);
 			break;
 		case	IDC_WALN:
 			break;
-        case IDC_SYSTEM: createFormVersion(GetParent(hwnd)); break;
+        case IDC_SYSTEM:
+			createFormVersion(parent_hwnd);
+		   	break;
         default:
             break;
     }
@@ -298,7 +356,7 @@ void formMainUpdateMute(HWND hWnd)
 
 void formManiCreateToolBar(HWND hWnd)
 {
-	int i;	
+	int i;
 	for (i=0; i<NELEMENTS(opt_toolbar_controls); i++) {
 		opt_toolbar_controls[i].device_id = 0x11;
 		opt_toolbar_controls[i].notif_proc = optToolbarsNotify;

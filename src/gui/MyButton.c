@@ -236,9 +236,8 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 
         SetCapture (hwnd);
 		pInfo->state = BUT_CLICK;
+		NotifyParent (hwnd, pCtrl->id, BN_PUSHED);
 		InvalidateRect (hwnd, NULL, FALSE);
-		if(dwStyle & SS_NOTIFY)
-			NotifyParent (hwnd, pCtrl->id, BN_PUSHED);
         break;
 	case MSG_LBUTTONUP:
 	{
@@ -267,10 +266,8 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 #endif
 			InvalidateRect (hwnd, NULL, FALSE);
 		}
-		// if (dwStyle & SS_NOTIFY) {
-            // NotifyParent (hwnd, pCtrl->id, BN_UNPUSHED);
-			// InvalidateRect (hwnd, NULL, TRUE);
-		// }
+		NotifyParent (hwnd, pCtrl->id, BN_UNPUSHED);
+		// InvalidateRect (hwnd, NULL, TRUE);
 
 		x = LOSWORD(lParam);
         y = HISWORD(lParam);
