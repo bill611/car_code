@@ -47,10 +47,6 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 #endif
 
 #define BMP_LOCAL_PATH "res/image/灯光/"
-#define POWER_MAX 2
-#define BRIGHT_MAX 6
-#define RATE_MAX 7
-#define COLOR_MAX 2
 
 enum {
 	LIGHT1,
@@ -58,22 +54,18 @@ enum {
 	LIGHT3,
 	LIGHT_NUM,
 };
-typedef struct _ButtonName {
-	uint8_t op_code;
-    char *name;
-    int x,w,h;
-	int y[LIGHT_NUM];
-}ButtonName;
 
 typedef struct _ButtonArray {
+    uint8_t device_id;
+    char *path;
     MgCtrlButton *ctrl;
     int num;
+    int y;
 }ButtonArray;
 
 typedef struct _StructLight {
-    MgCtrlButton **array;
-	ButtonName *opt_base;
-	int num;
+    ButtonArray *array;
+    int array_num;
 }StructLight;
 /* ---------------------------------------------------------------------------*
  *                      variables define
@@ -108,32 +100,57 @@ static FormBasePriv form_base_priv= {
 	.initPara =  initPara,
 };
 
-static ButtonName opt_power[] = {
-	{0x81,"off",117,84,51,{170,359,546}},
-	{0x80,"on",278,85,51,{170,359,546}},
+static MgCtrlButton opt_power[] = {
+	{0,0x81,"off",117,0,84,51},//{170,359,546}},
+	{0,0x80,"on",278,0,85,51},//{170,359,546}},
 };
-static ButtonName opt_bright[] = {
-	{0x82,"亮度",50,125,59,{221,410,597}},
+static MgCtrlButton opt_bright[] = {
+	{0,0x82,"亮度-0",50,0,125,59},//,{221,410,597}},
+	{0,0x82,"亮度-1",50,0,125,59},//,{221,410,597}},
+	{0,0x82,"亮度-2",50,0,125,59},//,{221,410,597}},
+	{0,0x82,"亮度-3",50,0,125,59},//,{221,410,597}},
+	{0,0x82,"亮度-4",50,0,125,59},//,{221,410,597}},
+	{0,0x82,"亮度-5",50,0,125,59},//,{221,410,597}},
 };
-static ButtonName opt_rate[] = {
-	{0x84,"速率",305,123,59,{221,410,597}},
+static MgCtrlButton opt_rate[] = {
+	{0,0x84,"速率-1",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-2",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-5",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-10",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-15",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-20",305,0,123,59},//,{221,410,597}},
+	{0,0x84,"速率-30",305,0,123,59},//,{221,410,597}},
 };
-static ButtonName opt_color[] = {
-	{0x83,"颜色",178,124,59,{221,410,597}},
+static MgCtrlButton opt_color[] = {
+	{0,0x83,"颜色-1",178,0,124,59},//{221,410,597}},
+	{0,0x83,"颜色-2",178,0,124,59},//{221,410,597}},
 };
 
+static ButtonArray array1[] = {
+    {0x03,"灯1",BMP_LOAD_PARA(opt_power),170},
+    {0x03,"灯1",BMP_LOAD_PARA(opt_bright),221},
+    {0x03,"灯1",BMP_LOAD_PARA(opt_rate),221},
+    {0x03,"灯1",BMP_LOAD_PARA(opt_color),221},
+};
+static ButtonArray array2[] = {
+    {0x1e,"灯2",BMP_LOAD_PARA(opt_power),359},
+    {0x1e,"灯2",BMP_LOAD_PARA(opt_bright),410},
+    {0x1e,"灯2",BMP_LOAD_PARA(opt_rate),410},
+    {0x1e,"灯2",BMP_LOAD_PARA(opt_color),410},
+};
+static ButtonArray array3[] = {
+    {0x1f,"灯3",BMP_LOAD_PARA(opt_power),546},
+    {0x1f,"灯3",BMP_LOAD_PARA(opt_bright),597},
+    {0x1f,"灯3",BMP_LOAD_PARA(opt_rate),597},
+    {0x1f,"灯3",BMP_LOAD_PARA(opt_color),597},
+};
+static StructLight light[] = {
+    {BMP_LOAD_PARA(array1)},
+    {BMP_LOAD_PARA(array2)},
+    {BMP_LOAD_PARA(array3)},
+};
 static FormBase* form_base = NULL;
 
-static MgCtrlButton power[LIGHT_NUM][POWER_MAX];
-static MgCtrlButton bright[LIGHT_NUM][BRIGHT_MAX];
-static MgCtrlButton rate[LIGHT_NUM][RATE_MAX];
-static MgCtrlButton color[LIGHT_NUM][COLOR_MAX];
-static StructLight light[] = {
-	{power,opt_power,POWER_MAX},
-	{bright,opt_bright,BRIGHT_MAX},
-	{rate,opt_rate,RATE_MAX},
-	{color,opt_color,COLOR_MAX},
-};
 /* ----------------------------------------------------------------*/
 /**
  * @brief optControlsNotify
@@ -148,7 +165,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	// saveLog("id:%d\n", id);
+    saveLog("id:%d\n", id);
 	// pro_com->sendOpt(opt_controls[id].device_id,
 			// opt_controls[id].op_code);
 }
@@ -165,21 +182,34 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-	int i;
+	int i,j,k;
+    StructLight *p_light;
+    ButtonArray *p_array;
+    MgCtrlButton *p_ctrl,*p;
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(light); i++) {
+        p_light = &light[i];
+        for (j=0; j<p_light->array_num; j++) {
+            p_array = p_light->array + j;
+            for (k=0; k<p_array->num; k++) {
+                p_ctrl = p_array->ctrl + k;
+                createSkinButton(hDlg,
+                        p_ctrl->idc,
+                        p_ctrl->x,
+                        p_ctrl->y,
+                        p_ctrl->w,
+                        p_ctrl->h,
+                        &p_ctrl->image_normal,
+                        &p_ctrl->image_press,
+                        1, 0,
+                        p_ctrl->notif_proc);
+            }
+        }
+	}
 	for (i=0; i<LIGHT_NUM; i++) {
-		// opt_controls[i].idc = i;
 		// opt_controls[i].device_id = 0x15;
 		// opt_controls[i].notif_proc = optControlsNotify;
-		// createSkinButton(hDlg,
-				// opt_controls[i].idc,
-				// opt_controls[i].x,
-				// opt_controls[i].y,
-				// opt_controls[i].w,
-				// opt_controls[i].h,
-				// &opt_controls[i].image_normal,
-				// &opt_controls[i].image_press,
-				// 1, 0,
-				// opt_controls[i].notif_proc);
 	}
 	formManiCreateToolBar(hDlg);
 }
@@ -216,27 +246,47 @@ static int formLightProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 
 void formLightLoadBmp(void)
 {
-	int i,j,k;
+	int i,j,k,idc=0;
 	char image_path[128] = {0};
-    MgCtrlButton **ctrl;
+    StructLight *p_light;
+    ButtonArray *p_array;
+    MgCtrlButton *p_ctrl,*new_ctrl,*p;
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<LIGHT_NUM; i++) {
-		for (k=0; k<NELEMENTS(light); k++) {
-			for (j=0; j<light[k].num; j++) {
-				ctrl = light[k].array;
-				sprintf(image_path,BMP_LOCAL_PATH"灯%d/灯%d%s(x%d，y%d).JPG",i+1,i+1,opt_power[j].name,
-						light[k].opt_base[j].x,
-						light[k].opt_base[j].y[i]);
-				saveLog("[%s]\n",image_path);
-				// bmpLoad((*(ctrl+i)+j)->image_normal, image_path);
-				sprintf(image_path,BMP_LOCAL_PATH"灯%d/灯%d%s-2(x%d，y%d).JPG",i+1,i+1,opt_power[j].name,
-						light[k].opt_base[j].x,
-						light[k].opt_base[j].y[i]);
-				saveLog("[%s]\n",image_path);
-				// bmpLoad(&power[i][j].image_press, image_path);
-			}
-		}
+	for (i=0; i<NELEMENTS(light); i++) {
+        p_light = &light[i];
+        for (j=0; j<p_light->array_num; j++) {
+            p_array = p_light->array + j;
+            new_ctrl = (MgCtrlButton *)calloc(p_array->num,sizeof(MgCtrlButton));
+            p = p_array->ctrl;
+            p_array->ctrl = new_ctrl;
+            for (k=0; k<p_array->num; k++) {
+                p_ctrl = p + k;
+                new_ctrl->idc = idc++;
+                new_ctrl->x = p_ctrl->x;
+                new_ctrl->y = p_array->y;
+                new_ctrl->w = p_ctrl->w;
+                new_ctrl->h = p_ctrl->h;
+                new_ctrl->device_id = p_array->device_id;
+                new_ctrl->op_code = p_ctrl->op_code;
+                new_ctrl->notif_proc = optControlsNotify;
+                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s(x%d，y%d).JPG",
+                        p_array->path,
+                        p_array->path,
+                        p_ctrl->img_name,
+                        p_ctrl->x,
+                        p_array->y);
+                saveLog("[%d][%d][%d][%s]\n",i,j,k,image_path);
+                bmpLoad(&new_ctrl->image_normal, image_path);
+                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s-2(x%d，y%d).JPG",
+                        p_array->path,
+                        p_array->path,
+                        p_ctrl->img_name,
+                        p_ctrl->x,
+                        p_array->y);
+                bmpLoad(&new_ctrl->image_press, image_path);
+            }
+        }
 	}
 }
 /* ----------------------------------------------------------------*/
