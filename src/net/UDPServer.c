@@ -644,8 +644,8 @@ void udpServerInit(void (*udpSocketRead)(SocketHandle *ABinding,SocketPacket *AD
 
 	pthread_attr_init(&threadAttr1);		//附加参数
 	pthread_attr_setdetachstate(&threadAttr1,PTHREAD_CREATE_DETACHED);	//设置线程为自动销毁
-	// int result = pthread_create(&m_pthread,&threadAttr1,udpSocketReadThread,NULL);	//创建线程
-	// if(result)
-		// printf("udpServerCreate() pthread failt,Error code:%d\n",result);
+	int result = pthread_create(&m_pthread,&threadAttr1,udpSocketReadThread,NULL);	//创建线程
+	if(result)
+		printf("udpServerCreate() pthread failt,Error code:%d\n",result);
 	pthread_attr_destroy(&threadAttr1);		//释放附加参数
 }
