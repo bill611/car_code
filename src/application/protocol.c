@@ -39,8 +39,6 @@ static void proUdpSendStatus(void);
 /* ---------------------------------------------------------------------------*
  *                        macro define
  *----------------------------------------------------------------------------*/
-#define BIT(x,bit) ((x & (1 << bit)) >> bit)
-#define BIT2(x,bit) ((x & (3 << bit)) >> bit)
 //------------协议A,串口协议
 #define COM_HEAD			0xFE  // 命令头
 #define COM_ORDER_CONNECT	0xFF  // 联机和联机应答命令

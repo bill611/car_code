@@ -205,6 +205,10 @@
 
 #define BMP_LOAD_PARA(x) x,NELEMENTS(x)
 
+#define BIT(x,bit) ((x & (1 << bit)) >> bit)
+#define BIT2(x,bit) ((x & (3 << bit)) >> bit)
+#define BIT3(x,bit) ((x & (7 << bit)) >> bit)
+
 #define TIME_1S (10 * 5)
 #define TIME_100MS (TIME_1S / 10)
 
