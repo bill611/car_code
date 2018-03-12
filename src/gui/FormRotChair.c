@@ -48,6 +48,8 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 	#define DBG_P( x... )
 #endif
 
+#define IDC_FOMR_TIMER 0xff
+
 #define BMP_LOCAL_PATH "res/image/旋转座椅/"
 enum {
     CHAIR_DIR_LEFT,  // 左座椅
@@ -81,6 +83,7 @@ static FormBase* form_base = NULL;
 static BITMAP bmp_bkg_l;
 static BITMAP bmp_bkg_r;
 static int chair_disp_type = CHAIR_LEFT;
+static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_r, BMP_LOCAL_PATH"右椅/旋转右座椅.JPG"},
@@ -265,10 +268,15 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 /* ---------------------------------------------------------------------------*/
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
+	if (nc == BN_PUSHED) {
+		SetTimer(GetParent (hwnd),IDC_FOMR_TIMER,TIME_500MS);
+		multi_ctrl = sendOptCmd(id);
 		return;
-	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
+	}
+	if (nc == BN_CLICKED) {
+		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
+		multi_ctrl = sendOptCmd(id);
+	}
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -356,6 +364,19 @@ static int formRotChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
 		case MSG_ELECTRIC_CHAIR_TYPE:
 			{
 				updateChairType(hDlg);
+			} break;
+		case MSG_TIMER:
+			{
+				if (wParam != IDC_FOMR_TIMER)
+					break;
+				
+				if (multi_ctrl == NULL)
+					break;
+				if (chair_disp_type == CHAIR_LEFT)
+					pro_com->sendOpt(0x08, multi_ctrl->op_code);
+				else
+					pro_com->sendOpt(0x09, multi_ctrl->op_code);
+
 			} break;
 		default:
 			break;

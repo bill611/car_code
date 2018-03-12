@@ -39,6 +39,7 @@ static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optAssistControlsReturnNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
@@ -51,6 +52,8 @@ static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 #else
 	#define DBG_P( x... )
 #endif
+
+#define IDC_FOMR_TIMER 0xff
 
 #define BMP_LOCAL_PATH "res/image/电动座椅/"
 enum {
@@ -93,6 +96,7 @@ static BITMAP bmp_bkg_r_cushin;
 static int chair_disp_type = CHAIR_LEFT;
 static int chair_dir_type = CHAIR_DIR_LEFT;
 static int chair_mode_type = CHAIR_BACKREST;
+static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_assist, BMP_LOCAL_PATH"座椅功能.JPG"},
@@ -141,6 +145,7 @@ static MgCtrlButton opt_controls[] = {
 
 // 辅助功能
 static MgCtrlButton opt_assist_controls[] = {
+	{0,	0x0,"返回",348,121,69,68,optAssistControlsReturnNotify},
 	{0,	0x88,"按犘打开",116,418,59,46,optSingleControlsNotify},
 	{0,	0x87,"按犘关闭",60,418,56,46,optSingleControlsNotify},
 	{0,	0x85,"加热打开",116,325,58,46,optSingleControlsNotify},
@@ -235,6 +240,7 @@ static void updateChairType(HWND hwnd)
 		for (j=0; j<chair[i].num; j++) {
 			array = chair[i].array + j;
 			for (k=0; k<array->num; k++) {
+				printf("[%d][%d][%d],disp:%d,mode:%d\n", i,j,k,chair_disp_type,chair_mode_type);
 				if (i == chair_disp_type && j == chair_mode_type)
 					display = SW_SHOWNORMAL;
 				else
@@ -318,9 +324,36 @@ static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	if (nc != BN_CLICKED)
 		return;
 	int i,k;
-	MgCtrlButton *ctrl;
 	chair_disp_type = CHAIR_ASSIST;
     form_base_priv.bmp_bkg = &bmp_bkg_assist;
+	chair_mode_type = CHAIR_BACKREST;
+	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
+
+}
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief optAssistControlsReturnNotify 辅助功能返回按键
+ *
+ * @param hwnd
+ * @param id
+ * @param nc
+ * @param add_data
+ */
+/* ---------------------------------------------------------------------------*/
+static void optAssistControlsReturnNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	int i,k;
+	if (chair_dir_type == CHAIR_DIR_LEFT) {
+		chair_disp_type = CHAIR_LEFT;
+		form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+	} else {
+		chair_disp_type = CHAIR_RIGHT;
+		form_base_priv.bmp_bkg = &bmp_bkg_r_backrest;
+	}
+	chair_mode_type = CHAIR_BACKREST;
+
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 
 }
@@ -429,10 +462,15 @@ static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 /* ---------------------------------------------------------------------------*/
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
+	if (nc == BN_PUSHED) {
+		SetTimer(GetParent (hwnd),IDC_FOMR_TIMER,TIME_500MS);
+		multi_ctrl = sendOptCmd(id);
 		return;
-	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
+	}
+	if (nc == BN_CLICKED) {
+		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
+		multi_ctrl = sendOptCmd(id);
+	}
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -521,6 +559,20 @@ static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM l
 			{
 				updateChairType(hDlg);
 			} break;
+		case MSG_TIMER:
+			{
+				if (wParam != IDC_FOMR_TIMER)
+					break;
+				
+				if (multi_ctrl == NULL)
+					break;
+
+				if (chair_dir_type == CHAIR_DIR_LEFT)
+					pro_com->sendOpt(0x01, multi_ctrl->op_code);
+				else
+					pro_com->sendOpt(0x02, multi_ctrl->op_code);
+			} break;
+
 		default:
 			break;
 	}

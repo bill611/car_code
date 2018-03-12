@@ -506,6 +506,11 @@ static void proComSendGetStatus(void)
 static void* proComInitThread(void *arg)
 {
 	while (online_state == 0) {
+		if (uart == NULL) {
+			usleep(100000);
+			continue;
+		}
+			
 		uart->SndData[0] = COM_HEAD;	
 		uart->SndData[1] = COM_ORDER_CONNECT;	
 		unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);

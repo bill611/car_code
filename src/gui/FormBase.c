@@ -38,7 +38,7 @@
 	#define DBG_P( x... )
 #endif
 
-#define IDC_FORM_BASE_TIMER 		0
+#define IDC_FORM_BASE_TIMER 		200
 
 /* ---------------------------------------------------------------------------*
  *                      variables define

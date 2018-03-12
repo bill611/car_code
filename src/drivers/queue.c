@@ -190,7 +190,7 @@ Queue * queueCreate(char *queue_name,QueueType type,unsigned int Size)
 		pthread_mutexattr_init(&This->priv->mutexattr2);
 		/* Set the mutex as a recursive mutex */
 		pthread_mutexattr_settype(&This->priv->mutexattr2,
-				PTHREAD_MUTEX_RECURSIVE);
+				PTHREAD_MUTEX_RECURSIVE_NP);
 		// PTHREAD_MUTEX_RECURSIVE_NP);
 		/* create the mutex with the attributes set */
 		pthread_mutex_init(&This->priv->mutex, &This->priv->mutexattr2);

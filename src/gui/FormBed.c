@@ -47,6 +47,8 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
+#define IDC_FOMR_TIMER 0xff
+
 #define BMP_LOCAL_PATH "res/image/电动床/"
 
 /* ---------------------------------------------------------------------------*
@@ -91,6 +93,7 @@ static MgCtrlButton opt_controls[] = {
 };
 
 static FormBase* form_base = NULL;
+static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
 /* ---------------------------------------------------------------------------*/
 /**
@@ -111,6 +114,7 @@ static MgCtrlButton * sendOptCmd(HWND id)
 			break;
 		}
     }
+	pro_com->sendOpt(ctrl->device_id, ctrl->op_code);
 	return ctrl;
 }
 /* ---------------------------------------------------------------------------*/
@@ -128,7 +132,7 @@ static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	if (nc != BN_CLICKED)
 		return;
 	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
+	sendOptCmd(id);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -143,11 +147,15 @@ static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 /* ---------------------------------------------------------------------------*/
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
+	if (nc == BN_PUSHED) {
+		SetTimer(GetParent (hwnd),IDC_FOMR_TIMER,TIME_500MS);
+		multi_ctrl = sendOptCmd(id);
 		return;
-	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
-	pro_com->sendOpt(ctrl->device_id, ctrl->op_code);
+	}
+	if (nc == BN_CLICKED) {
+		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
+		multi_ctrl = sendOptCmd(id);
+	}
 }
 
 /* ----------------------------------------------------------------*/
@@ -199,6 +207,16 @@ static int formBedProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 		case MSG_UPDATESTATUS:
 			{
 				formMainUpdateMute(hDlg);
+			} break;
+		case MSG_TIMER:
+			{
+				if (wParam != IDC_FOMR_TIMER)
+					break;
+				
+				if (multi_ctrl == NULL)
+					break;
+
+				pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
 			} break;
 		default:
 			break;
