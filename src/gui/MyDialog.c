@@ -34,7 +34,7 @@ HWND GUIAPI CreateMyWindowIndirectParamEx (PMY_DLGTEMPLATE pDlgTemplate,
 	CreateInfo.dwReserved     = (DWORD)pDlgTemplate;
 
 	CreateInfo.dwStyle        = pDlgTemplate->dwStyle & ~WS_VISIBLE;
-	CreateInfo.dwExStyle      = pDlgTemplate->dwExStyle | WS_EX_AUTOSECONDARYDC;
+	CreateInfo.dwExStyle      = pDlgTemplate->dwExStyle ;//| WS_EX_AUTOSECONDARYDC;
 	CreateInfo.spCaption      = pDlgTemplate->caption;
 	CreateInfo.hMenu          = pDlgTemplate->hMenu;
 	CreateInfo.hCursor        = GetSystemCursor (IDC_ARROW);

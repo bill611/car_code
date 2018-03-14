@@ -97,8 +97,8 @@ static MY_CTRLDATA ChildCtrls [] = {
 static MY_DLGTEMPLATE DlgInitParam =
 {
     WS_NONE,
-    WS_EX_AUTOSECONDARYDC,
-    // WS_EX_NONE,
+    // WS_EX_AUTOSECONDARYDC,
+	WS_EX_NONE,
     0,0,SCR_WIDTH,SCR_HEIGHT,
     "",
     0, 0,       //menu and icon is null
@@ -164,6 +164,7 @@ static void updateChairType(HWND hwnd)
 	int display;
 	MgCtrlButton *ctrl;
 	ButtonArray *array;
+	RECT rect;
     for (i=0; i<NELEMENTS(chair); i++) {
 		for (j=0; j<chair[i].num; j++) {
 			array = chair[i].array + j;
@@ -177,7 +178,12 @@ static void updateChairType(HWND hwnd)
 			}
 		}
     }
-    InvalidateRect (hwnd, NULL, TRUE);
+	rect.top = 64;
+	rect.left = 118;
+	rect.right = 427;
+	rect.bottom = 480;
+
+    InvalidateRect (hwnd, &rect, FALSE);
 }
 /* ---------------------------------------------------------------------------*/
 /**

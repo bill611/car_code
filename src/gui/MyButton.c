@@ -205,12 +205,12 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 			pInfo->select.state = BUT_STATE_SELECT;
 		else
 			pInfo->select.state = BUT_STATE_UNSELECT;
-		InvalidateRect (hwnd, NULL, TRUE);
+		InvalidateRect (hwnd, NULL, FALSE);
 		return 0;
 
     case MSG_MYBUTTON_SET_SELECT_MODE:
 		pInfo->select.mode = (int)wParam;
-		InvalidateRect (hwnd, NULL, TRUE);
+		InvalidateRect (hwnd, NULL, FALSE);
 		return 0;
 
 	case MSG_ENABLE:
@@ -224,7 +224,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		}
 		else
 			return 0;
-		InvalidateRect (hwnd, NULL, TRUE);
+		InvalidateRect (hwnd, NULL, FALSE);
 		return 0;
 
     case MSG_LBUTTONDOWN:
@@ -279,7 +279,6 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		if (PtInRect ((PRECT) &(pCtrl->cl), x, y))
         {
 			// playButtonSound();
-            printf("mode:%d,id:%d\n",pInfo->select.mode,pCtrl->id );
 			if (pInfo->select.mode){
 				if (pInfo->select.state == BUT_STATE_SELECT) 
 					pInfo->select.state = BUT_STATE_UNSELECT;
@@ -287,7 +286,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 					pInfo->select.state = BUT_STATE_SELECT;
 			}
 			NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
-			InvalidateRect (hwnd, NULL, TRUE);
+			InvalidateRect (hwnd, NULL, FALSE);
 		} else if(dwStyle & BS_CHECKBOX) {
 			pInfo->state = BUT_NORMAL;
 			InvalidateRect (hwnd, NULL, FALSE);

@@ -54,6 +54,8 @@ void DrawBackground(HWND hWnd, HDC hdc, const RECT* pClipRect,BITMAP *Image)
     BOOL fGetDC = FALSE;
     RECT rcTemp;
 	RECT rcClient;
+	HDC sec_dc;
+	sec_dc = GetSecondaryDC (hWnd); 
 
 	GetClientRect(hWnd,&rcClient);
 
