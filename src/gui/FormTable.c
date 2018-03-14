@@ -88,10 +88,10 @@ static FormBasePriv form_base_priv= {
 static MgCtrlButton opt_controls[] = {
 	{0,	0x81,"后退",110,532,116,56,optMultiControlsNotify},
 	{0,	0x80,"前进",110,455,116,56,optMultiControlsNotify},
-	{0,	0x80,"上升",254,455,118,56,optMultiControlsNotify},
-	{0,	0x80,"下降",254,532,118,56,optMultiControlsNotify},
-	{0,	0x83,"全开",110,607,116,56,optNoticControlsNotify},
-	{0,	0x82,"全收",254,607,118,56,optNoticControlsNotify},
+	{0,	0x82,"上升",254,455,118,56,optMultiControlsNotify},
+	{0,	0x83,"下降",254,532,118,56,optMultiControlsNotify},
+	{0,	0x84,"全开",110,607,116,56,optNoticControlsNotify},
+	{0,	0x85,"全收",254,607,118,56,optNoticControlsNotify},
 };
 
 static FormBase* form_base = NULL;
