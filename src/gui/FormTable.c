@@ -35,7 +35,8 @@ extern void formMainUpdateMute(HWND hWnd);
  *----------------------------------------------------------------------------*/
 static int formTableProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
-static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticLieNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticUnLieNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
@@ -51,6 +52,14 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 
 #define BMP_LOCAL_PATH "res/image/桌板/"
 
+typedef struct _BedBox{
+    HWND idc;
+    BITMAP bmp;
+}BedBox;
+typedef struct _BedBoxButton{
+    HWND idc;
+    BITMAP bmp[2];
+}BedBoxButton;
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
@@ -90,13 +99,22 @@ static MgCtrlButton opt_controls[] = {
 	{0,	0x80,"前进",110,455,116,56,optMultiControlsNotify},
 	{0,	0x82,"上升",254,455,118,56,optMultiControlsNotify},
 	{0,	0x83,"下降",254,532,118,56,optMultiControlsNotify},
-	{0,	0x84,"全开",110,607,116,56,optNoticControlsNotify},
-	{0,	0x85,"全收",254,607,118,56,optNoticControlsNotify},
+	{0,	0x84,"全开",110,607,116,56,optNoticUnLieNotify},
+	{0,	0x85,"全收",254,607,118,56,optNoticLieNotify},
 };
 
 static FormBase* form_base = NULL;
 static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief btConfirmPress 确认键回调
+ */
+/* ---------------------------------------------------------------------------*/
+static void btConfirmPress(void)
+{
+    pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief sendOptCmd 根据id查找当前触发控件
@@ -116,12 +134,12 @@ static MgCtrlButton * sendOptCmd(HWND id)
 			break;
 		}
     }
-	pro_com->sendOpt(ctrl->device_id, ctrl->op_code);
+	// pro_com->sendOpt(ctrl->device_id, ctrl->op_code);
 	return ctrl;
 }
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief optNoticControlsNotify 单次触发按键
+ * @brief optNoticLieNotify 单次触发按键
  *
  * @param hwnd
  * @param id
@@ -129,12 +147,21 @@ static MgCtrlButton * sendOptCmd(HWND id)
  * @param add_data
  */
 /* ---------------------------------------------------------------------------*/
-static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+static void optNoticLieNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
 	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
+    multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_TABLE_FOLD,btConfirmPress );
+}
+static void optNoticUnLieNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+    multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_TABLE_UNFOLD,btConfirmPress );
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -157,6 +184,7 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	if (nc == BN_CLICKED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
 		multi_ctrl = sendOptCmd(id);
+        pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
 	}
 }
 

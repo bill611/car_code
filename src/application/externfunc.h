@@ -28,6 +28,7 @@
 #include "MyButton.h"
 #include "MyDialog.h"
 #include "FormMain.h"
+#include "FormTopBox.h"
 
 // include for app
 #include "debug.h"

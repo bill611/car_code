@@ -65,6 +65,7 @@ extern void formLightLoadBmp(void);
 extern void formProjectionLoadBmp(void);
 extern void formTableLoadBmp(void);
 extern void formA12LoadBmp(void);
+extern void formTopBoxLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -157,6 +158,7 @@ static InitBmpFunc loadBmps[] = {
 	formProjectionLoadBmp,
 	formTableLoadBmp,
 	formA12LoadBmp,
+    formTopBoxLoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;

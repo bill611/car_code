@@ -38,7 +38,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void optNoticLieNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optNoticUnLieNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
-static void showNotice(HWND hWnd,int type,int mode);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -65,18 +64,9 @@ typedef struct _BedBoxButton{
  *                      variables define
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg; 
-static BedBox notice_lie;// 躺下
-static BedBox notice_unlie;// 收起
-static BedBoxButton notice_confirm,notice_cancel;
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"电动床.JPG"},
-    {&notice_lie.bmp, BMP_LOCAL_PATH"全躺提示(X70-Y304).JPG"},
-    {&notice_unlie.bmp, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&notice_confirm.bmp[0], BMP_LOCAL_PATH"确定(X240-Y404).JPG"},
-    {&notice_confirm.bmp[1], BMP_LOCAL_PATH"确定-2(X240-Y404).JPG"},
-    {&notice_cancel.bmp[0], BMP_LOCAL_PATH"取消(X70-Y404).JPG"},
-    {&notice_cancel.bmp[1], BMP_LOCAL_PATH"取消-2(X70-Y404).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -114,44 +104,14 @@ static MgCtrlButton opt_controls[] = {
 static FormBase* form_base = NULL;
 static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
-static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
-    showNotice(GetParent (hwnd),0,0);
-}
-static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    showNotice(GetParent (hwnd),0,0);
-}
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief showNotice 显示提示框
- *
- * @param hWnd
- * @param type 0全收 1全躺
- * @param mode 0 隐藏 1显示
+ * @brief btConfirmPress 确认键回调
  */
 /* ---------------------------------------------------------------------------*/
-static void showNotice(HWND hWnd,int type,int mode)
+static void btConfirmPress(void)
 {
-    ShowWindow(GetDlgItem (hWnd, notice_lie.idc), SW_HIDE);
-    ShowWindow(GetDlgItem (hWnd, notice_unlie.idc), SW_HIDE);
-    if (mode == 0) {
-        ShowWindow(GetDlgItem (hWnd, notice_confirm.idc), SW_HIDE);
-        ShowWindow(GetDlgItem (hWnd, notice_cancel.idc), SW_HIDE);
-        return;
-    } 
-    ShowWindow(GetDlgItem (hWnd, notice_confirm.idc), SW_SHOWNORMAL);
-    ShowWindow(GetDlgItem (hWnd, notice_cancel.idc), SW_SHOWNORMAL);
-    if (type == 0)
-        ShowWindow(GetDlgItem (hWnd, notice_unlie.idc), SW_SHOWNORMAL);
-    else
-        ShowWindow(GetDlgItem (hWnd, notice_lie.idc), SW_SHOWNORMAL);
-    
+    pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -191,7 +151,7 @@ static void optNoticLieNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		return;
 	saveLog("[%s]id:%d\n",__FUNCTION__, id);
     multi_ctrl = sendOptCmd(id);
-    showNotice(GetParent (hwnd),1,1);
+    topMessage(GetParent (hwnd),TOPBOX_BED_LIE,btConfirmPress );
 }
 static void optNoticUnLieNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
@@ -199,7 +159,7 @@ static void optNoticUnLieNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		return;
 	saveLog("[%s]id:%d\n",__FUNCTION__, id);
     multi_ctrl = sendOptCmd(id);
-    showNotice(GetParent (hwnd),0,1);
+    topMessage(GetParent (hwnd),TOPBOX_BED_UNLIE,btConfirmPress );
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -253,40 +213,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				1, 0,
 				opt_controls[i].notif_proc);
 	}
-    notice_lie.idc = i++;
-    CreateWindowEx2 (CTRL_STATIC, "",
-            WS_CHILD|SS_BITMAP,
-            WS_EX_TRANSPARENT,
-            notice_lie.idc,
-            70,304,340,155,
-            hDlg, NULL, NULL,
-            (DWORD)&notice_lie.bmp);
-    notice_unlie.idc = i++;
-    CreateWindowEx2 (CTRL_STATIC, "",
-            WS_CHILD|SS_BITMAP,
-            WS_EX_TRANSPARENT,
-            notice_unlie.idc,
-            70,304,340,155,
-            hDlg, NULL, NULL,
-            (DWORD)&notice_unlie.bmp);
-    notice_confirm.idc = i++;
-    createSkinButton(hDlg,
-            notice_confirm.idc,
-            240,404,170,55,
-            &notice_confirm.bmp[0],
-            &notice_confirm.bmp[1],
-            1, 0,
-            btConfirmPress);
-    notice_cancel.idc = i;
-    createSkinButton(hDlg,
-            notice_cancel.idc,
-            70,404,170,55,
-            &notice_cancel.bmp[0],
-            &notice_cancel.bmp[1],
-            1, 0,
-            btCancelPress);
-    ShowWindow(GetDlgItem (hDlg, notice_confirm.idc), SW_HIDE);
-    ShowWindow(GetDlgItem (hDlg, notice_cancel.idc), SW_HIDE);
 	formManiCreateToolBar(hDlg);
 }
 
