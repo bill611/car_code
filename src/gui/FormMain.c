@@ -44,6 +44,7 @@ extern int createFormLight(HWND hMainWnd);
 extern int createFormProjection(HWND hMainWnd);
 extern int createFormTable(HWND hMainWnd);
 extern int createFormA12(HWND hMainWnd,int type);
+extern int createFormWlan(HWND hMainWnd);
 
 extern void formVersionLoadBmp(void);
 extern void formPasswordLoadBmp(void);
@@ -66,6 +67,7 @@ extern void formProjectionLoadBmp(void);
 extern void formTableLoadBmp(void);
 extern void formA12LoadBmp(void);
 extern void formTopBoxLoadBmp(void);
+extern void formWlanLoadBmp(void);
 
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
@@ -159,6 +161,7 @@ static InitBmpFunc loadBmps[] = {
 	formTableLoadBmp,
 	formA12LoadBmp,
     formTopBoxLoadBmp,
+    formWlanLoadBmp,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -279,6 +282,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			createFormA12(parent_hwnd,1);
 			break;
 		case	IDC_WALN:
+            createFormWlan(parent_hwnd);
 			break;
         case IDC_SYSTEM:
 			createFormVersion(parent_hwnd);

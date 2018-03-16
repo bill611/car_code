@@ -61,8 +61,6 @@ void DrawBackground(HWND hWnd, HDC hdc, const RECT* pClipRect,BITMAP *Image)
         hdc = GetSecondaryClientDC (hWnd);
         fGetDC = TRUE;
     }
-//    if (pClipRect)
-//        ClipRectIntersect (hdc, pClipRect);
     if (pClipRect) {
         rcTemp = *pClipRect;
         ScreenToClient (hWnd, &rcTemp.left, &rcTemp.top);
