@@ -35,7 +35,10 @@ extern void formMainUpdateMute(HWND hWnd);
  *----------------------------------------------------------------------------*/
 static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
-static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticLegFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticLegUnFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticChairFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void optNoticChairUnFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
@@ -135,10 +138,10 @@ static FormBasePriv form_base_priv= {
 // device 0x0b
 static MgCtrlButton opt_controls[] = {
 	{0,	0x0,"辅助功能",305,509,119,51,optAssistControlsNotify},
-	{0,	0x82,"全收",58,509,60,51},
-	{0,	0x83,"全躺",118,509,59,51},
-	{0,	0x81,"腿托收",240,509,59,51},
-	{0,	0x80,"腿托展开",181,509,59,51},
+	{0,	0x82,"全收",58,509,60,51,optNoticChairFoldControlsNotify},
+	{0,	0x83,"全躺",118,509,59,51,optNoticChairUnFoldControlsNotify},
+	{0,	0x81,"腿托收",240,509,59,51,optNoticLegFoldControlsNotify},
+	{0,	0x80,"腿托展开",181,509,59,51,optNoticLegUnFoldControlsNotify},
 	{0,	0x0,"右椅",281,622,114,55,optRightChairControlsNotify},
 	{0,	0x0,"左椅",83,622,113,54,optLeftChairControlsNotify},
 };
@@ -259,6 +262,18 @@ static void updateChairType(HWND hwnd)
 }
 /* ---------------------------------------------------------------------------*/
 /**
+ * @brief btConfirmPress 确认键回调
+ */
+/* ---------------------------------------------------------------------------*/
+static void btConfirmPress(void)
+{
+	if (chair_dir_type == CHAIR_DIR_LEFT)
+		pro_com->sendOpt(0x01, multi_ctrl->op_code);
+	else
+		pro_com->sendOpt(0x02, multi_ctrl->op_code);
+}
+/* ---------------------------------------------------------------------------*/
+/**
  * @brief sendOptCmd 根据id查找当前触发控件
  *
  * @param id 触发控件id
@@ -290,15 +305,15 @@ static MgCtrlButton * sendOptCmd(HWND id)
     }
 	return NULL;
 search_ok:
-    if (chair_dir_type == CHAIR_DIR_LEFT)
-        pro_com->sendOpt(0x01, ctrl->op_code);
-    else
-        pro_com->sendOpt(0x02, ctrl->op_code);
+    // if (chair_dir_type == CHAIR_DIR_LEFT)
+        // pro_com->sendOpt(0x01, ctrl->op_code);
+    // else
+        // pro_com->sendOpt(0x02, ctrl->op_code);
 	return ctrl;
 }
 /* ----------------------------------------------------------------*/
 /**
- * @brief optNoticControlsNotify 弹出提示按键
+ * @brief optNoticLegFoldControlsNotify 弹出提示按键
  *
  * @param hwnd
  * @param id
@@ -306,12 +321,37 @@ search_ok:
  * @param add_data
  */
 /* ----------------------------------------------------------------*/
-static void optNoticControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+static void optNoticLegFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
 	saveLog("[%s]id:%d\n",__FUNCTION__, id);
-	MgCtrlButton * ctrl = sendOptCmd(id);
+	multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_LEG_FOLD,btConfirmPress );
+}
+static void optNoticLegUnFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+	multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_LEG_UNFOLD,btConfirmPress );
+}
+static void optNoticChairFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+	multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_CHAIR_FOLD,btConfirmPress );
+}
+static void optNoticChairUnFoldControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	saveLog("[%s]id:%d\n",__FUNCTION__, id);
+	multi_ctrl = sendOptCmd(id);
+    topMessage(GetParent (hwnd),TOPBOX_CHAIR_UNFOLD,btConfirmPress );
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -452,7 +492,11 @@ static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	sendOptCmd(id);
+	multi_ctrl = sendOptCmd(id);
+	if (chair_dir_type == CHAIR_DIR_LEFT)
+		pro_com->sendOpt(0x01, multi_ctrl->op_code);
+	else
+		pro_com->sendOpt(0x02, multi_ctrl->op_code);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -475,6 +519,10 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	if (nc == BN_CLICKED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
 		multi_ctrl = sendOptCmd(id);
+		if (chair_dir_type == CHAIR_DIR_LEFT)
+			pro_com->sendOpt(0x01, multi_ctrl->op_code);
+		else
+			pro_com->sendOpt(0x02, multi_ctrl->op_code);
 	}
 }
 
@@ -521,7 +569,7 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
     creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
-            optNoticControlsNotify);
+            optNoticLegFoldControlsNotify);
     int i,j;
 	int display = 0;
 	ButtonArray *array;

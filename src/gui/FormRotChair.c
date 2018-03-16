@@ -179,7 +179,7 @@ static void updateChairType(HWND hwnd)
 		}
     }
 	rect.top = 64;
-	rect.left = 118;
+	rect.left = 52;
 	rect.right = 427;
 	rect.bottom = 480;
 

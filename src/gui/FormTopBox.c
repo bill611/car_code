@@ -40,7 +40,7 @@
  *----------------------------------------------------------------------------*/
 #define DISPLAY_TIME 	3000		//显示时间 2S
 
-#define BMP_LOCAL_PATH "res/image/"
+#define BMP_LOCAL_PATH "res/image/弹出提示/"
 
 enum {
 	IDC_TOPBOX_TIMER ,
@@ -70,14 +70,14 @@ static BITMAP bmp_chair_unfold;// 桌板收起
 static BedBoxButton notice_confirm,notice_cancel;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bed_lie, BMP_LOCAL_PATH"全躺提示(X70-Y304).JPG"},
-    {&bmp_bed_unlie, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_table_fold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_table_unfold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_leg_fold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_leg_unfold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_chair_fold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
-    {&bmp_chair_unfold, BMP_LOCAL_PATH"全收提示(X70-Y304).JPG"},
+    {&bmp_bed_lie, BMP_LOCAL_PATH"电动床全躺提示(X70-Y304).JPG"},
+    {&bmp_bed_unlie, BMP_LOCAL_PATH"电动床全收提示(X70-Y304).JPG"},
+    {&bmp_table_fold, BMP_LOCAL_PATH"桌板全展提示(X70-Y304).JPG"},
+    {&bmp_table_unfold, BMP_LOCAL_PATH"桌板全收提示(X70-Y304).JPG"},
+    {&bmp_leg_fold, BMP_LOCAL_PATH"桌腿展开提示(X70-Y304).JPG"},
+    {&bmp_leg_unfold, BMP_LOCAL_PATH"桌腿收拢提示(X70-Y304).JPG"},
+    {&bmp_chair_fold, BMP_LOCAL_PATH"座椅全收提示(X70-Y304).JPG"},
+    {&bmp_chair_unfold, BMP_LOCAL_PATH"座椅全躺提示(X70-Y304).JPG"},
     {&notice_confirm.bmp[0], BMP_LOCAL_PATH"确定(X240-Y404).JPG"},
     {&notice_confirm.bmp[1], BMP_LOCAL_PATH"确定-2(X240-Y404).JPG"},
     {&notice_cancel.bmp[0], BMP_LOCAL_PATH"取消(X70-Y404).JPG"},

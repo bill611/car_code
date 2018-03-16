@@ -473,7 +473,7 @@ const st_udp2com udp2com[] = {
 /* ---------------------------------------------------------------------------*/
 static void proComSendOpt(int device,int opt)
 {
-	if (device == 0)
+	if (device == 0 || opt == 0)
 		return;
 	uart->SndData[0] = device;	
 	uart->SndData[1] = opt;	
