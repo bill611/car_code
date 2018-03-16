@@ -54,13 +54,11 @@ void DrawBackground(HWND hWnd, HDC hdc, const RECT* pClipRect,BITMAP *Image)
     BOOL fGetDC = FALSE;
     RECT rcTemp;
 	RECT rcClient;
-	HDC sec_dc;
-	sec_dc = GetSecondaryDC (hWnd); 
 
 	GetClientRect(hWnd,&rcClient);
 
     if (hdc == 0) {
-        hdc = GetClientDC (hWnd);
+        hdc = GetSecondaryClientDC (hWnd);
         fGetDC = TRUE;
     }
 //    if (pClipRect)
@@ -73,7 +71,7 @@ void DrawBackground(HWND hWnd, HDC hdc, const RECT* pClipRect,BITMAP *Image)
     }
 	FillBoxWithBitmap(hdc,rcClient.left,rcClient.top,RECTW(rcClient),RECTH(rcClient),Image);
     if (fGetDC)
-        ReleaseDC (hdc);
+        ReleaseSecondaryDC (hWnd,hdc);
 }
 //----------------------------------------------------------------------------
 void wndEraseBackground(HWND hWnd,HDC hdc, const RECT* pClipRect,BITMAP *pImage,int Left,int Top,int Width,int Height)

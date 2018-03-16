@@ -102,8 +102,8 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
         g_config.device_main_controls[i] =
             SendMessage(GetDlgItem (GetParent (hwnd), i),
                     MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
-        Public.saveConfig();
     }
+	Public.saveConfig();
     SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 }
 static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
