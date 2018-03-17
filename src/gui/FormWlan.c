@@ -35,10 +35,12 @@ extern void formMainUpdateMute(HWND hWnd);
  *----------------------------------------------------------------------------*/
 static int formWlanProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
+static void btKyeboardDeletPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data);
 static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data);
 static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
+static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -55,7 +57,8 @@ enum {
 	IDC_LABER_ERR,
 	IDC_BUTTON_ERR_CONFIRM,
 
-	IDC_EDIT_PASSWORD = 50,
+	IDC_EDIT_ACCOUNT = 50,
+	IDC_EDIT_PASSWORD ,
 };
 
 
@@ -63,13 +66,16 @@ enum {
  *                      variables define
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg; // 背景
+static int current_edit = IDC_EDIT_ACCOUNT;
+static char key_num[] = "0123456789abcdefghijklmnopqrstuvwxyz ";
 
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"WLAN-1.jpg"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
-    EDIT_PSD(195,286,180,20,IDC_EDIT_PASSWORD,"",0,NULL),
+    EDIT_L(148,220,244,36,IDC_EDIT_ACCOUNT,"",0,NULL),
+    EDIT_PSD_L(148,264,244,36,IDC_EDIT_PASSWORD,"",0,NULL),
 };
 
 
@@ -131,11 +137,22 @@ static MgCtrlButton opt_controls[] = {
 	{0,	0,"y",241,378,38,50},
 	{0,	0,"z",101,487,38,50},
 	{0,	0,"space",140,543,160,49},
-	{0,	0,"enter",302,543,139,49},
+	{0,	0,"enter",302,543,139,49,btKyeboardEnterPress},
+	{0,	0,"delete",41,543,139,49,btKyeboardDeletPress},
 };
 
 static FormBase* form_base = NULL;
 
+static void editNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	char text[50];
+	if (nc == EN_SETFOCUS){
+		int ip_len = SendMessage (GetDlgItem(GetParent(hwnd),id), MSG_GETTEXT, 50,  (LPARAM)text);
+		SendMessage (GetDlgItem(GetParent(hwnd),id), EM_SETCARETPOS, 0, ip_len);
+	} else if (nc == EN_KILLFOCUS) {
+		current_edit = id;
+	}
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief btKyeboardNumPress 获取设备ID按钮
@@ -150,17 +167,20 @@ static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    // if (id >= IDC_BUTTON_0 && id <= IDC_BUTTON_9) {
-        // char buf[4];
-        // sprintf(buf,"%d",id);
-        // SendMessage (GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-                // MSG_CHAR, buf[0], 0L);
-    // }
-    // } else if (id == IDC_BUTTON_CLEAR) 
-        // SetWindowText(GetDlgItem(GetParent (hwnd),IDC_EDIT_PASSWORD),"");
-    // else if (id == IDC_BUTTON_DELET)
-        // SendMessage (GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-                // MSG_CHAR, '\b', 0L);
+	SendMessage(GetDlgItem(GetParent(hwnd),current_edit),MSG_CHAR,key_num[id],0);
+}
+
+static void btKyeboardDeletPress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	SendMessage(GetDlgItem(GetParent(hwnd),current_edit),MSG_CHAR,'\b',0);
+}
+
+static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
 }
 
 static void showErrInfo(HWND hwnd,BOOL type)
@@ -230,8 +250,11 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	int i;
 	HWND hCtrl;
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
+	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
         opt_controls[i].idc = i;
+		if (opt_controls[i].notif_proc == NULL)
+			opt_controls[i].notif_proc = btKyeboardNumPress;
 		createSkinButton(hDlg,
 				opt_controls[i].idc,
 				opt_controls[i].x,
@@ -243,6 +266,12 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				1, 0,
 				opt_controls[i].notif_proc);
 	}
+	SetWindowElementAttr(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT), WE_FGC_WINDOW,MY_WHIGHT);
+	SendDlgItemMessage(hDlg,IDC_EDIT_ACCOUNT, EM_LIMITTEXT, 20, 0L);
+	SetNotificationCallback (GetDlgItem(hDlg,IDC_EDIT_ACCOUNT), editNotify);
+	SetWindowElementAttr(GetDlgItem(hDlg,IDC_EDIT_PASSWORD), WE_FGC_WINDOW,MY_WHIGHT);
+	SendDlgItemMessage(hDlg,IDC_EDIT_PASSWORD, EM_LIMITTEXT, 20, 0L);
+	SetNotificationCallback (GetDlgItem(hDlg,IDC_EDIT_PASSWORD), editNotify);
     // CreateWindowEx2 (CTRL_STATIC, "",
             // WS_CHILD|SS_BITMAP,
             // WS_EX_TRANSPARENT,
@@ -318,7 +347,8 @@ int createFormWlan(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
-        SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
+		SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
+		SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),"");
         showErrInfo(Form,FALSE);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {

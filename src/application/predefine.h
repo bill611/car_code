@@ -91,12 +91,12 @@
  */
 /* ----------------------------------------------------------------*/
 #define EDIT(x,y,w,h,id,caption,dwAddData,font)  \
-{CTRL_SLEDIT,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_CENTER| WS_TABSTOP,\
+{CTRL_SLEDIT,WS_CHILD|WS_VISIBLE|ES_CENTER| WS_TABSTOP,\
 	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
 
 #define EDIT_L(x,y,w,h,id,caption,dwAddData,font)  \
-{CTRL_SLEDIT,WS_CHILD|WS_VISIBLE|WS_BORDER|ES_LEFT| WS_TABSTOP,\
-	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
+{CTRL_SLEDIT,WS_CHILD|WS_VISIBLE|ES_LEFT| WS_TABSTOP,\
+	x,y,w,h,id,caption,dwAddData,WS_EX_TRANSPARENT,NULL,NULL,font}
 
 #define EDIT_L_DISVISIBLE(x,y,w,h,id,caption,dwAddData,font)  \
 {CTRL_SLEDIT,WS_CHILD|WS_BORDER|ES_LEFT| WS_TABSTOP,\
@@ -112,11 +112,11 @@
 
 #define EDIT_PSD(x,y,w,h,id,caption,dwAddData,font)  \
 {CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_VISIBLE|ES_CENTER|WS_TABSTOP,\
-	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
+	x,y,w,h,id,caption,dwAddData,WS_EX_TRANSPARENT,NULL,NULL,font}
 
 #define EDIT_PSD_L(x,y,w,h,id,caption,dwAddData,font)  \
-{CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_VISIBLE|WS_BORDER|ES_LEFT|WS_TABSTOP,\
-	x,y,w,h,id,caption,dwAddData,0,NULL,NULL,font}
+{CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_VISIBLE|ES_LEFT|WS_TABSTOP,\
+	x,y,w,h,id,caption,dwAddData,WS_EX_TRANSPARENT,NULL,NULL,font}
 
 #define EDIT_PSD_L_DISVISIBLE(x,y,w,h,id,caption,dwAddData,font)  \
 {CTRL_SLEDIT,WS_CHILD|ES_PASSWORD|WS_BORDER|ES_LEFT|WS_TABSTOP,\
