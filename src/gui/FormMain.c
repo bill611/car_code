@@ -93,16 +93,19 @@ enum {
     IDC_VOLUEM_ADD, // 音量增加
     IDC_MUTE,  // 静音
     IDC_CLOSE,  // 关闭
+    IDC_WIFI,  // wifi 图标
 };
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
 BITMAP bmp_bkg1; // 背景1
 BITMAP bmp_bkg2; // 背景2
+static BITMAP bmp_wifi; // wifi
 
 static BmpLocation bmp_load[] = {
 	{&bmp_bkg1, "res/image/背景.JPG"},
 	{&bmp_bkg2, "res/image/背景-2.JPG"},
+	{&bmp_wifi, BMP_LOCAL_PATH"/wifi(x424，y5).JPG"},
 };
 
 
@@ -218,6 +221,27 @@ static int formMainTimerProc1s(void)
 	return 0;
 }
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief formMainSetNetWorkState 改变网口状态图标
+ *
+ * @param state 0未连接 1连接
+ */
+/* ---------------------------------------------------------------------------*/
+static void formMainSetNetWorkState(int state)
+{
+	static int state_old = 0;
+	if (state_old == state) {
+		return;
+	}
+	state_old = state;
+    if (state)
+        ShowWindow(GetDlgItem (hwnd_main, IDC_WIFI), SW_SHOWNORMAL);
+    else
+        ShowWindow(GetDlgItem (hwnd_main, IDC_WIFI), SW_HIDE);
+
+}
+
 static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
@@ -311,7 +335,8 @@ static void optToolbarsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			} break;
 		case	IDC_CLOSE:
 			{
-
+				SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
+				screensaverStart(LCD_OFF);
 			} break;
 
         default:
@@ -418,6 +443,14 @@ static void formMainCreateControl(HWND hWnd)
                 opt_controls[i].notif_proc);
 	}
 	formManiCreateToolBar(hWnd);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            IDC_WIFI,
+            424,5,36,35,
+            hWnd, NULL, NULL,
+            (DWORD)&bmp_wifi);
+    ShowWindow(GetDlgItem (hWnd, IDC_WIFI), SW_HIDE);
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -504,7 +537,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);
-				screensaverStart(LCD_ON);
+				// screensaverStart(LCD_ON);
 			} break;
 
 		case MSG_ERASEBKGND:
@@ -543,7 +576,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 
 		case MSG_LBUTTONDOWN:
 			{
-				screensaverStart(LCD_ON);
+				// screensaverStart(LCD_ON);
 			} break;
 
 		case MSG_UPDATESTATUS:
@@ -642,6 +675,7 @@ FormMain * formMainCreate(
 	this->timerStop = formMainTimerStop;
 	this->timerGetState = formMainTimerGetState;
 	this->timerProc1s = formMainTimerProc1s;
+    this->setNetWorkState = formMainSetNetWorkState;
 
 	return this;
 }

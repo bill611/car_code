@@ -127,15 +127,15 @@ void ErrorLog(int ecode,const char *fmt,...)
 #ifndef WIN32
 //windows 的GetLocalIP代码在capture.c中实现
 
-int GetLocalIP(char *IP,char *NetMask,char *MAC)
+int GetLocalIP(char *net_name,char *IP,char *NetMask,char *MAC)
 {
-#ifndef PC
 	struct ifreq ifr;
 	int sock;
 	if((sock = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		return 0;
 	}
-	strcpy(ifr.ifr_name, "eth0");
+#ifndef PC
+	strcpy(ifr.ifr_name, net_name);
 	if(ioctl(sock, SIOCGIFADDR, &ifr) < 0)
 		goto error;
 
@@ -634,6 +634,16 @@ void SaveLog(const char *fmt,...)
  */
 int net_detect(char* net_name)
 {
+#ifdef PC
+    return 0;
+#endif
+    char ip[16] =  {0},netmask[16],mac[20];
+    GetLocalIP(net_name,ip,netmask,mac);
+    if (ip[0] == 0)
+        return -1;
+    else
+        return 0;
+#if 0
 	int skfd = 0;
 	struct ifreq ifr;
 	struct sockaddr_in *pAddr = NULL;
@@ -653,12 +663,13 @@ int net_detect(char* net_name)
 	}
 	close(skfd);
 	if(ifr.ifr_flags & IFF_RUNNING) {
-		// printf("%s is running :)\n", ifr.ifr_name);
+        printf("%s is running :)\n", ifr.ifr_name);
 		return 0;
 	} else {
+        printf("%s is not running :(\n", ifr.ifr_name);
 		return -1;
-		// printf("%s is not running :(\n", ifr.ifr_name);
 	}
+#endif
 }
 
 /* ----------------------------------------------------------------*/

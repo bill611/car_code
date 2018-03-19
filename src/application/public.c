@@ -276,8 +276,8 @@ void publicInit(void)
 	}
 
 	//取本机IP
-	// GetLocalIP(Public.cLocalIP,Public.cNetMask,Public.MAC);
-	// printf("LocalIP=%s, cNetMask=%s, MAC=%s\n",Public.cLocalIP, Public.cNetMask, Public.MAC);
+    // GetLocalIP(Public.cLocalIP,Public.cNetMask,Public.MAC);
+    // printf("LocalIP=%s, cNetMask=%s, MAC=%s\n",Public.cLocalIP, Public.cNetMask, Public.MAC);
 
 	//创建 UDP客户端
 	udpclient = TUDPClient_Create(0);

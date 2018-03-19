@@ -109,6 +109,11 @@ static void irqTimerInit(int sec)
 /* ---------------------------------------------------------------------------*/
 static void timer1s(void)
 {
+	// ¼ì²éÍøÂçÁ¬½Ó×´Ì¬
+	if (net_detect("wlan0") < 0)
+		form_main->setNetWorkState(0);
+	else
+		form_main->setNetWorkState(1);
 	if (form_main->timerProc1s()) {
         printf("form timer 1s\n");
 	}

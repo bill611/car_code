@@ -51,6 +51,8 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
+#define IDC_FOMR_TIMER 0xff
+
 #define BMP_LOCAL_PATH "res/image/WLAN/"
 enum {
 
@@ -82,8 +84,8 @@ static MY_CTRLDATA ChildCtrls [] = {
 static MY_DLGTEMPLATE DlgInitParam =
 {
     WS_NONE,
-    // WS_EX_AUTOSECONDARYDC,
-	WS_EX_NONE,
+    WS_EX_AUTOSECONDARYDC,
+	// WS_EX_NONE,
     0,0,SCR_WIDTH,SCR_HEIGHT,
     "",
     0, 0,       //menu and icon is null
@@ -172,15 +174,21 @@ static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data)
 
 static void btKyeboardDeletPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
-	if (nc != BN_CLICKED)
+	if (nc == BN_PUSHED) {
+		SetTimer(GetParent (hwnd),IDC_FOMR_TIMER,TIME_100MS);
 		return;
-	SendMessage(GetDlgItem(GetParent(hwnd),current_edit),MSG_CHAR,'\b',0);
+	}
+	if (nc == BN_CLICKED) {
+		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
+        SendMessage(GetDlgItem(GetParent(hwnd),current_edit),MSG_CHAR,'\b',0);
+	}
 }
 
 static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+	ExcuteCmd(1,"./network.sh","Infra","&",NULL);
 }
 
 static void showErrInfo(HWND hwnd,BOOL type)
@@ -310,6 +318,13 @@ static int formWlanProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 		case MSG_UPDATESTATUS:
 			{
 				formMainUpdateMute(hDlg);
+			} break;
+		case MSG_TIMER:
+			{
+				if (wParam != IDC_FOMR_TIMER)
+					break;
+				
+                SendMessage(GetDlgItem(hDlg,current_edit),MSG_CHAR,'\b',0);
 			} break;
 		default:
 			break;

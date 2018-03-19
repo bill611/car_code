@@ -135,6 +135,6 @@ int GetFilesNum(char *pPathDir,void (*func)(void *));
 void clearFramebuffer(void);
 BOOL playButtonSound(void);
 void WatchDogClose(void);
-int GetLocalIP(char *IP,char *NetMask,char *MAC);
+int GetLocalIP(char *net_name,char *IP,char *NetMask,char *MAC);
 #endif
 
