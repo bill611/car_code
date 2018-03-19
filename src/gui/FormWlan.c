@@ -140,7 +140,7 @@ static MgCtrlButton opt_controls[] = {
 	{0,	0,"z",101,487,38,50},
 	{0,	0,"space",140,543,160,49},
 	{0,	0,"enter",302,543,139,49,btKyeboardEnterPress},
-	{0,	0,"delete",41,543,139,49,btKyeboardDeletPress},
+	{0,	0,"delete",39,543,139,49,btKyeboardDeletPress},
 };
 
 static FormBase* form_base = NULL;
