@@ -298,11 +298,13 @@ int AdjustLCDLight(int Light,int force_off)
 BOOL screensaverStart(BOOL On)
 {
 	if(On) {// 点亮LCD，退出屏保模式
-		AdjustLCDLight(Public.LCDLight,1);
+		Public.LCDLight = 1;
+		Mygpio->SetValueNow(Mygpio,ENUM_GPIO_LCD,IO_ACTIVE);
 		Public.ScrSaversTimer = 0;
 		return FALSE;
 	} else {
-		AdjustLCDLight(10,1);
+		Public.LCDLight = 0;
+		Mygpio->SetValueNow(Mygpio,ENUM_GPIO_LCD,IO_INACTIVE);
 		return TRUE;
 	}
 }
@@ -401,6 +403,7 @@ int ExcuteCmd(int bWait,char *Cmd,...)
 	}
 	va_end(argp);
 	printf("cmd :%s\n",commond);
+#if 0
 	if ((fp = popen(commond, "r") ) == 0) {
 		perror("popen");
 		return -1;
@@ -410,10 +413,12 @@ int ExcuteCmd(int bWait,char *Cmd,...)
 		// printf("popen ret is :%d\n", ret);
 	}
 	return ret;
+#else
 
 	// 用此函数导致产生僵尸进程
-	// system(commond);
-	// return 0;
+    system(commond);
+    return 0;
+#endif
 }
 //---------------------------------------------------------------------------
 //判断本地IP与目标IP是否同一个网段,如果不在同一个网段将返回最小的广播域
@@ -576,13 +581,13 @@ time_t MyGetTickCount(void)
 
 void talkLedControl(int status)
 {
-	if (status == 1) {
-		// Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_POWER,IO_ACTIVE);
-		Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_LED,IO_ACTIVE);
-	} else {
-		// Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_POWER,IO_INACTIVE);
-		Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_LED,IO_INACTIVE);
-	}
+	// if (status == 1) {
+		// // Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_POWER,IO_ACTIVE);
+		// Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_LED,IO_ACTIVE);
+	// } else {
+		// // Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_POWER,IO_INACTIVE);
+		// Mygpio->SetValueNow(Mygpio,ENUM_GPIO_CCD_LED,IO_INACTIVE);
+	// }
 }
 
 unsigned long long GetFlashFreeSpace(void)

@@ -45,11 +45,7 @@
 #define GPIO_GROUP_H 'h'
 
 
-#define GPIO_ECHO_RESET		GPIO_GROUP_D,4
-#define GPIO_CCD_LED		GPIO_GROUP_G,8
-#define GPIO_CCD_POWER		GPIO_GROUP_G,15
-#define GPIO_UNLOCK         GPIO_GROUP_E,9
-#define GPIO_RESET         	GPIO_GROUP_G,14
+#define ENUM_GPIO_LCD		GPIO_GROUP_D,3
 
 /* ----------------------------------------------------------------*
  *                      variables define
@@ -57,11 +53,7 @@
 MyGpio *Mygpio = NULL;
 
 MyGpioPriv gpiotbl[]={
-	{GPIO_ECHO_RESET,		"0",IO_ACTIVE,0},
-	{GPIO_CCD_POWER,		"1",IO_ACTIVE,0},
-	{GPIO_CCD_LED,			"1",IO_INACTIVE,0},
-	{GPIO_UNLOCK,			"1",IO_INACTIVE,0},
-	{GPIO_RESET,			"0",IO_INPUT,50},
+	{ENUM_GPIO_LCD,		"1",IO_ACTIVE,0},
 };
 
 /* ----------------------------------------------------------------*/

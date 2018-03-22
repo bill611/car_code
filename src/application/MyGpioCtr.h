@@ -24,11 +24,7 @@ extern "C" {
 #define FLASH_FOREVER	0x7FFFFFFF
 
 	typedef enum {
-		ENUM_GPIO_ECHO_RESET,	// 消回音芯片复位
-		ENUM_GPIO_CCD_POWER,	// 摄像头电源
-		ENUM_GPIO_CCD_LED,		// 摄像头补光灯
-		ENUM_GPIO_UNLOCK,		// 开锁
-		ENUM_GPIO_RESET,		// 恢复出厂设置接口，输入
+		ENUM_GPIO_LCD,	// 消回音芯片复位
 	}GPIO_TBL;
 
 	typedef enum {//200ms为周期

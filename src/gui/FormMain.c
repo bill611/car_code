@@ -576,7 +576,10 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 
 		case MSG_LBUTTONDOWN:
 			{
-				screensaverStart(LCD_ON);
+                if (Public.LCDLight == 0) {
+                    screensaverStart(LCD_ON);
+                    return; 
+                }
 			} break;
 
 		case MSG_UPDATESTATUS:
