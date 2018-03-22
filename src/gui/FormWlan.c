@@ -140,7 +140,7 @@ static MgCtrlButton opt_controls[] = {
 	{0,	0,"z",101,487,38,50},
 	{0,	0,"space",140,543,160,49},
 	{0,	0,"enter",302,543,139,49,btKyeboardEnterPress},
-	{0,	0,"delete",39,543,139,49,btKyeboardDeletPress},
+	{0,	0,"delete",39,543,100,49,btKyeboardDeletPress},
 };
 
 static FormBase* form_base = NULL;
@@ -188,7 +188,7 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	ExcuteCmd(1,"./network.sh","Infra","&",NULL);
+	ExcuteCmd(1,"./network.sh",NULL);
 }
 
 static void showErrInfo(HWND hwnd,BOOL type)

@@ -60,7 +60,7 @@ static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LP
 		case MSG_LBUTTONDOWN:
 			{
 				this->auto_close_time = FORM_SETTING_ONTIME;
-				// screensaverStart(LCD_ON);
+				screensaverStart(LCD_ON);
 			} return CONTINUE;
 
 		case MSG_TIMER:

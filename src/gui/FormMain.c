@@ -335,8 +335,8 @@ static void optToolbarsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			} break;
 		case	IDC_CLOSE:
 			{
-				SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 				screensaverStart(LCD_OFF);
+				SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 			} break;
 
         default:
@@ -537,7 +537,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);
-				// screensaverStart(LCD_ON);
+				screensaverStart(LCD_ON);
 			} break;
 
 		case MSG_ERASEBKGND:
@@ -576,7 +576,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 
 		case MSG_LBUTTONDOWN:
 			{
-				// screensaverStart(LCD_ON);
+				screensaverStart(LCD_ON);
 			} break;
 
 		case MSG_UPDATESTATUS:
