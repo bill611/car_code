@@ -38,8 +38,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam);
 static void btKyeboardDeletPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 static void btKyeboardNumPress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data);
-static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 /* ---------------------------------------------------------------------------*
@@ -188,59 +186,35 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	ExcuteCmd(1,"./network.sh",NULL);
-}
+    char pwd[32] = {0};
+    char account[32] = {0};
+	FILE *fp;
 
-static void showErrInfo(HWND hwnd,BOOL type)
-{
-    if (type) {
-        ShowWindow(GetDlgItem (hwnd, IDC_LABER_ERR),
-                SW_SHOWNORMAL);
-        ShowWindow(GetDlgItem (hwnd, IDC_BUTTON_ERR_CONFIRM),
-                SW_SHOWNORMAL);
-    } else {
-        ShowWindow(GetDlgItem (hwnd, IDC_LABER_ERR),
-                SW_HIDE);
-        ShowWindow(GetDlgItem (hwnd, IDC_BUTTON_ERR_CONFIRM),
-                SW_HIDE);
-    } 
-}
-/* ----------------------------------------------------------------*/
-/**
- * @brief btExitPress 保存按钮
- *
- * @param hwnd
- * @param id
- * @param nc
- * @param add_data
- */
-/* ----------------------------------------------------------------*/
-static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    ShowWindow(GetParent(hwnd),SW_HIDE);
-}
-static void btErrConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    showErrInfo(GetParent (hwnd),FALSE);
-	SetWindowText(GetDlgItem(GetParent (hwnd),IDC_EDIT_PASSWORD),"");
-}
-
-static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-    char buf[32] = {0};
+    GetWindowText(GetDlgItem (GetParent (hwnd), IDC_EDIT_ACCOUNT),
+            account,sizeof(account));
     GetWindowText(GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
-            buf,sizeof(buf));
-    if (strcmp(buf,g_config.password) == 0) {
-        createFormPreSet(GetParent (hwnd));
-    } else {
-        showErrInfo(GetParent (hwnd),TRUE);
-    }
+            pwd,sizeof(pwd));
+    saveLog("account:%s,password:%s\n", account,pwd);
+	fp = fopen("network_config","wb");
+	if(fp) {
+#if 0
+		fprintf(fp,"SSID %s",account);
+		fprintf(fp,"AUTH_KEY %s",pwd);
+#else
+		fprintf(fp,"SSID LanBin\n",account);
+		fprintf(fp,"AUTH_KEY lan102520\n",pwd);
+#endif
+        fflush(fp);
+		fclose(fp);
+		fp = NULL;
+		sync();
+	} else
+		printf("Can't open network_config\n");
+	if(fp)
+		fclose(fp);
+	ExcuteCmd(1,"./network.sh",">","debug.txt","&",NULL);
+    topMessage(GetParent (hwnd),TOPBOX_WIFI_CONNECTING,NULL );
+    ShowWindow(GetParent(hwnd),SW_HIDE);
 }
 
 /* ----------------------------------------------------------------*/
@@ -280,22 +254,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	SetWindowElementAttr(GetDlgItem(hDlg,IDC_EDIT_PASSWORD), WE_FGC_WINDOW,MY_WHIGHT);
 	SendDlgItemMessage(hDlg,IDC_EDIT_PASSWORD, EM_LIMITTEXT, 20, 0L);
 	SetNotificationCallback (GetDlgItem(hDlg,IDC_EDIT_PASSWORD), editNotify);
-    // CreateWindowEx2 (CTRL_STATIC, "",
-            // WS_CHILD|SS_BITMAP,
-            // WS_EX_TRANSPARENT,
-            // IDC_LABER_ERR,
-            // 95,254,296,177,
-            // hDlg, NULL, NULL,
-            // (DWORD)&bmp_err);
-    // createSkinButton(hDlg,
-            // IDC_BUTTON_ERR_CONFIRM,
-            // 184,365,118,49,
-            // &bmp_err_confirm,
-            // &bmp_err_confirm1,
-            // 1, 0,
-            // btErrConfirmPress);
-    // ShowWindow(GetDlgItem (hDlg, IDC_BUTTON_ERR_CONFIRM),
-            // SW_HIDE);
 	formManiCreateToolBar(hDlg);
 }
 
@@ -343,7 +301,7 @@ void formWlanLoadBmp(void)
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(X%d，Y%d).jpg",opt_controls[i].img_name,
+		sprintf(image_path,BMP_LOCAL_PATH"%s(X%d，Y%d).JPG",opt_controls[i].img_name,
 				opt_controls[i].x,
 				opt_controls[i].y);
 		bmpLoad(&opt_controls[i].image_normal, image_path);
@@ -364,7 +322,6 @@ int createFormWlan(HWND hMainWnd)
 	if(Form) {
 		SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
 		SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),"");
-        showErrInfo(Form,FALSE);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;

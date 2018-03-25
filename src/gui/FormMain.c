@@ -322,7 +322,7 @@ static void optToolbarsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		return;
 	saveLog("[%s]%d\n",__FUNCTION__, id);
 	pro_com->sendOpt(opt_toolbar_controls[id-IDC_MAIN_PAGE].device_id,
-			opt_controls[id-IDC_MAIN_PAGE].op_code);
+			opt_toolbar_controls[id-IDC_MAIN_PAGE].op_code);
     switch (id) {
 		case	IDC_MAIN_PAGE:
 			{

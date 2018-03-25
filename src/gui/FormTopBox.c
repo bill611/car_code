@@ -55,8 +55,7 @@ typedef struct _BedBoxButton{
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-
-
+static int form_type;
 static void (*callbackFunc)(void) = NULL;
 static BITMAP *bmp_bkg = NULL; 
 static BITMAP bmp_bed_lie; // 电动床全躺
@@ -67,7 +66,11 @@ static BITMAP bmp_leg_fold;// 腿托展开
 static BITMAP bmp_leg_unfold;// 腿托收起
 static BITMAP bmp_chair_fold;// 座椅展开
 static BITMAP bmp_chair_unfold;// 桌板收起
-static BedBoxButton notice_confirm,notice_cancel;
+static BITMAP bmp_wifi_connecting;// wifi连接中
+static BITMAP bmp_wifi_failed;// wifi连接失败
+static BITMAP notice_confirm[2];// 2个键的确认
+static BITMAP notice_cancel[2];// 2个键的取消
+static BITMAP wifi_confirm[2];// wifi确认
 
 static BmpLocation bmp_load[] = {
     {&bmp_bed_lie, BMP_LOCAL_PATH"电动床全躺提示(X70-Y304).JPG"},
@@ -78,10 +81,14 @@ static BmpLocation bmp_load[] = {
     {&bmp_leg_unfold, BMP_LOCAL_PATH"桌腿展开提示(X70-Y304).JPG"},
     {&bmp_chair_fold, BMP_LOCAL_PATH"座椅全收提示(X70-Y304).JPG"},
     {&bmp_chair_unfold, BMP_LOCAL_PATH"座椅全躺提示(X70-Y304).JPG"},
-    {&notice_confirm.bmp[0], BMP_LOCAL_PATH"确定(X240-Y404).JPG"},
-    {&notice_confirm.bmp[1], BMP_LOCAL_PATH"确定-2(X240-Y404).JPG"},
-    {&notice_cancel.bmp[0], BMP_LOCAL_PATH"取消(X70-Y404).JPG"},
-    {&notice_cancel.bmp[1], BMP_LOCAL_PATH"取消-2(X70-Y404).JPG"},
+    {&bmp_wifi_connecting, BMP_LOCAL_PATH"正在连接提示(X100，Y278).JPG"},
+    {&bmp_wifi_failed, BMP_LOCAL_PATH"wifi失败(X100，Y278).JPG"},
+    {&notice_confirm[0], BMP_LOCAL_PATH"确定(X240-Y404).JPG"},
+    {&notice_confirm[1], BMP_LOCAL_PATH"确定-2(X240-Y404).JPG"},
+    {&notice_cancel[0], BMP_LOCAL_PATH"取消(X70-Y404).JPG"},
+    {&notice_cancel[1], BMP_LOCAL_PATH"取消-2(X70-Y404).JPG"},
+    {&wifi_confirm[0], BMP_LOCAL_PATH"确定(X186，Y389).JPG"},
+    {&wifi_confirm[1], BMP_LOCAL_PATH"确定-2(X186，Y389).JPG"},
 };
 
 //----------------------------------------------------------------------------
@@ -115,20 +122,30 @@ static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 //----------------------------------------------------------------------------
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-    createSkinButton(hDlg,
-            IDC_BUTTON_CONFIRM,
-            170,100,170,55,
-            &notice_confirm.bmp[0],
-            &notice_confirm.bmp[1],
-            1, 0,
-            btConfirmPress);
-    createSkinButton(hDlg,
-            IDC_BUTTON_CANCEL,
-            0,100,170,55,
-            &notice_cancel.bmp[0],
-            &notice_cancel.bmp[1],
-            1, 0,
-            btCancelPress);
+    if (form_type == TOPBOX_WIFI_CONNECTING || form_type == TOPBOX_WIFI_FAILED) {
+        createSkinButton(hDlg,
+                IDC_BUTTON_CANCEL,
+                86,111,114,47,
+                &wifi_confirm[0],
+                &wifi_confirm[1],
+                1, 0,
+                btCancelPress);
+    } else {
+        createSkinButton(hDlg,
+                IDC_BUTTON_CONFIRM,
+                170,100,170,55,
+                &notice_confirm[0],
+                &notice_confirm[1],
+                1, 0,
+                btConfirmPress);
+        createSkinButton(hDlg,
+                IDC_BUTTON_CANCEL,
+                0,100,170,55,
+                &notice_cancel[0],
+                &notice_cancel[1],
+                1, 0,
+                btCancelPress);
+    }
 }
 static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 {
@@ -174,7 +191,8 @@ void formTopBoxLoadBmp(void)
 int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) )
 {
     callbackFunc = notif_proc;
-    switch (type)
+    form_type = type;
+    switch (form_type)
     {
         case TOPBOX_BED_LIE :      bmp_bkg = &bmp_bed_lie;break;
         case TOPBOX_BED_UNLIE :    bmp_bkg = &bmp_bed_unlie;break;
@@ -184,6 +202,18 @@ int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) )
         case TOPBOX_LEG_UNFOLD :   bmp_bkg = &bmp_leg_unfold;break;
         case TOPBOX_CHAIR_FOLD :   bmp_bkg = &bmp_chair_fold;break;
         case TOPBOX_CHAIR_UNFOLD : bmp_bkg = &bmp_chair_unfold;break;
+        case TOPBOX_WIFI_CONNECTING : 
+        case TOPBOX_WIFI_FAILED : 
+                                   {
+                                       if (type == TOPBOX_WIFI_CONNECTING)
+                                           bmp_bkg = &bmp_wifi_connecting;
+                                       else
+                                           bmp_bkg = &bmp_wifi_failed;
+                                       DlgInitParam.x = 100;
+                                       DlgInitParam.y = 278;
+                                       DlgInitParam.w = 286;
+                                       DlgInitParam.h = 173;
+                                   }break;
         default : break;
     }
        
