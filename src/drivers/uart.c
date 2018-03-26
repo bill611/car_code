@@ -176,7 +176,7 @@ static int uartSend(UartServer *This,void *Buf,int datalen)
 	msg.cmd.leng = datalen;
 	memset(msg.cmd.send_data,0,sizeof(msg.cmd.send_data));
 	memcpy(msg.cmd.send_data,Buf,msg.cmd.leng);
-	msgsnd(This->msg_id, &msg, sizeof (Command), 0);
+	msgsnd(This->msg_id, &msg, sizeof (MsgType), 0);
 	// printfbuf(msg.cmd.send_data,msg.cmd.leng);
 	return 1;
 }
@@ -286,9 +286,9 @@ static void * uartSendThead(UartServer *This)
 {
 	MsgType msg;
 	while(!This->Terminated){
-		int ret = msgrcv(This->msg_id, &msg, sizeof(Command), 0, 0);
+		msgrcv(This->msg_id, &msg, sizeof(MsgType), 0, 0);
 		PortSend(This,msg.cmd.send_data,msg.cmd.leng);
-		usleep(100000);
+		usleep(50000);
 	}
 	pthread_exit(NULL);
 }

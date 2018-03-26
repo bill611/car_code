@@ -36,6 +36,7 @@ extern "C" {
 	// }StCtrl;
 
 	typedef struct _DevToCom {
+		void (*start)(void);  // 等待UI启动完，开始串口通讯
 		void (*getStatus)(void);  // 发送获取状态命令
 		int (*getOnline)(void);  // 获取联机状态
 		void (*checkOnlineCmd)(unsigned char *data,int leng);  // 检查是否为联机命令

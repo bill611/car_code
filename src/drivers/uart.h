@@ -13,7 +13,7 @@ typedef portinfo_t *pportinfo_t;
 
 typedef struct {
 	int	leng;
-    char   send_data[MAX_STRARG_LEN];
+    unsigned char   send_data[MAX_STRARG_LEN];
 } Command;
 
 typedef struct {

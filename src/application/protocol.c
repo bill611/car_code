@@ -222,6 +222,7 @@ typedef struct _PacketsID {
 DevToCom *pro_com;
 DevToApp *pro_app;
 static int online_state;  //联机状态 0非联机 1联机
+static int start;  // 是否开始串口通讯 1开始 0未开始
 static int packet_pos;
 static PacketsID packets_id[10];
 static u16 packet_id = 0;
@@ -481,6 +482,10 @@ static void proComSendOpt(int device,int opt)
 	uart->ToSingleChip(uart,2);
 }
 
+static void proComStart(void)
+{
+   start = 1; 
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief proComSendGetStatus 发送获取状态命令
@@ -506,7 +511,7 @@ static void proComSendGetStatus(void)
 static void* proComInitThread(void *arg)
 {
 	while (online_state == 0) {
-		if (uart == NULL) {
+		if (uart == NULL || start == 0) {
 			usleep(100000);
 			continue;
 		}
@@ -726,6 +731,8 @@ void initProtocol(void)
 	pro_com = (DevToCom *)calloc(1,sizeof(DevToCom));
 	pro_app = (DevToApp *)calloc(1,sizeof(DevToApp));
 	online_state = 0;
+    start = 0;
+	pro_com->start = proComStart;
 	pro_com->sendOpt = proComSendOpt;
 	pro_com->getOnline = proUdpGetOnline;
 	pro_com->checkOnlineCmd = proComCheckOnlineCmd;

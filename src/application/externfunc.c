@@ -403,7 +403,7 @@ int ExcuteCmd(int bWait,char *Cmd,...)
 	}
 	va_end(argp);
 	printf("cmd :%s\n",commond);
-#if 0
+#if 1
 	if ((fp = popen(commond, "r") ) == 0) {
 		perror("popen");
 		return -1;

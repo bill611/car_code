@@ -538,6 +538,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);
 				screensaverStart(LCD_ON);
+                pro_com->start();
 			} break;
 
 		case MSG_ERASEBKGND:
