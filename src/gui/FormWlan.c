@@ -201,8 +201,10 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 		fprintf(fp,"SSID %s",account);
 		fprintf(fp,"AUTH_KEY %s",pwd);
 #else
-		fprintf(fp,"SSID LanBin\n",account);
-		fprintf(fp,"AUTH_KEY lan102520\n",pwd);
+		fprintf(fp,"SSID TC_OFFICE\n",account);
+		fprintf(fp,"AUTH_KEY TC.86kb.com\n",pwd);
+		// fprintf(fp,"SSID LanBin\n",account);
+		// fprintf(fp,"AUTH_KEY lan102520\n",pwd);
 #endif
         fflush(fp);
 		fclose(fp);

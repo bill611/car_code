@@ -208,6 +208,9 @@ static int saveConfig(void)
                     etc_value_int[i].key,
                     buf);
     }
+	if (etcFileCheck("config.ini") == TRUE) {//检查配置文件并备份
+	    backData("config.ini");
+	}
     sync();
         
     return 1;
@@ -274,6 +277,7 @@ void publicInit(void)
 
 		UnloadEtcFile(hFile);
 	}
+	etcFileCheck("config.ini");
 
 	//取本机IP
     // GetLocalIP(Public.cLocalIP,Public.cNetMask,Public.MAC);
