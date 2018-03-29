@@ -61,6 +61,10 @@ enum {
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg_system1; // 背景
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_system1, BMP_LOCAL_PATH"bkg_system1.JPG"},
 };
@@ -134,6 +138,40 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 
 /* ----------------------------------------------------------------*/
 /**
+ * @brief createFormVersion 创建窗口
+ *
+ * @param hMainWnd
+ *
+ * @returns
+ */
+/* ----------------------------------------------------------------*/
+void formVersionLoadBmp(void)
+{
+    int i;
+	char image_path[128] = {0};
+    pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_press, image_path);
+    }
+    bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
+
+/* ----------------------------------------------------------------*/
+/**
  * @brief initPara 初始化参数
  *
  * @param hDlg
@@ -145,6 +183,7 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
+    formVersionLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_VERSION),CODE_VERSION);
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_DATE),__DATE__);
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
@@ -182,31 +221,9 @@ static int formVersionProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-/* ----------------------------------------------------------------*/
-/**
- * @brief createFormVersion 创建窗口
- *
- * @param hMainWnd
- *
- * @returns
- */
-/* ----------------------------------------------------------------*/
-void formVersionLoadBmp(void)
+void formVersionLoadLock(void)
 {
-    int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
-                opt_controls[i].x,
-                opt_controls[i].y);
-        bmpLoad(&opt_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
-                opt_controls[i].x,
-                opt_controls[i].y);
-        bmpLoad(&opt_controls[i].image_press, image_path);
-    }
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
 }
 
 int createFormVersion(HWND hMainWnd)

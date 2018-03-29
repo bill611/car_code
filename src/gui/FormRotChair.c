@@ -85,6 +85,10 @@ static BITMAP bmp_bkg_r;
 static int chair_disp_type = CHAIR_LEFT;
 static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_r, BMP_LOCAL_PATH"右椅/旋转右座椅.JPG"},
     {&bmp_bkg_l, BMP_LOCAL_PATH"左椅/旋转左座椅.JPG"},
@@ -315,6 +319,45 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
 				display, 0, p->notif_proc);
 	}
 }
+static void bmpsRotChairButtonLoad(MgCtrlButton *controls,int num)
+{
+	int i;
+	char image_path[128] = {0};
+    MgCtrlButton *p;
+	for (i=0; i<num; i++) {
+        p = controls + i;
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_press, image_path);
+	}
+}
+void formRotChairLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+
+void formRotChairLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_controls));
+    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_l_controls));
+    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_r_controls));
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -327,6 +370,7 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
+    formRotChairLoadBmp();
     creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
             optMultiControlsNotify);
     int i,j;
@@ -394,33 +438,6 @@ static int formRotChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-static void bmpsRotChairButtonLoad(MgCtrlButton *controls,int num)
-{
-	int i;
-	char image_path[128] = {0};
-    MgCtrlButton *p;
-	for (i=0; i<num; i++) {
-        p = controls + i;
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",p->img_name,
-                p->x,
-                p->y);
-        bmpLoad(&p->image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",p->img_name,
-                p->x,
-                p->y);
-        bmpLoad(&p->image_press, image_path);
-	}
-}
-void formRotChairLoadBmp(void)
-{
-	int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_controls));
-    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_l_controls));
-    bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_r_controls));
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormRotChair 创建窗口

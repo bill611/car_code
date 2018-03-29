@@ -79,6 +79,10 @@ static BITMAP bmp_err; // 错误框
 static BITMAP bmp_err_confirm; // 错误框确定
 static BITMAP bmp_err_confirm1; // 错误框确定按下
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_system2, BMP_LOCAL_PATH"bkg_system2.JPG"},
     {&bmp_err, BMP_LOCAL_PATH"密码错误提示框（X95，Y254）.JPG"},
@@ -208,6 +212,34 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
     }
 }
 
+void formPasswordLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+void formPasswordLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s（X%d,Y%d）.JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s亮（X%d,Y%d）.JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_press, image_path);
+	}
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -222,6 +254,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
 	HWND hCtrl;
+    formPasswordLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		createSkinButton(hDlg,
@@ -274,23 +307,6 @@ static int formPasswordProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-void formPasswordLoadBmp(void)
-{
-	int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s（X%d,Y%d）.JPG",opt_controls[i].img_name,
-				opt_controls[i].x,
-				opt_controls[i].y);
-		bmpLoad(&opt_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s亮（X%d,Y%d）.JPG",opt_controls[i].img_name,
-				opt_controls[i].x,
-				opt_controls[i].y);
-		bmpLoad(&opt_controls[i].image_press, image_path);
-	}
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormPassword 创建窗口

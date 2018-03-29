@@ -72,6 +72,10 @@ static BITMAP notice_confirm[2];// 2个键的确认
 static BITMAP notice_cancel[2];// 2个键的取消
 static BITMAP wifi_confirm[2];// wifi确认
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bed_lie, BMP_LOCAL_PATH"电动床全躺提示(X70-Y304).JPG"},
     {&bmp_bed_unlie, BMP_LOCAL_PATH"电动床全收提示(X70-Y304).JPG"},
@@ -147,6 +151,24 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
                 btCancelPress);
     }
 }
+void formTopBoxLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+
+void formTopBoxLoadBmp(void)
+{
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
+
 static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -154,6 +176,7 @@ static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lPara
         case MSG_INITDIALOG:
             {
                 Screen.Add(hWnd,"TFrmTopMessage");
+                formTopBoxLoadBmp();
                 initPara(hWnd,message,wParam,lParam);
                 SetTimer(hWnd,IDC_TOPBOX_TIMER,DISPLAY_TIME);
                 break;
@@ -182,11 +205,6 @@ static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lPara
     return DefaultDialogProc(hWnd, message, wParam, lParam);
 }
 
-void formTopBoxLoadBmp(void)
-{
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-}
 //----------------------------------------------------------------------------
 int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) )
 {

@@ -69,6 +69,10 @@ static BITMAP bmp_bkg; // 背景
 static int current_edit = IDC_EDIT_ACCOUNT;
 static char key_num[] = "0123456789abcdefghijklmnopqrstuvwxyz ";
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"WLAN-1.jpg"},
 };
@@ -197,7 +201,7 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
     saveLog("account:%s,password:%s\n", account,pwd);
 	fp = fopen("network_config","wb");
 	if(fp) {
-#if 0
+#if 1
 		fprintf(fp,"SSID %s",account);
 		fprintf(fp,"AUTH_KEY %s",pwd);
 #else
@@ -219,6 +223,31 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
     ShowWindow(GetParent(hwnd),SW_HIDE);
 }
 
+void formWlanLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+
+void formWlanLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(X%d，Y%d).JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_normal, image_path);
+	}
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -233,6 +262,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
 	HWND hCtrl;
+    formWlanLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
@@ -296,19 +326,6 @@ static int formWlanProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-void formWlanLoadBmp(void)
-{
-	int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(X%d，Y%d).JPG",opt_controls[i].img_name,
-				opt_controls[i].x,
-				opt_controls[i].y);
-		bmpLoad(&opt_controls[i].image_normal, image_path);
-	}
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormWlan 创建窗口

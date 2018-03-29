@@ -60,6 +60,10 @@ enum {
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg_select; // 选择功能界面背景
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_select, BMP_LOCAL_PATH"选择功能背景.JPG"},
 };
@@ -110,6 +114,46 @@ static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
     SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
 }
+
+void formPresetLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+
+/* ----------------------------------------------------------------*/
+/**
+ * @brief createFormPreSet 创建窗口
+ *
+ * @param hMainWnd
+ *
+ * @returns
+ */
+/* ----------------------------------------------------------------*/
+void formPresetLoadBmp(void)
+{
+    int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
+                opt_controls[i].x,
+                opt_controls[i].y);
+        bmpLoad(&opt_controls[i].image_press, image_path);
+    }
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
+
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -123,7 +167,7 @@ static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-    HWND ctrl;
+    formPresetLoadBmp();
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		createSkinButton(hDlg,
 				opt_controls[i].idc,
@@ -167,33 +211,6 @@ static int formPresetProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	}
 
     return DefaultDialogProc(hDlg, message, wParam, lParam);
-}
-
-/* ----------------------------------------------------------------*/
-/**
- * @brief createFormPreSet 创建窗口
- *
- * @param hMainWnd
- *
- * @returns
- */
-/* ----------------------------------------------------------------*/
-void formPresetLoadBmp(void)
-{
-    int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
-                opt_controls[i].x,
-                opt_controls[i].y);
-        bmpLoad(&opt_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
-                opt_controls[i].x,
-                opt_controls[i].y);
-        bmpLoad(&opt_controls[i].image_press, image_path);
-    }
 }
 
 int createFormPreSet(HWND hMainWnd)

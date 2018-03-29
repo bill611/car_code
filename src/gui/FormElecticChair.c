@@ -101,6 +101,10 @@ static int chair_dir_type = CHAIR_DIR_LEFT;
 static int chair_mode_type = CHAIR_BACKREST;
 static MgCtrlButton * multi_ctrl = NULL; // 多次连续触发按键
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg_assist, BMP_LOCAL_PATH"座椅功能.JPG"},
     {&bmp_bkg_l_backrest, BMP_LOCAL_PATH"左座椅/左靠背/左座椅靠背.JPG"},
@@ -556,6 +560,49 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
 				display, 0, p->notif_proc);
 	}
 }
+static void bmpsElectricChairButtonLoad(MgCtrlButton *controls,int num)
+{
+	int i;
+	char image_path[128] = {0};
+    MgCtrlButton *p;
+	for (i=0; i<num; i++) {
+        p = controls + i;
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",p->img_name,
+                p->x,
+                p->y);
+        bmpLoad(&p->image_press, image_path);
+	}
+}
+void formElectricChairLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+void formElectricChairLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_assist_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_backrest_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_leg_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_cushin_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_backrest_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_leg_controls));
+    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_cushin_controls));
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -568,6 +615,7 @@ static void creatButtonControl(HWND hDlg,MgCtrlButton *ctrl,int num,int display,
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
+    formElectricChairLoadBmp();
     creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
             optNoticLegFoldControlsNotify);
     int i,j;
@@ -636,38 +684,6 @@ static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM l
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-static void bmpsElectricChairButtonLoad(MgCtrlButton *controls,int num)
-{
-	int i;
-	char image_path[128] = {0};
-    MgCtrlButton *p;
-	for (i=0; i<num; i++) {
-        p = controls + i;
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",p->img_name,
-                p->x,
-                p->y);
-        bmpLoad(&p->image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",p->img_name,
-                p->x,
-                p->y);
-        bmpLoad(&p->image_press, image_path);
-	}
-}
-void formElectricChairLoadBmp(void)
-{
-	int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_assist_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_backrest_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_leg_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_l_cushin_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_backrest_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_leg_controls));
-    bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_cushin_controls));
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormElectricChair 创建窗口

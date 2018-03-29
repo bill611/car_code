@@ -29,6 +29,14 @@ extern "C" {
 
 #include <stdint.h>
 
+#define INIT_MUTEX_LOCK(attr,mutex) \
+    do { \
+        pthread_mutexattr_init(&attr);\
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);\
+        pthread_mutex_init(&mutex, &attr);\
+        pthread_mutexattr_destroy(&attr);\
+    } while(0)
+
 	enum {
 		MSG_MYBUTTON_GET_SELECT_STATE = MSG_USER+1,
 		MSG_MYBUTTON_SET_SELECT_MODE,

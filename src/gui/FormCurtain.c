@@ -53,6 +53,10 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg; 
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"窗帘.JPG"},
 };
@@ -114,6 +118,34 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			opt_controls[id].op_code);
 }
 
+void formCurtainLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+void formCurtainLoadBmp(void)
+{
+	int i;
+	char image_path[128] = {0};
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(opt_controls); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_normal, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
+				opt_controls[i].x,
+				opt_controls[i].y);
+		bmpLoad(&opt_controls[i].image_press, image_path);
+	}
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -127,6 +159,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
+    formCurtainLoadBmp();
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		opt_controls[i].idc = i;
 		opt_controls[i].device_id = 0x15;
@@ -175,23 +208,6 @@ static int formCurtainProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-void formCurtainLoadBmp(void)
-{
-	int i;
-	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(opt_controls); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,
-				opt_controls[i].x,
-				opt_controls[i].y);
-		bmpLoad(&opt_controls[i].image_normal, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s-2(x%d，y%d).JPG",opt_controls[i].img_name,
-				opt_controls[i].x,
-				opt_controls[i].y);
-		bmpLoad(&opt_controls[i].image_press, image_path);
-	}
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormCurtain 创建窗口

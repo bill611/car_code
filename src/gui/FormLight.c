@@ -90,6 +90,10 @@ typedef struct _StaticPower {
  *----------------------------------------------------------------------------*/
 static BITMAP bmp_bkg; 
 
+static int bmp_load_finished = 0;
+static pthread_mutex_t mutex;		//队列控制互斥信号
+static pthread_mutexattr_t mutexattr2;
+
 static BmpLocation bmp_load[] = {
     {&bmp_bkg, BMP_LOCAL_PATH"灯光.JPG"},
 };
@@ -400,6 +404,78 @@ static void refreshAll(HWND hDlg)
 	updateColor(hDlg,	1,(Public.light2 & (1 << 3)) >> 3);
 	updateColor(hDlg,	2,(Public.light3 & (1 << 3)) >> 3);
 }
+void formLightLoadLock(void)
+{
+    INIT_MUTEX_LOCK(mutexattr2,mutex);
+}
+void formLightLoadBmp(void)
+{
+	int i,j,k;
+	char image_path[128] = {0};
+    StructLight *p_light;
+    ButtonArray *p_array;
+    MgCtrlButton *p_ctrl,*new_ctrl,*p;
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+	printf("[%s]\n", __FUNCTION__);
+    bmpsLoad(BMP_LOAD_PARA(bmp_load));
+	for (i=0; i<NELEMENTS(light); i++) {
+        p_light = &light[i];
+        for (j=0; j<p_light->array_num; j++) {
+            p_array = p_light->array + j;
+            new_ctrl = (MgCtrlButton *)calloc(p_array->num,sizeof(MgCtrlButton));
+            p = p_array->ctrl;
+            p_array->ctrl = new_ctrl;
+            for (k=0; k<p_array->num; k++) {
+                p_ctrl = p + k;
+                new_ctrl->x = p_ctrl->x;
+                new_ctrl->y = p_array->y;
+                new_ctrl->w = p_ctrl->w;
+                new_ctrl->h = p_ctrl->h;
+                new_ctrl->device_id = p_light->device_id;
+                new_ctrl->op_code = p_ctrl->op_code;
+				if (p_array->notif_proc)
+					new_ctrl->notif_proc = p_array->notif_proc;
+				else if (p_ctrl->notif_proc)
+					new_ctrl->notif_proc = p_ctrl->notif_proc;
+                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s(x%d，y%d).JPG",
+                        p_light->path,
+                        p_light->path,
+                        p_ctrl->img_name,
+                        p_ctrl->x,
+                        p_array->y);
+                bmpLoad(&new_ctrl->image_normal, image_path);
+                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s-2(x%d，y%d).JPG",
+                        p_light->path,
+                        p_light->path,
+                        p_ctrl->img_name,
+                        p_ctrl->x,
+                        p_array->y);
+                bmpLoad(&new_ctrl->image_press, image_path);
+				new_ctrl++;
+            }
+        }
+	}
+	for (i=0; i<NELEMENTS(opt_static_power); i++) {
+		sprintf(image_path,BMP_LOCAL_PATH"%s/%s(x%d，y%d).JPG",
+				opt_static_power[i].path,
+				opt_static_power[i].path,
+				opt_static_power[i].x,
+				opt_static_power[i].y);
+		bmpLoad(&opt_static_power[i].bmp_inactive, image_path);
+		sprintf(image_path,BMP_LOCAL_PATH"%s/%s-2(x%d，y%d).JPG",
+				opt_static_power[i].path,
+				opt_static_power[i].path,
+				opt_static_power[i].x,
+				opt_static_power[i].y);
+		bmpLoad(&opt_static_power[i].bmp_active, image_path);
+	}
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
+}
 /* ----------------------------------------------------------------*/
 /**
  * @brief initPara 初始化参数
@@ -416,8 +492,8 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     StructLight *p_light;
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
+    formLightLoadBmp();
 	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	for (i=0; i<NELEMENTS(light); i++) {
         p_light = &light[i];
         for (j=0; j<p_light->array_num; j++) {
@@ -485,68 +561,6 @@ static int formLightProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     return DefaultDialogProc(hDlg, message, wParam, lParam);
 }
 
-void formLightLoadBmp(void)
-{
-	int i,j,k;
-	char image_path[128] = {0};
-    StructLight *p_light;
-    ButtonArray *p_array;
-    MgCtrlButton *p_ctrl,*new_ctrl,*p;
-	printf("[%s]\n", __FUNCTION__);
-    bmpsLoad(BMP_LOAD_PARA(bmp_load));
-	for (i=0; i<NELEMENTS(light); i++) {
-        p_light = &light[i];
-        for (j=0; j<p_light->array_num; j++) {
-            p_array = p_light->array + j;
-            new_ctrl = (MgCtrlButton *)calloc(p_array->num,sizeof(MgCtrlButton));
-            p = p_array->ctrl;
-            p_array->ctrl = new_ctrl;
-            for (k=0; k<p_array->num; k++) {
-                p_ctrl = p + k;
-                new_ctrl->x = p_ctrl->x;
-                new_ctrl->y = p_array->y;
-                new_ctrl->w = p_ctrl->w;
-                new_ctrl->h = p_ctrl->h;
-                new_ctrl->device_id = p_light->device_id;
-                new_ctrl->op_code = p_ctrl->op_code;
-				if (p_array->notif_proc)
-					new_ctrl->notif_proc = p_array->notif_proc;
-				else if (p_ctrl->notif_proc)
-					new_ctrl->notif_proc = p_ctrl->notif_proc;
-                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s(x%d，y%d).JPG",
-                        p_light->path,
-                        p_light->path,
-                        p_ctrl->img_name,
-                        p_ctrl->x,
-                        p_array->y);
-                bmpLoad(&new_ctrl->image_normal, image_path);
-                sprintf(image_path,BMP_LOCAL_PATH"%s/%s%s-2(x%d，y%d).JPG",
-                        p_light->path,
-                        p_light->path,
-                        p_ctrl->img_name,
-                        p_ctrl->x,
-                        p_array->y);
-                bmpLoad(&new_ctrl->image_press, image_path);
-				new_ctrl++;
-            }
-        }
-	}
-	for (i=0; i<NELEMENTS(opt_static_power); i++) {
-		sprintf(image_path,BMP_LOCAL_PATH"%s/%s(x%d，y%d).JPG",
-				opt_static_power[i].path,
-				opt_static_power[i].path,
-				opt_static_power[i].x,
-				opt_static_power[i].y);
-		bmpLoad(&opt_static_power[i].bmp_inactive, image_path);
-		sprintf(image_path,BMP_LOCAL_PATH"%s/%s-2(x%d，y%d).JPG",
-				opt_static_power[i].path,
-				opt_static_power[i].path,
-				opt_static_power[i].x,
-				opt_static_power[i].y);
-		bmpLoad(&opt_static_power[i].bmp_active, image_path);
-	}
-
-}
 /* ----------------------------------------------------------------*/
 /**
  * @brief createFormLight 创建窗口

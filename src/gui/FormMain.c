@@ -69,6 +69,28 @@ extern void formA12LoadBmp(void);
 extern void formTopBoxLoadBmp(void);
 extern void formWlanLoadBmp(void);
 
+extern void formVersionLoadLock(void);
+extern void formPasswordLoadLock(void);
+extern void formPresetLoadLock(void);
+extern void formCDLoadLock(void);
+extern void formElectricChairLoadLock(void);
+extern void formSecretaryChairLoadLock(void);
+extern void formRotChairLoadLock(void);
+extern void formCurtainLoadLock(void);
+extern void formGlassScreenLoadLock(void);
+extern void formTvScreenLoadLock(void);
+extern void formDVDLoadLock(void);
+extern void formMonitorLoadLock(void);
+extern void formDoorLoadLock(void);
+extern void formBedLoadLock(void);
+extern void formSaTvLoadLock(void);
+extern void formSkyLightLoadLock(void);
+extern void formLightLoadLock(void);
+extern void formProjectionLoadLock(void);
+extern void formTableLoadLock(void);
+extern void formA12LoadLock(void);
+extern void formTopBoxLoadLock(void);
+extern void formWlanLoadLock(void);
 /* ---------------------------------------------------------------------------*
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
@@ -84,6 +106,7 @@ static void formMainLoadBmp(void);
 #endif
 
 typedef void (*InitBmpFunc)(void) ;
+typedef void (*InitLockFunc)(void) ;
 
 #define BMP_LOCAL_PATH "res/image/主页/"
 
@@ -142,8 +165,7 @@ static MgCtrlButton opt_toolbar_controls[] = {
 };
 
 static InitBmpFunc loadBmps[] = {
-    formMainLoadBmp,
-    formVersionLoadBmp,
+    // formMainLoadBmp,
 	formPasswordLoadBmp,
     formPresetLoadBmp,
 	formCDLoadBmp,
@@ -165,6 +187,31 @@ static InitBmpFunc loadBmps[] = {
 	formA12LoadBmp,
     formTopBoxLoadBmp,
     formWlanLoadBmp,
+    formVersionLoadBmp,
+};
+static InitLockFunc loadLocks[] = {
+	formPasswordLoadLock,
+    formPresetLoadLock,
+	formCDLoadLock,
+	formElectricChairLoadLock,
+    formSecretaryChairLoadLock,
+    formRotChairLoadLock,
+    formCurtainLoadLock,
+	formGlassScreenLoadLock,
+	formTvScreenLoadLock,
+	formDVDLoadLock,
+	formMonitorLoadLock,
+	formDoorLoadLock,
+	formBedLoadLock,
+	formSaTvLoadLock,
+	formSkyLightLoadLock,
+	formLightLoadLock,
+	formProjectionLoadLock,
+	formTableLoadLock,
+	formA12LoadLock,
+    formTopBoxLoadLock,
+    formWlanLoadLock,
+    formVersionLoadLock,
 };
 
 static HWND hwnd_main = HWND_INVALID;
@@ -495,17 +542,41 @@ static void formMainLoadBmp(void)
 
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief fromLoadBmps 加载各个窗口的图片
+ * @brief fromLoadLocks 加载各个窗口的图片
  */
 /* ---------------------------------------------------------------------------*/
-static void fromLoadBmps(void)
+static void fromLoadLocks(void)
+{
+    int i;
+    for (i=0; i<NELEMENTS(loadLocks); i++) {
+        loadLocks[i]();
+    }
+}
+
+static void * loadBmpsThread(void *arg)
 {
     int i;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
         loadBmps[i]();
     }
+    return NULL;
 }
 
+static void createBmpLoadThread(void)
+{
+	int result;
+	pthread_t m_pthread;					//线程号
+	pthread_attr_t threadAttr1;				//线程属性
+	pthread_attr_init(&threadAttr1);		//附加参数
+	//设置线程为自动销毁
+	pthread_attr_setdetachstate(&threadAttr1,PTHREAD_CREATE_DETACHED);
+	//创建线程，无传递参数
+	result = pthread_create(&m_pthread,&threadAttr1,loadBmpsThread,NULL);
+	if(result)
+		printf("[%s] pthread failt,Error code:%d\n",__FUNCTION__,result);
+
+	pthread_attr_destroy(&threadAttr1);		//释放附加参数
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainProc 窗口回调函数
@@ -533,7 +604,9 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				Screen.Add(hWnd,"TFrmMain");
 				hwnd_main = Screen.hMainWnd = hWnd;
 				// 装载所有图片
-				fromLoadBmps();
+                formMainLoadBmp();
+                fromLoadLocks();
+                createBmpLoadThread();
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);
@@ -579,7 +652,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 			{
                 if (Public.LCDLight == 0) {
                     screensaverStart(LCD_ON);
-                    return; 
+                    return;
                 }
 			} break;
 
