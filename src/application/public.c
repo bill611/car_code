@@ -279,6 +279,7 @@ void publicInit(void)
 	}
 	etcFileCheck("config.ini");
 
+	// ExcuteCmd(1,"tar","xzf","image.tar.gz","-C","/image",NULL);	
 	//取本机IP
     // GetLocalIP(Public.cLocalIP,Public.cNetMask,Public.MAC);
     // printf("LocalIP=%s, cNetMask=%s, MAC=%s\n",Public.cLocalIP, Public.cNetMask, Public.MAC);

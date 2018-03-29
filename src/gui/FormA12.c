@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/预设/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"预设/"
 
 enum {
 	TYPE_A1,
@@ -166,6 +166,9 @@ void formA12LoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_A1] == 0
+            && g_config.device_main_controls[IDC_A2] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

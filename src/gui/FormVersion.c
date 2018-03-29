@@ -47,7 +47,7 @@ static void btExitPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/系统-1/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"系统-1/"
 enum {
 	IDC_BUTTON_MANAGE,
 	IDC_BUTTON_EXIT,

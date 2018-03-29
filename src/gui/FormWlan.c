@@ -51,7 +51,7 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH "res/image/WLAN/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"WLAN/"
 enum {
 
 	IDC_LABER_ERR,
@@ -74,7 +74,7 @@ static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"WLAN-1.jpg"},
+    {&bmp_bkg, BMP_LOCAL_PATH"WLAN-1.JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {

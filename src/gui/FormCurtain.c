@@ -46,12 +46,12 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/窗帘/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"窗帘/"
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_bkg;
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
@@ -126,6 +126,8 @@ void formCurtainLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_CURTAIN] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

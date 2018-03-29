@@ -56,7 +56,7 @@ static void optColor3Notify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/灯光/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"灯光/"
 
 enum {
 	LIGHT1,
@@ -415,6 +415,8 @@ void formLightLoadBmp(void)
     StructLight *p_light;
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl,*new_ctrl,*p;
+    if (g_config.device_main_controls[IDC_LIGHT] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);
@@ -493,7 +495,6 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
     formLightLoadBmp();
-	printf("[%s]\n", __FUNCTION__);
 	for (i=0; i<NELEMENTS(light); i++) {
         p_light = &light[i];
         for (j=0; j<p_light->array_num; j++) {

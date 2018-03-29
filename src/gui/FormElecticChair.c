@@ -58,7 +58,7 @@ static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH "res/image/电动座椅/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"电动座椅/"
 enum {
     CHAIR_DIR_LEFT,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅
@@ -585,6 +585,8 @@ void formElectricChairLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_CHAIR_ELE] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

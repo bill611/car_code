@@ -108,7 +108,7 @@ static void formMainLoadBmp(void);
 typedef void (*InitBmpFunc)(void) ;
 typedef void (*InitLockFunc)(void) ;
 
-#define BMP_LOCAL_PATH "res/image/主页/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"主页/"
 
 enum {
     IDC_MAIN_PAGE = 100,  // 主页
@@ -165,29 +165,28 @@ static MgCtrlButton opt_toolbar_controls[] = {
 };
 
 static InitBmpFunc loadBmps[] = {
-    // formMainLoadBmp,
-	formPasswordLoadBmp,
-    formPresetLoadBmp,
 	formCDLoadBmp,
-	formElectricChairLoadBmp,
-    formSecretaryChairLoadBmp,
-    formRotChairLoadBmp,
-    formCurtainLoadBmp,
-	formGlassScreenLoadBmp,
-	formTvScreenLoadBmp,
-	formDVDLoadBmp,
+    formVersionLoadBmp,
 	formMonitorLoadBmp,
+    formPresetLoadBmp,
+	formSkyLightLoadBmp,
+	formProjectionLoadBmp,
+	formGlassScreenLoadBmp,
+    formSecretaryChairLoadBmp,
 	formDoorLoadBmp,
 	formBedLoadBmp,
-	formSaTvLoadBmp,
-	formSkyLightLoadBmp,
-	formLightLoadBmp,
-	formProjectionLoadBmp,
+    formCurtainLoadBmp,
 	formTableLoadBmp,
-	formA12LoadBmp,
+	formTvScreenLoadBmp,
     formTopBoxLoadBmp,
     formWlanLoadBmp,
-    formVersionLoadBmp,
+	formSaTvLoadBmp,
+	formDVDLoadBmp,
+	formPasswordLoadBmp,
+    formRotChairLoadBmp,
+	formA12LoadBmp,
+	formLightLoadBmp,
+	formElectricChairLoadBmp,
 };
 static InitLockFunc loadLocks[] = {
 	formPasswordLoadLock,

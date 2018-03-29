@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/卫星电视/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"卫星电视/"
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
@@ -133,6 +133,8 @@ void formSaTvLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_SATV] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

@@ -50,7 +50,7 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH "res/image/旋转座椅/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"旋转座椅/"
 enum {
     CHAIR_DIR_LEFT,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅
@@ -345,6 +345,8 @@ void formRotChairLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_CHAIR_ROT] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

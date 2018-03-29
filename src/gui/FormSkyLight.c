@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/天窗/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"天窗/"
 
 enum {
 	IDC_OPEN,
@@ -132,6 +132,8 @@ void formSkyLightLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_SKYLIGHT] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);

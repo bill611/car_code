@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/电动门/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"电动门/"
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
@@ -122,12 +122,14 @@ void formDoorLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
-	printf("[%s]\n", __FUNCTION__);
+    if (g_config.device_main_controls[IDC_DOOR] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);
         return;
     }
+	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		sprintf(image_path,BMP_LOCAL_PATH"%s(x%d，y%d).JPG",opt_controls[i].img_name,

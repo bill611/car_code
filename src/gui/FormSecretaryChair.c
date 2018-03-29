@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH "res/image/秘书椅/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"秘书椅/"
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
@@ -123,6 +123,13 @@ void formSecretaryChairLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_CHAIR_SECRETARY] == 0)
+        return;
+	pthread_mutex_lock(&mutex);
+    if (bmp_load_finished == 1) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
@@ -135,6 +142,8 @@ void formSecretaryChairLoadBmp(void)
 				opt_controls[i].y);
 		bmpLoad(&opt_controls[i].image_press, image_path);
 	}
+	bmp_load_finished = 1;
+    pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**

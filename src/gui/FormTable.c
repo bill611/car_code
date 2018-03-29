@@ -50,7 +50,7 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH "res/image/桌板/"
+#define BMP_LOCAL_PATH BMP_RES_PATH"桌板/"
 
 typedef struct _BedBox{
     HWND idc;
@@ -201,6 +201,8 @@ void formTableLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
+    if (g_config.device_main_controls[IDC_TABLE] == 0)
+        return;
 	pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
         pthread_mutex_unlock(&mutex);
