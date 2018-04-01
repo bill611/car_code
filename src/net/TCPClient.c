@@ -36,12 +36,10 @@ static int TTCPClient_Connect(struct _TTCPClient *This,const char *IP,int port,i
     p->sin_port=htons(port);
     if(inet_aton(IP,&p->sin_addr)<0)
     {
-		ErrorLog(0,"Can't know IP address as %s",IP);
         return -1;
     }
 	This->m_socket=socket(PF_INET,SOCK_STREAM,0);
 	if(This->m_socket==0) {
-		ErrorLog(0,"TCP Client init socket failed!\n");
         return -1;
     }
 
@@ -135,7 +133,6 @@ TTCPClient* TTCPClient_Create()
 
     This = (TTCPClient *)malloc(sizeof(TTCPClient));
     if(This==NULL) {
-        ErrorLog(0x7FFFFFFF,"alloc TCPClient memory failt!\n");
         return NULL;
     }
     This->Destroy = TTCPClient_Destroy;

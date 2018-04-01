@@ -51,17 +51,20 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_title,bmp_icon; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"秘书椅.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"秘书椅(x69，y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"秘书椅图标(x74，y137).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
+    STATIC_IMAGE(69,89,100,28,200,(DWORD)&bmp_title),
+    STATIC_IMAGE(74,137,336,526,201,(DWORD)&bmp_icon),
 };
 
 
@@ -224,7 +227,7 @@ int createFormSecretaryChair(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

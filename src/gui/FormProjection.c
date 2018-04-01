@@ -51,14 +51,15 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_title,bmp_icon; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"屏幕投影.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"屏幕投影(x69，y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"屏幕投影图标(x63，y317).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -171,6 +172,20 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				1, 0,
 				opt_controls[i].notif_proc);
 	}
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            69,89,113,30,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_title);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            63,317,363,175,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_icon);
 	formManiCreateToolBar(hDlg);
 }
 
@@ -221,7 +236,7 @@ int createFormProjection(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

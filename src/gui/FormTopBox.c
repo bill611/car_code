@@ -210,6 +210,10 @@ int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) )
 {
     callbackFunc = notif_proc;
     form_type = type;
+    DlgInitParam.x = 70;
+    DlgInitParam.y = 304;
+    DlgInitParam.w = 340;
+    DlgInitParam.h = 155;
     switch (form_type)
     {
         case TOPBOX_BED_LIE :      bmp_bkg = &bmp_bed_lie;break;

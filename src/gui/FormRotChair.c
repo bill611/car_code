@@ -76,10 +76,16 @@ typedef struct _ElecChair {
     ButtonArray *array;
 	int num;
 }ElecChair;
+enum {
+    IDC_LABER_TITEL = 200,
+    IDC_LABER_LEFT,
+    IDC_LABER_RIGHT,
+};
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
 static FormBase* form_base = NULL;
+static BITMAP bmp_title;
 static BITMAP bmp_bkg_l;
 static BITMAP bmp_bkg_r;
 static int chair_disp_type = CHAIR_LEFT;
@@ -90,11 +96,15 @@ static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg_r, BMP_LOCAL_PATH"右椅/旋转右座椅.JPG"},
-    {&bmp_bkg_l, BMP_LOCAL_PATH"左椅/旋转左座椅.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"旋转座椅(x69，y89).JPG"},
+    {&bmp_bkg_r, BMP_LOCAL_PATH"右椅/旋转右座椅 (x83，y124).JPG"},
+    {&bmp_bkg_l, BMP_LOCAL_PATH"左椅/旋转左座椅 (x83，y124).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
+    STATIC_IMAGE(69,89,106,26,IDC_LABER_TITEL,(DWORD)&bmp_title),
+    STATIC_IMAGE(83,124,311,418,IDC_LABER_RIGHT,(DWORD)&bmp_bkg_r),
+    STATIC_IMAGE(83,124,311,418,IDC_LABER_LEFT,(DWORD)&bmp_bkg_l),
 };
 
 
@@ -244,7 +254,9 @@ static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 	if (nc != BN_CLICKED)
 		return;
 	chair_disp_type = CHAIR_LEFT;
-    form_base_priv.bmp_bkg = &bmp_bkg_l;
+    // form_base_priv.bmp_bkg = &bmp_bkg_l;
+    ShowWindow(GetDlgItem(GetParent (hwnd),IDC_LABER_LEFT),SW_SHOWNORMAL);
+    ShowWindow(GetDlgItem(GetParent (hwnd),IDC_LABER_RIGHT),SW_HIDE);
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 /* ---------------------------------------------------------------------------*/
@@ -262,7 +274,9 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 	if (nc != BN_CLICKED)
 		return;
 	chair_disp_type = CHAIR_RIGHT;
-    form_base_priv.bmp_bkg = &bmp_bkg_r;
+    // form_base_priv.bmp_bkg = &bmp_bkg_r;
+    ShowWindow(GetDlgItem(GetParent (hwnd),IDC_LABER_RIGHT),SW_SHOWNORMAL);
+    ShowWindow(GetDlgItem(GetParent (hwnd),IDC_LABER_LEFT),SW_HIDE);
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 
@@ -283,7 +297,7 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		multi_ctrl = sendOptCmd(id);
 		return;
 	}
-	if (nc == BN_CLICKED) {
+	if (nc == BN_UNPUSHED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
 		multi_ctrl = sendOptCmd(id);
 	}
@@ -454,13 +468,14 @@ int createFormRotChair(HWND hMainWnd)
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
 		chair_disp_type = CHAIR_LEFT;
-		form_base_priv.bmp_bkg = &bmp_bkg_l;
 		SendMessage(Form,MSG_UPDATESTATUS,0,0);
 		SendMessage(Form,MSG_ELECTRIC_CHAIR_TYPE,0,0);
+		ShowWindow(GetDlgItem(Form,IDC_LABER_LEFT),SW_SHOWNORMAL);
+		ShowWindow(GetDlgItem(Form,IDC_LABER_RIGHT),SW_HIDE);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg_l;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

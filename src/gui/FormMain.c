@@ -165,6 +165,7 @@ static MgCtrlButton opt_toolbar_controls[] = {
 };
 
 static InitBmpFunc loadBmps[] = {
+    formMainLoadBmp,
 	formCDLoadBmp,
     formVersionLoadBmp,
 	formMonitorLoadBmp,
@@ -547,17 +548,32 @@ static void formMainLoadBmp(void)
 static void fromLoadLocks(void)
 {
     int i;
-    for (i=0; i<NELEMENTS(loadLocks); i++) {
-        loadLocks[i]();
+    // int i;
+    unsigned long long time_n,time_o;
+    for (i=0; i<NELEMENTS(loadBmps); i++) {
+        time_o = GetMs();
+        loadBmps[i]();
+        time_n = GetMs();
+        printf("time:%lld\n", time_n-time_o);
     }
+    restartNetwork();
+    // for (i=0; i<NELEMENTS(loadLocks); i++) {
+        // loadLocks[i]();
+    // }
 }
 
+#if 0 //后台执行加载
 static void * loadBmpsThread(void *arg)
 {
     int i;
+    unsigned long long time_n,time_o;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
+        time_o = GetMs();
         loadBmps[i]();
+        time_n = GetMs();
+        printf("time:%lld\n", time_n-time_o);
     }
+    restartNetwork();
     return NULL;
 }
 
@@ -576,6 +592,7 @@ static void createBmpLoadThread(void)
 
 	pthread_attr_destroy(&threadAttr1);		//释放附加参数
 }
+#endif
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief formMainProc 窗口回调函数
@@ -603,9 +620,9 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				Screen.Add(hWnd,"TFrmMain");
 				hwnd_main = Screen.hMainWnd = hWnd;
 				// 装载所有图片
-                formMainLoadBmp();
+                // formMainLoadBmp();
                 fromLoadLocks();
-                createBmpLoadThread();
+                // createBmpLoadThread();
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);

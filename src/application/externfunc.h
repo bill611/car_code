@@ -132,7 +132,6 @@ int check_database_sql(void);
 int net_detect(char* net_name);
 void print_data(char *data,int len);
 int GetFilesNum(char *pPathDir,void (*func)(void *));
-void clearFramebuffer(void);
 BOOL playButtonSound(void);
 void WatchDogClose(void);
 int GetLocalIP(char *net_name,char *IP,char *NetMask,char *MAC);

@@ -110,10 +110,16 @@ static void irqTimerInit(int sec)
 static void timer1s(void)
 {
 	// ¼ì²éÍøÂçÁ¬½Ó×´Ì¬
-	if (net_detect("wlan0") < 0)
+    if (net_detect("wlan0") < 0) {
 		form_main->setNetWorkState(0);
-	else
+        if (Public.net_connect_times) {
+            if (--Public.net_connect_times == 0)
+                topMessage(Screen.hMainWnd,TOPBOX_WIFI_FAILED,NULL );
+        }
+    } else {
+        Public.net_connect_times = 0;
 		form_main->setNetWorkState(1);
+    }
 	if (form_main->timerProc1s()) {
         printf("form timer 1s\n");
 	}

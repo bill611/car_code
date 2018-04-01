@@ -816,8 +816,8 @@ void bmpsLoad(BmpLocation *bmp,int num)
 {
 	int i;
 	for (i=0; i<num; i++) {
-		if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, bmp[i].location))
-			printf ("LoadBitmap(%s)fail.\n",bmp[i].location);
+        if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, bmp[i].location))
+            printf ("LoadBitmaps(%s)fail.\n",bmp[i].location);
 	}
 }
 

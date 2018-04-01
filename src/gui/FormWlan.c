@@ -59,13 +59,14 @@ enum {
 
 	IDC_EDIT_ACCOUNT = 50,
 	IDC_EDIT_PASSWORD ,
+	IDC_LABER_BACKGROUND ,
 };
 
 
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; // 背景
+static BITMAP bmp_title; 
 static int current_edit = IDC_EDIT_ACCOUNT;
 static char key_num[] = "0123456789abcdefghijklmnopqrstuvwxyz ";
 
@@ -74,10 +75,11 @@ static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"WLAN-1.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"WLAN(x8 ，y91).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
+    STATIC_IMAGE(8,91,472,612,IDC_LABER_BACKGROUND,(DWORD)&bmp_title),
     EDIT_L(148,220,244,36,IDC_EDIT_ACCOUNT,"",0,NULL),
     EDIT_PSD_L(148,264,244,36,IDC_EDIT_PASSWORD,"",0,NULL),
 };
@@ -180,7 +182,7 @@ static void btKyeboardDeletPress(HWND hwnd, int id, int nc, DWORD add_data)
 		SetTimer(GetParent (hwnd),IDC_FOMR_TIMER,TIME_100MS);
 		return;
 	}
-	if (nc == BN_CLICKED) {
+	if (nc == BN_UNPUSHED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
         SendMessage(GetDlgItem(GetParent(hwnd),current_edit),MSG_CHAR,'\b',0);
 	}
@@ -202,8 +204,8 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 	fp = fopen("network_config","wb");
 	if(fp) {
 #if 1
-		fprintf(fp,"SSID %s",account);
-		fprintf(fp,"AUTH_KEY %s",pwd);
+		fprintf(fp,"SSID %s\n",account);
+		fprintf(fp,"AUTH_KEY %s\n",pwd);
 #else
 		// fprintf(fp,"SSID TC_OFFICE\n",account);
 		// fprintf(fp,"AUTH_KEY TC.86kb.com\n",pwd);
@@ -218,7 +220,7 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
 		printf("Can't open network_config\n");
 	if(fp)
 		fclose(fp);
-	ExcuteCmd(1,"./network.sh",">","debug.txt","&",NULL);
+    restartNetwork();
     topMessage(GetParent (hwnd),TOPBOX_WIFI_CONNECTING,NULL );
     ShowWindow(GetParent(hwnd),SW_HIDE);
 }
@@ -265,6 +267,13 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     formWlanLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
+    // CreateWindowEx2 (CTRL_STATIC, "",
+            // WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            // WS_EX_TRANSPARENT,
+            // IDC_LABER_BACKGROUND, // 避免与toolbar冲突 
+            // ,
+            // hDlg, NULL, NULL,
+            // (DWORD)&bmp_title);
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
         opt_controls[i].idc = i;
 		if (opt_controls[i].notif_proc == NULL)
@@ -344,7 +353,7 @@ int createFormWlan(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

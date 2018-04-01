@@ -240,6 +240,7 @@ void publicInit(void)
 	Screen.ReturnMain = screenReturnMainForm;
 	Screen.foreachForm = screenForeachForm;
 
+	Public.net_connect_times = 0;
 	Public.WatchDog_fd = -2;
 
     Public.saveConfig = saveConfig;

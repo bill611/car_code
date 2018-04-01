@@ -9,7 +9,7 @@ LIB_DIR += $(MAKEROOT)/src/libs
 INC_DIR += $(MAKEROOT)/src/include
 XLINKER = -Xlinker "-(" -lts -lfreetype -lminigui_ths -ldl -lpng -ljpeg  -lm -lpthread -lrt -Xlinker "-)"
 COMPILE = $(CC) -muclibc -o $@ $(OBJ) ${addprefix -L,${LIB_DIR}} ${XLINKER}
-CFLAGS = -muclibc -c -DWATCHDOG_DEBUG -O2' > evn.mk
+CFLAGS = -muclibc -c -O0' > evn.mk
 echo '
 COMPILER_PATH=/usr/local/arm_linux_4.2/arm-none-linux-gnueabi
 KERNERL_PATH=/home/xubin/work/tools/kernel_2.6.35/linux-2.6.35.4

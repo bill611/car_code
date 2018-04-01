@@ -16,9 +16,7 @@ typedef struct _FORMCLASS
 
 typedef struct _SCREEN_FORM
 {
-    HWND hMainWnd;												//主窗口 HWND hUpdate;                                               //更新窗口
-	HWND hUpdate;
-	FILE *DrangLogfp;
+    HWND hMainWnd;												//主窗口 HWND hUpdate;
 	int Width;
 	int Height;
 	int Count;													//合计数
@@ -132,6 +130,7 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 	char cLocalIP[16];		// 本机IP地址
 	char cNetMask[16];		// 子网掩码
 	char cGateWay[16];		// 默认网关
+	int net_connect_times;  // 网络连接计数次数
 
 	int WatchDog_fd;
 

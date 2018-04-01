@@ -56,14 +56,15 @@ enum {
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_title,bmp_icon; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"玻璃控制.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"玻璃控制(X69-Y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"玻璃控制图标(X80-Y520).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -123,7 +124,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			op_code = 0xa6;
 		else if (id == IDC_GLASS_DOWN)
 			op_code = 0xa7;
-	} else if (nc == BN_CLICKED) {
+	} else if (nc == BN_UNPUSHED) {
 		if(id == IDC_GLASS_PWR) {
 			Public.glass_power = SendMessage(GetDlgItem (GetParent (hwnd), id),
 					MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
@@ -198,6 +199,20 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 		   	MSG_MYBUTTON_SET_SELECT_MODE, 2, 0);
 	SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_PWR].idc),
 			   MSG_MYBUTTON_SET_SELECT_STATE, Public.glass_power, 0);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            69,89,108,28,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_title);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            80,520,318,55,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_icon);
 	formManiCreateToolBar(hDlg);
 }
 
@@ -248,7 +263,7 @@ int createFormGlassScreen(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

@@ -63,14 +63,15 @@ typedef struct _BedBoxButton{
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_title,bmp_icon; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"电动床.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"电动床(x69，y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"电动床图标(x98，y184).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -183,7 +184,7 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		multi_ctrl = sendOptCmd(id);
 		return;
 	}
-	if (nc == BN_CLICKED) {
+	if (nc == BN_UNPUSHED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
 		multi_ctrl = sendOptCmd(id);
         pro_com->sendOpt(multi_ctrl->device_id, multi_ctrl->op_code);
@@ -248,6 +249,20 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				1, 0,
 				opt_controls[i].notif_proc);
 	}
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            69,89,107,28,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_title);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            98,184,285,231,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_icon);
 	formManiCreateToolBar(hDlg);
 }
 
@@ -308,7 +323,7 @@ int createFormBed(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

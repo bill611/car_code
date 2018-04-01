@@ -51,14 +51,15 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg;
+static BITMAP bmp_title,bmp_icon; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"窗帘.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"窗帘(x69，y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"窗帘图标(x61，y165).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -160,8 +161,22 @@ void formCurtainLoadBmp(void)
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-	int i;
+	int i = 0;
     formCurtainLoadBmp();
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            200, // 避免与toolbar冲突 
+            69,89,104,28,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_title);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            201, // 避免与toolbar冲突 
+            61,165,362,477,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_icon);
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		opt_controls[i].idc = i;
 		opt_controls[i].device_id = 0x15;
@@ -227,7 +242,7 @@ int createFormCurtain(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

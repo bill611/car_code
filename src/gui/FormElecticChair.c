@@ -76,6 +76,12 @@ enum {
     CHAIR_LEG,  	// 腿托
 };
 
+enum {
+    IDC_LABER_TITEL = 200,
+    IDC_LABER_BACKGROUND,
+    IDC_LABER_ICON,
+};
+
 typedef struct _ButtonArray {
     MgCtrlButton *ctrl;
     int num;
@@ -89,6 +95,7 @@ typedef struct _ElecChair {
  *                      variables define
  *----------------------------------------------------------------------------*/
 static FormBase* form_base = NULL;
+static BITMAP bmp_title,bmp_icon;
 static BITMAP bmp_bkg_assist;
 static BITMAP bmp_bkg_l_backrest;
 static BITMAP bmp_bkg_l_leg;
@@ -106,16 +113,21 @@ static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg_assist, BMP_LOCAL_PATH"座椅功能.JPG"},
-    {&bmp_bkg_l_backrest, BMP_LOCAL_PATH"左座椅/左靠背/左座椅靠背.JPG"},
-    {&bmp_bkg_l_leg, BMP_LOCAL_PATH"左座椅/左腿托/左座椅腿托.JPG"},
-    {&bmp_bkg_l_cushin, BMP_LOCAL_PATH"左座椅/左座垫/左座椅座垫.JPG"},
-    {&bmp_bkg_r_backrest, BMP_LOCAL_PATH"右座椅/右靠背/右座椅靠背.JPG"},
-    {&bmp_bkg_r_leg, BMP_LOCAL_PATH"右座椅/右腿托/右座椅腿托.JPG"},
-    {&bmp_bkg_r_cushin, BMP_LOCAL_PATH"右座椅/右座垫/右座椅座垫.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"电动座椅(x69，y89).JPG"},
+    {&bmp_icon, BMP_LOCAL_PATH"座椅腿托(x58，y482).JPG"},
+    {&bmp_bkg_assist, BMP_LOCAL_PATH"座椅功能(x55，y122).JPG"},
+    {&bmp_bkg_l_backrest, BMP_LOCAL_PATH"左座椅/左靠背/左座椅靠背(x55，y122).JPG"},
+    {&bmp_bkg_l_leg, BMP_LOCAL_PATH"左座椅/左腿托/左座椅腿托(x55，y122).JPG"},
+    {&bmp_bkg_l_cushin, BMP_LOCAL_PATH"左座椅/左座垫/左座椅座垫(x55，y122).JPG"},
+    {&bmp_bkg_r_backrest, BMP_LOCAL_PATH"右座椅/右靠背/右座椅靠背(x55，y122).JPG"},
+    {&bmp_bkg_r_leg, BMP_LOCAL_PATH"右座椅/右腿托/右座椅腿托(x55，y122).JPG"},
+    {&bmp_bkg_r_cushin, BMP_LOCAL_PATH"右座椅/右座垫/右座椅座垫(x55，y122).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
+    STATIC_IMAGE(69,89,106,26,IDC_LABER_TITEL,(DWORD)&bmp_title),
+    STATIC_IMAGE(55,122,370,340,IDC_LABER_BACKGROUND,(DWORD)&bmp_bkg_l_backrest),
+    STATIC_IMAGE(58,482,178,29,IDC_LABER_ICON,(DWORD)&bmp_icon),
 };
 
 
@@ -257,10 +269,10 @@ static void updateChairType(HWND hwnd)
 			}
 		}
     }
-	rect.top = 64;
-	rect.left = 52;
-	rect.right = 427;
-	rect.bottom = 480;
+	rect.top = 122;
+	rect.left = 55;
+	rect.right = 370;
+	rect.bottom = 340;
 
     InvalidateRect (hwnd, &rect, FALSE);
 }
@@ -374,7 +386,8 @@ static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		return;
 	int i,k;
 	chair_disp_type = CHAIR_ASSIST;
-    form_base_priv.bmp_bkg = &bmp_bkg_assist;
+    SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+            (DWORD)&bmp_bkg_assist,0);
 	chair_mode_type = CHAIR_BACKREST;
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 
@@ -396,10 +409,12 @@ static void optAssistControlsReturnNotify(HWND hwnd, int id, int nc, DWORD add_d
 	int i,k;
 	if (chair_dir_type == CHAIR_DIR_LEFT) {
 		chair_disp_type = CHAIR_LEFT;
-		form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+        SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+                (DWORD)&bmp_bkg_l_backrest,0);
 	} else {
 		chair_disp_type = CHAIR_RIGHT;
-		form_base_priv.bmp_bkg = &bmp_bkg_r_backrest;
+        SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+                (DWORD)&bmp_bkg_r_backrest,0);
 	}
 	chair_mode_type = CHAIR_BACKREST;
 
@@ -423,7 +438,8 @@ static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 	chair_dir_type = CHAIR_DIR_LEFT;
 	chair_disp_type = CHAIR_LEFT;
 	chair_mode_type = CHAIR_BACKREST;
-    form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+    SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+            (DWORD)&bmp_bkg_l_backrest,0);
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 /* ---------------------------------------------------------------------------*/
@@ -443,7 +459,8 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 	chair_dir_type = CHAIR_DIR_RIGHT;
 	chair_disp_type = CHAIR_RIGHT;
 	chair_mode_type = CHAIR_BACKREST;
-    form_base_priv.bmp_bkg = &bmp_bkg_r_backrest;
+    SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+            (DWORD)&bmp_bkg_r_backrest,0);
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 /* ---------------------------------------------------------------------------*/
@@ -460,26 +477,29 @@ static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 {
 	if (nc != BN_CLICKED)
 		return;
+    BITMAP *bmp;
 	if (chair_mode_type < CHAIR_LEG)
 		chair_mode_type++;
 	else
 		chair_mode_type = CHAIR_BACKREST;
     if (chair_mode_type == CHAIR_BACKREST) {
        if (chair_dir_type == CHAIR_DIR_LEFT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+        bmp = &bmp_bkg_l_backrest;
        else if (chair_dir_type == CHAIR_DIR_RIGHT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_r_backrest;
+        bmp = &bmp_bkg_r_backrest;
     } else if (chair_mode_type == CHAIR_CUSHIN) {
        if (chair_dir_type == CHAIR_DIR_LEFT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_l_cushin;
+        bmp = &bmp_bkg_l_cushin;
        else if (chair_dir_type == CHAIR_DIR_RIGHT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_r_cushin;
+        bmp = &bmp_bkg_r_cushin;
     } else if (chair_mode_type == CHAIR_LEG) {
        if (chair_dir_type == CHAIR_DIR_LEFT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_l_leg;
+        bmp = &bmp_bkg_l_leg;
        else if (chair_dir_type == CHAIR_DIR_RIGHT) 
-        form_base_priv.bmp_bkg = &bmp_bkg_r_leg;
+        bmp = &bmp_bkg_r_leg;
     }
+    SendMessage(GetDlgItem(GetParent (hwnd),IDC_LABER_BACKGROUND),STM_SETIMAGE,
+            (DWORD)bmp,0);
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 /* ---------------------------------------------------------------------------*/
@@ -520,7 +540,7 @@ static void optMultiControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		multi_ctrl = sendOptCmd(id);
 		return;
 	}
-	if (nc == BN_CLICKED) {
+	if (nc == BN_UNPUSHED) {
 		KillTimer (GetParent (hwnd),IDC_FOMR_TIMER);
 		multi_ctrl = sendOptCmd(id);
 		if (chair_dir_type == CHAIR_DIR_LEFT)
@@ -702,13 +722,13 @@ int createFormElectricChair(HWND hMainWnd)
 		chair_disp_type = CHAIR_LEFT;
 		chair_dir_type = CHAIR_DIR_LEFT;
 		chair_mode_type = CHAIR_BACKREST;
-		form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+		SendMessage(GetDlgItem(Form,IDC_LABER_BACKGROUND),STM_SETIMAGE,(DWORD)&bmp_bkg_l_backrest,0);
 		SendMessage(Form,MSG_UPDATESTATUS,0,0);
 		SendMessage(Form,MSG_ELECTRIC_CHAIR_TYPE,0,0);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg_l_backrest;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,

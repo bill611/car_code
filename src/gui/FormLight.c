@@ -88,14 +88,18 @@ typedef struct _StaticPower {
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_bkg; 
+static BITMAP bmp_title; 
+static BITMAP bmp_light1,bmp_light2,bmp_light3; 
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
 
 static BmpLocation bmp_load[] = {
-    {&bmp_bkg, BMP_LOCAL_PATH"灯光.JPG"},
+    {&bmp_title, BMP_LOCAL_PATH"灯光(x69，y89).JPG"},
+    {&bmp_light1, BMP_LOCAL_PATH"灯光1(x218，y141).JPG"},
+    {&bmp_light2, BMP_LOCAL_PATH"灯光2(x218，y330).JPG"},
+    {&bmp_light3, BMP_LOCAL_PATH"灯光3(x218，y516).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -528,6 +532,34 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 				hDlg, NULL, NULL,
 				(DWORD)&opt_static_power[i].bmp_inactive);
 	}
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            idc++,
+            69,89,106,28,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_title);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            idc++,
+            218,141,44,26,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_light1);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            idc++,
+            218,330,44,26,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_light2);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            idc,
+            218,516,44,26,
+            hDlg, NULL, NULL,
+            (DWORD)&bmp_light3);
 	refreshAll(hDlg);
 	formManiCreateToolBar(hDlg);
 }
@@ -580,7 +612,7 @@ int createFormLight(HWND hMainWnd)
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
 		form_base_priv.hwnd = hMainWnd;
-		form_base_priv.bmp_bkg = &bmp_bkg;
+		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);
 		CreateMyWindowIndirectParam(form_base->priv->dlgInitParam,
 				form_base->priv->hwnd,
