@@ -50,6 +50,9 @@ extern "C" {
 		int (*getSendPort)(void);  // 获取接收端口
 		void (*getStatus)(void);  // 发送获取状态命令
 		void (*sendOpt)(int device,int opt);  // 发送操作命令
+
+		void (*dbgRecSerial)(unsigned char *data,int leng);  // 调试广播串口接收命令
+		void (*dbgSendSerial)(unsigned char *data,int leng);  // 调试广播串口发送命令
 	}DevToApp;
 
 	extern DevToCom *pro_com;

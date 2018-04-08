@@ -116,6 +116,9 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 //------------协议B,UDP协议
 #define LOCAL_PORT		8080 // 本地udp接收端口
 #define REMOTE_PORT		6060 // app端udp接收端口
+
+#define SERIAL_REC_PORT		1000 // 调试用接收到串口数据后发送广播
+#define SERIAL_SEDN_PORT	1001 // 调试用发送串口数据后发送广播
 // 7寸屏和app端接收IP是均广播方式：255.255.255.255
 //一般网络udp通讯，双方同一个数据包均发送3次，数据包ID不变，以确保对方收到。
 
@@ -687,6 +690,16 @@ static void proUdpSendStatus(void)
 			&data,sizeof(data),3,0,NULL,NULL);
 }
 
+static void proDbgRecSerial(unsigned char *data,int leng)
+{
+	udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_REC_PORT,
+			data,leng,1,0,NULL,NULL);
+}
+static void proDbgSendSerial(unsigned char *data,int leng)
+{
+	udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_SEDN_PORT,
+			data,leng,1,0,NULL,NULL);
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief checOptCode 检查匹配码
@@ -741,6 +754,8 @@ void initProtocol(void)
 	pro_app->getSendPort = proUdpGetSendPort;
 	pro_app->getRecivePort = proUdpGetRecivePort;
 	pro_app->udpSocketRead = udpSocketRead;
+	pro_app->dbgRecSerial = proDbgRecSerial;
+	pro_app->dbgSendSerial = proDbgSendSerial;
 
 
 #ifdef PC

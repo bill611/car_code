@@ -64,6 +64,8 @@ static void FromSingleChip(UartDeal *This)
 	if (len <= 0) {
 		return;
 	}
+    if (pro_app)
+        pro_app->dbgRecSerial(buff,len);
 	pro_com->checkOnlineCmd(buff,len);	
 	pro_com->checkStateCmd(buff,len);	
 
@@ -81,6 +83,8 @@ static void FromSingleChip(UartDeal *This)
 static void ToSingleChip(UartDeal *This,int cnt)
 {
 	This->uart->Send(This->uart,This->SndData,cnt);
+    if (pro_app)
+        pro_app->dbgSendSerial(This->SndData,cnt);
 }
 
 /* ---------------------------------------------------------------------------*/
