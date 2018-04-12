@@ -53,6 +53,7 @@ extern "C" {
 
 		void (*dbgRecSerial)(unsigned char *data,int leng);  // 调试广播串口接收命令
 		void (*dbgSendSerial)(unsigned char *data,int leng);  // 调试广播串口发送命令
+		void (*dbgPrint)(const char *fmt, ...);  // 调试广播信息
 	}DevToApp;
 
 	extern DevToCom *pro_com;

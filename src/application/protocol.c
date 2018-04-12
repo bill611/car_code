@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdarg.h>
 #include "externfunc.h"
 #include "UDPServer.h"
 #include "UartDeal.h"
@@ -35,6 +36,7 @@ extern uint32_t getDiffSysTick(uint64_t new,uint64_t old);
  *                  internal functions declare
  *----------------------------------------------------------------------------*/
 static void proUdpSendStatus(void);
+static void proDbgPrint(const char *fmt, ...);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -44,6 +46,7 @@ static void proUdpSendStatus(void);
 #define COM_ORDER_CONNECT	0xFF  // 联机和联机应答命令
 #define COM_ORDER_STATUS	0xFC  // 获取客户设备状态和状态应答命令
 
+#pragma pack(1)
 // 发送联机或者获取客户设备状态命令数据包
 typedef struct{
 	u8 head;
@@ -119,6 +122,7 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 
 #define SERIAL_REC_PORT		1000 // 调试用接收到串口数据后发送广播
 #define SERIAL_SEDN_PORT	1001 // 调试用发送串口数据后发送广播
+#define DEBUG_PORT	        1002 // 调试用发送打印信息
 // 7寸屏和app端接收IP是均广播方式：255.255.255.255
 //一般网络udp通讯，双方同一个数据包均发送3次，数据包ID不变，以确保对方收到。
 
@@ -208,7 +212,7 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 
 	u32 flagEnd; // 0xbb66aa55
 }st_var;
-
+#pragma pack()
 //------------协议B,UDP协议---end
 
 #define VAILDTIME 	(5000)				//5秒
@@ -504,7 +508,7 @@ static void proComSendGetStatus(void)
 }
 /* ---------------------------------------------------------------------------*/
 /**
- * @brief proComInitThread 上电每100ms发送一次联机命令
+ * @brief proComInitThread 上电每1s发送一次联机命令
  *
  * @param arg
  *
@@ -515,7 +519,7 @@ static void* proComInitThread(void *arg)
 {
 	while (online_state == 0) {
 		if (uart == NULL || start == 0) {
-			usleep(100000);
+			sleep(1);
 			continue;
 		}
 			
@@ -524,7 +528,7 @@ static void* proComInitThread(void *arg)
 		unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
 		uart->SndData[2] = check;	
 		uart->ToSingleChip(uart,3);
-		usleep(100000);
+		sleep(1);
 	}
 	return NULL;
 }
@@ -575,8 +579,10 @@ static int proUdpGetSendPort(void)
 /* ---------------------------------------------------------------------------*/
 static void proComCheckOnlineCmd(unsigned char *data,int leng)
 {
-	if (leng != 3)
+    if (leng != 3) {
+        proDbgPrint("[%s]leng:%d != 3\n",__FUNCTION__,leng);        
 		return;
+    }
 	if (data[0] == COM_HEAD && data[1] == COM_ORDER_CONNECT) {
 		unsigned char check = (unsigned char)(COM_HEAD + COM_ORDER_CONNECT); 
 		if (data[2] == check)	 {
@@ -599,8 +605,11 @@ static void proComCheckOnlineCmd(unsigned char *data,int leng)
 /* ---------------------------------------------------------------------------*/
 static void proComCheckStateCmd(unsigned char *data,int leng)
 {
-	if (leng != sizeof(st_status))
+    if (leng != sizeof(st_status)) {
+        proDbgPrint("[%s]leng:%d != st_status:%d\n",
+                __FUNCTION__,leng,sizeof(st_status));        
 		return;
+    }
 	st_status *status = (st_status *)data;
 	Public.leftSeat = status->leftSeat;
 	Public.rightSeat = status->rightSeat;
@@ -632,12 +641,18 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 	// for (i=0; i<AData->Size; i++) {
 		// printf("[%d]%x\n", i,AData->Data[i]);
 	// }
-	if(AData->Size != sizeof(st_set))
+    if(AData->Size != sizeof(st_set)) {
+        proDbgPrint("[%s]leng:%d != st_set:%d\n",
+                __FUNCTION__,AData->Size,sizeof(st_set));        
         return 0;
+    }
     st_set *data = (st_set *)AData->Data;
 	if (data->flagStart != NET_HEAD
-			|| data->flagEnd != NET_END)
+            || data->flagEnd != NET_END) {
+        proDbgPrint("[%s]data->flagStart:%#x != data->flagEnd:%#x\n",
+                __FUNCTION__,data->flagStart,data->flagEnd);        
 		return 0;
+    }
     //判断包是否重发
     dwTick = GetTickCount();
     for(i=0;i<10;i++) {
@@ -700,6 +715,16 @@ static void proDbgSendSerial(unsigned char *data,int leng)
 	udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_SEDN_PORT,
 			data,leng,1,0,NULL,NULL);
 }
+static void proDbgPrint(const char *fmt, ...)
+{
+    va_list args;
+    char buf[128] = {0};
+    va_start(args, fmt);
+    vsprintf(buf,fmt, args);
+    va_end(args);
+	udp_server->AddTask(udp_server,"255.255.255.255",DEBUG_PORT,
+			(void *)buf,strlen(buf),1,0,NULL,NULL);
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief checOptCode 检查匹配码
@@ -756,6 +781,7 @@ void initProtocol(void)
 	pro_app->udpSocketRead = udpSocketRead;
 	pro_app->dbgRecSerial = proDbgRecSerial;
 	pro_app->dbgSendSerial = proDbgSendSerial;
+	pro_app->dbgPrint = proDbgPrint;
 
 
 #ifdef PC
