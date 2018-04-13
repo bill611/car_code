@@ -239,6 +239,10 @@ int createFormCD(HWND hMainWnd)
 		SendMessage(Form,MSG_UPDATESTATUS,0,0);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
+        if (bmp_load_finished == 0) {
+            topMessage(hMainWnd,TOPBOX_ICON_LOADING,NULL );
+            return 0;
+        }
 		form_base_priv.hwnd = hMainWnd;
 		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);

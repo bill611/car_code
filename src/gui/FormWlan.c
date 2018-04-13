@@ -264,7 +264,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
 	HWND hCtrl;
-    formWlanLoadBmp();
+    // formWlanLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
     // CreateWindowEx2 (CTRL_STATIC, "",
@@ -348,10 +348,15 @@ int createFormWlan(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
+        current_edit = IDC_EDIT_ACCOUNT;
 		SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
 		SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),"");
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
+        if (bmp_load_finished == 0) {
+            topMessage(hMainWnd,TOPBOX_ICON_LOADING,NULL );
+            return 0;
+        }
 		form_base_priv.hwnd = hMainWnd;
 		form_base_priv.bmp_bkg = &bmp_bkg2;
 		form_base = formBaseCreate(&form_base_priv);

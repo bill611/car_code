@@ -68,6 +68,7 @@ static BITMAP bmp_chair_fold;// 座椅展开
 static BITMAP bmp_chair_unfold;// 桌板收起
 static BITMAP bmp_wifi_connecting;// wifi连接中
 static BITMAP bmp_wifi_failed;// wifi连接失败
+static BITMAP bmp_icon_loading;// 正在加载中
 static BITMAP notice_confirm[2];// 2个键的确认
 static BITMAP notice_cancel[2];// 2个键的取消
 static BITMAP wifi_confirm[2];// wifi确认
@@ -87,6 +88,7 @@ static BmpLocation bmp_load[] = {
     {&bmp_chair_unfold, BMP_LOCAL_PATH"座椅全躺提示(X70-Y304).JPG"},
     {&bmp_wifi_connecting, BMP_LOCAL_PATH"正在连接提示(X100，Y278).JPG"},
     {&bmp_wifi_failed, BMP_LOCAL_PATH"wifi失败(X100，Y278).JPG"},
+    {&bmp_icon_loading, BMP_LOCAL_PATH"正在加载中(X100，Y278).JPG"},
     {&notice_confirm[0], BMP_LOCAL_PATH"确定(X240-Y404).JPG"},
     {&notice_confirm[1], BMP_LOCAL_PATH"确定-2(X240-Y404).JPG"},
     {&notice_cancel[0], BMP_LOCAL_PATH"取消(X70-Y404).JPG"},
@@ -114,7 +116,9 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    callbackFunc();
+    if (callbackFunc) {
+        callbackFunc();
+    }
 	SendMessage(GetParent (hwnd), MSG_CLOSE, 0, 0);
 }
 static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
@@ -126,7 +130,9 @@ static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 //----------------------------------------------------------------------------
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-    if (form_type == TOPBOX_WIFI_CONNECTING || form_type == TOPBOX_WIFI_FAILED) {
+    if (form_type == TOPBOX_WIFI_CONNECTING 
+            || form_type == TOPBOX_WIFI_FAILED
+            || form_type == TOPBOX_ICON_LOADING) {
         createSkinButton(hDlg,
                 IDC_BUTTON_CANCEL,
                 86,111,114,47,
@@ -176,7 +182,7 @@ static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lPara
         case MSG_INITDIALOG:
             {
                 Screen.Add(hWnd,"TFrmTopMessage");
-                formTopBoxLoadBmp();
+                // formTopBoxLoadBmp();
                 initPara(hWnd,message,wParam,lParam);
                 SetTimer(hWnd,IDC_TOPBOX_TIMER,DISPLAY_TIME);
                 break;
@@ -224,13 +230,16 @@ int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) )
         case TOPBOX_LEG_UNFOLD :   bmp_bkg = &bmp_leg_unfold;break;
         case TOPBOX_CHAIR_FOLD :   bmp_bkg = &bmp_chair_fold;break;
         case TOPBOX_CHAIR_UNFOLD : bmp_bkg = &bmp_chair_unfold;break;
+        case TOPBOX_ICON_LOADING : 
         case TOPBOX_WIFI_CONNECTING : 
         case TOPBOX_WIFI_FAILED : 
                                    {
                                        if (type == TOPBOX_WIFI_CONNECTING)
                                            bmp_bkg = &bmp_wifi_connecting;
-                                       else
+                                       else if (type == TOPBOX_WIFI_FAILED)
                                            bmp_bkg = &bmp_wifi_failed;
+                                       else if (type == TOPBOX_ICON_LOADING)
+                                           bmp_bkg = &bmp_icon_loading;
                                        DlgInitParam.x = 100;
                                        DlgInitParam.y = 278;
                                        DlgInitParam.w = 286;

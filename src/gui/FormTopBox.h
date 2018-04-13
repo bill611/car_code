@@ -32,6 +32,7 @@ extern "C" {
         TOPBOX_CHAIR_UNFOLD,
         TOPBOX_WIFI_CONNECTING,
         TOPBOX_WIFI_FAILED,
+        TOPBOX_ICON_LOADING,
     };
 
     int topMessage(HWND hMainWnd,int type,void (*notif_proc)(void) );

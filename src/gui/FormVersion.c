@@ -183,7 +183,7 @@ void formVersionLoadBmp(void)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-    formVersionLoadBmp();
+    // formVersionLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_VERSION),CODE_VERSION);
 	SetWindowText(GetDlgItem(hDlg,IDC_LABER_DATE),__DATE__);
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
@@ -232,6 +232,10 @@ int createFormVersion(HWND hMainWnd)
 	if(Form) {
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
+        if (bmp_load_finished == 0) {
+            topMessage(hMainWnd,TOPBOX_ICON_LOADING,NULL );
+            return 0;
+        }
 		form_base_priv.hwnd = hMainWnd;
 		form_base_priv.bmp_bkg = &bmp_bkg_system1;
 		form_base = formBaseCreate(&form_base_priv);

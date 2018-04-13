@@ -165,9 +165,11 @@ static MgCtrlButton opt_toolbar_controls[] = {
 };
 
 static InitBmpFunc loadBmps[] = {
-    formMainLoadBmp,
-	formCDLoadBmp,
+    // formMainLoadBmp,
+    // formTopBoxLoadBmp,
+    formWlanLoadBmp,
     formVersionLoadBmp,
+	formCDLoadBmp,
 	formMonitorLoadBmp,
     formPresetLoadBmp,
 	formSkyLightLoadBmp,
@@ -179,8 +181,6 @@ static InitBmpFunc loadBmps[] = {
     formCurtainLoadBmp,
 	formTableLoadBmp,
 	formTvScreenLoadBmp,
-    formTopBoxLoadBmp,
-    formWlanLoadBmp,
 	formSaTvLoadBmp,
 	formDVDLoadBmp,
 	formPasswordLoadBmp,
@@ -548,7 +548,7 @@ static void formMainLoadBmp(void)
 static void fromLoadLocks(void)
 {
     int i;
-    // int i;
+#if 0
     unsigned long long time_n,time_o;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
         time_o = GetMs();
@@ -557,12 +557,14 @@ static void fromLoadLocks(void)
         printf("time:%lld\n", time_n-time_o);
     }
     restartNetwork();
-    // for (i=0; i<NELEMENTS(loadLocks); i++) {
-        // loadLocks[i]();
-    // }
+#else
+    for (i=0; i<NELEMENTS(loadLocks); i++) {
+        loadLocks[i]();
+    }
+#endif
 }
 
-#if 0 //后台执行加载
+#if 1 //后台执行加载
 static void * loadBmpsThread(void *arg)
 {
     int i;
@@ -573,7 +575,9 @@ static void * loadBmpsThread(void *arg)
         time_n = GetMs();
         printf("time:%lld\n", time_n-time_o);
     }
+#ifndef WATCHDOG_DEBUG
     restartNetwork();
+#endif
     return NULL;
 }
 
@@ -620,9 +624,10 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				Screen.Add(hWnd,"TFrmMain");
 				hwnd_main = Screen.hMainWnd = hWnd;
 				// 装载所有图片
-                // formMainLoadBmp();
+                formMainLoadBmp();
+                formTopBoxLoadBmp();
                 fromLoadLocks();
-                // createBmpLoadThread();
+                createBmpLoadThread();
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);

@@ -707,13 +707,17 @@ static void proUdpSendStatus(void)
 
 static void proDbgRecSerial(unsigned char *data,int leng)
 {
-	udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_REC_PORT,
-			data,leng,1,0,NULL,NULL);
+#ifndef WATCHDOG_DEBUG
+    udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_REC_PORT,
+            data,leng,1,0,NULL,NULL);
+#endif
 }
 static void proDbgSendSerial(unsigned char *data,int leng)
 {
-	udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_SEDN_PORT,
-			data,leng,1,0,NULL,NULL);
+#ifndef WATCHDOG_DEBUG
+    udp_server->AddTask(udp_server,"255.255.255.255",SERIAL_SEDN_PORT,
+            data,leng,1,0,NULL,NULL);
+#endif
 }
 static void proDbgPrint(const char *fmt, ...)
 {
