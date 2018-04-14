@@ -361,9 +361,9 @@ void formRotChairLoadBmp(void)
 	char image_path[128] = {0};
     if (g_config.device_main_controls[IDC_CHAIR_ROT] == 0)
         return;
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -372,7 +372,7 @@ void formRotChairLoadBmp(void)
     bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_l_controls));
     bmpsRotChairButtonLoad(BMP_LOAD_PARA(opt_r_controls));
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -386,7 +386,7 @@ void formRotChairLoadBmp(void)
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-    formRotChairLoadBmp();
+    // formRotChairLoadBmp();
     creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
             optMultiControlsNotify);
     int i,j;

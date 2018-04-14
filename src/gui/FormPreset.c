@@ -137,9 +137,9 @@ void formPresetLoadBmp(void)
 {
     int i;
 	char image_path[128] = {0};
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -155,7 +155,7 @@ void formPresetLoadBmp(void)
         bmpLoad(&opt_controls[i].image_press, image_path);
     }
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 /* ----------------------------------------------------------------*/
@@ -171,7 +171,7 @@ void formPresetLoadBmp(void)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-    formPresetLoadBmp();
+    // formPresetLoadBmp();
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		createSkinButton(hDlg,
 				opt_controls[i].idc,

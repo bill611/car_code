@@ -421,9 +421,9 @@ void formLightLoadBmp(void)
     MgCtrlButton *p_ctrl,*new_ctrl,*p;
     if (g_config.device_main_controls[IDC_LIGHT] == 0)
         return;
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -480,7 +480,7 @@ void formLightLoadBmp(void)
 		bmpLoad(&opt_static_power[i].bmp_active, image_path);
 	}
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -498,7 +498,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
     StructLight *p_light;
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
-    formLightLoadBmp();
+    // formLightLoadBmp();
 	for (i=0; i<NELEMENTS(light); i++) {
         p_light = &light[i];
         for (j=0; j<p_light->array_num; j++) {

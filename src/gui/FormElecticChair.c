@@ -607,9 +607,9 @@ void formElectricChairLoadBmp(void)
 	char image_path[128] = {0};
     if (g_config.device_main_controls[IDC_CHAIR_ELE] == 0)
         return;
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -623,7 +623,7 @@ void formElectricChairLoadBmp(void)
     bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_leg_controls));
     bmpsElectricChairButtonLoad(BMP_LOAD_PARA(opt_r_cushin_controls));
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -637,7 +637,7 @@ void formElectricChairLoadBmp(void)
 /* ----------------------------------------------------------------*/
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
-    formElectricChairLoadBmp();
+    // formElectricChairLoadBmp();
     creatButtonControl(hDlg, BMP_LOAD_PARA(opt_controls),1,
             optNoticLegFoldControlsNotify);
     int i,j;

@@ -234,9 +234,9 @@ void formWlanLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -248,7 +248,7 @@ void formWlanLoadBmp(void)
 		bmpLoad(&opt_controls[i].image_normal, image_path);
 	}
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**

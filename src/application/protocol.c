@@ -637,6 +637,11 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 {
 	int i;
 	unsigned int dwTick;
+	if (ABinding == NULL || AData == NULL) {
+        proDbgPrint("[%s]ABinding = %x != AData:%x\n",
+                __FUNCTION__,AData,AData);        
+		return 0;
+	}
 	//回复数据包
 	// for (i=0; i<AData->Size; i++) {
 		// printf("[%d]%x\n", i,AData->Data[i]);
@@ -721,6 +726,7 @@ static void proDbgSendSerial(unsigned char *data,int leng)
 }
 static void proDbgPrint(const char *fmt, ...)
 {
+#ifndef WATCHDOG_DEBUG
     va_list args;
     char buf[128] = {0};
     va_start(args, fmt);
@@ -728,6 +734,7 @@ static void proDbgPrint(const char *fmt, ...)
     va_end(args);
 	udp_server->AddTask(udp_server,"255.255.255.255",DEBUG_PORT,
 			(void *)buf,strlen(buf),1,0,NULL,NULL);
+#endif
 }
 /* ---------------------------------------------------------------------------*/
 /**

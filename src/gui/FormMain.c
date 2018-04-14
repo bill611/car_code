@@ -626,7 +626,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 				// 装载所有图片
                 formMainLoadBmp();
                 formTopBoxLoadBmp();
-                fromLoadLocks();
+                // fromLoadLocks();
                 createBmpLoadThread();
 				// 创建主窗口控件
 				formMainCreateControl(hWnd);

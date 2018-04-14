@@ -119,13 +119,13 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
     if (callbackFunc) {
         callbackFunc();
     }
-	SendMessage(GetParent (hwnd), MSG_CLOSE, 0, 0);
+	SendNotifyMessage(GetParent (hwnd), MSG_CLOSE, 0, 0);
 }
 static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-	SendMessage(GetParent (hwnd), MSG_CLOSE, 0, 0);
+	SendNotifyMessage(GetParent (hwnd), MSG_CLOSE, 0, 0);
 }
 //----------------------------------------------------------------------------
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
@@ -164,15 +164,15 @@ void formTopBoxLoadLock(void)
 
 void formTopBoxLoadBmp(void)
 {
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
     bmpsLoad(BMP_LOAD_PARA(bmp_load));
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 
 static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
@@ -181,10 +181,10 @@ static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lPara
     {
         case MSG_INITDIALOG:
             {
-                Screen.Add(hWnd,"TFrmTopMessage");
+                // Screen.Add(hWnd,"TFrmTopMessage");
                 // formTopBoxLoadBmp();
                 initPara(hWnd,message,wParam,lParam);
-                SetTimer(hWnd,IDC_TOPBOX_TIMER,DISPLAY_TIME);
+				SetTimer(hWnd,IDC_TOPBOX_TIMER,DISPLAY_TIME);
                 break;
             }
         case MSG_TIMER:
@@ -199,10 +199,12 @@ static int MessageBoxWinProc(HWND hWnd, int message, WPARAM wParam, LPARAM lPara
                 DrawBackground (hWnd, (HDC)wParam, (const RECT*)lParam,bmp_bkg);
             return 0;
         case MSG_CLOSE:
+			if (IsTimerInstalled(hWnd,IDC_TOPBOX_TIMER))
+				KillTimer(hWnd,IDC_TOPBOX_TIMER);
             EndDialog(hWnd,lParam);
             return 0;
         case MSG_DESTROY:
-            Screen.Del(hWnd);
+            // Screen.Del(hWnd);
             DestroyAllControls (hWnd);
             return 0;
         default:

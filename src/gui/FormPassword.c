@@ -220,9 +220,9 @@ void formPasswordLoadBmp(void)
 {
 	int i;
 	char image_path[128] = {0};
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -238,7 +238,7 @@ void formPasswordLoadBmp(void)
 		bmpLoad(&opt_controls[i].image_press, image_path);
 	}
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -254,7 +254,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
 	HWND hCtrl;
-    formPasswordLoadBmp();
+    // formPasswordLoadBmp();
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		createSkinButton(hDlg,

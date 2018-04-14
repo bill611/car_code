@@ -123,9 +123,9 @@ void formProjectionLoadBmp(void)
 	char image_path[128] = {0};
     if (g_config.device_main_controls[IDC_PROJECTION] == 0)
         return;
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -141,7 +141,7 @@ void formProjectionLoadBmp(void)
 		bmpLoad(&opt_controls[i].image_press, image_path);
 	}
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -156,7 +156,7 @@ void formProjectionLoadBmp(void)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i;
-    formProjectionLoadBmp();
+    // formProjectionLoadBmp();
 	for (i=0; i<NELEMENTS(opt_controls); i++) {
 		opt_controls[i].idc = i;
 		opt_controls[i].device_id = 0x04;

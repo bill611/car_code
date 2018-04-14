@@ -129,9 +129,9 @@ void formCurtainLoadBmp(void)
 	char image_path[128] = {0};
     if (g_config.device_main_controls[IDC_CURTAIN] == 0)
         return;
-	pthread_mutex_lock(&mutex);
+	// pthread_mutex_lock(&mutex);
     if (bmp_load_finished == 1) {
-        pthread_mutex_unlock(&mutex);
+        // pthread_mutex_unlock(&mutex);
         return;
     }
 	printf("[%s]\n", __FUNCTION__);
@@ -147,7 +147,7 @@ void formCurtainLoadBmp(void)
 		bmpLoad(&opt_controls[i].image_press, image_path);
 	}
 	bmp_load_finished = 1;
-    pthread_mutex_unlock(&mutex);
+    // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/
 /**
@@ -162,7 +162,7 @@ void formCurtainLoadBmp(void)
 static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 {
 	int i = 0;
-    formCurtainLoadBmp();
+    // formCurtainLoadBmp();
     CreateWindowEx2 (CTRL_STATIC, "",
             WS_CHILD|WS_VISIBLE|SS_BITMAP,
             WS_EX_TRANSPARENT,
