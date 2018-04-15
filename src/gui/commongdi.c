@@ -815,16 +815,34 @@ int PostMainWindowMessage(unsigned int Msg,unsigned int wParam,unsigned int lPar
 void bmpsLoad(BmpLocation *bmp,int num)
 {
 	int i;
+    char path_src[256],path_back[256];
 	for (i=0; i<num; i++) {
-        if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, bmp[i].location))
+        sprintf(path_src,"%s%s",BMP_RES_PATH,bmp[i].location);
+        sprintf(path_back,"%s%s",BMP_RESBACK_PATH,bmp[i].location);
+        // printf("loads back:%s\n",path_back );
+        if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, path_src)) {
             printf ("LoadBitmaps(%s)fail.\n",bmp[i].location);
+            ExcuteCmd(1,"cp",path_back,path_src,NULL);
+            sync();
+            if (LoadBitmap (HDC_SCREEN, bmp[i].bmp, path_src))
+                printf ("LoadBitmaps(%s)fail-again!!.\n",bmp[i].location);
+        }
 	}
 }
 
 void bmpLoad(BITMAP *bmp,char *path)
 {
-    if (LoadBitmap (HDC_SCREEN,bmp, path))
+    char path_src[256],path_back[256];
+    sprintf(path_src,"%s%s",BMP_RES_PATH,path);
+    sprintf(path_back,"%s%s",BMP_RESBACK_PATH,path);
+    // printf("load back:%s\n",path_back );
+    if (LoadBitmap (HDC_SCREEN,bmp, path_src)) {
         printf ("LoadBitmap(%s)fail.\n",path);
+        ExcuteCmd(1,"cp",path_back,path_src,NULL);
+        sync();
+        if (LoadBitmap (HDC_SCREEN,bmp, path_src))
+            printf ("LoadBitmaps(%s)fail-again!!.\n",path);
+    }
 }
 /* ---------------------------------------------------------------------------*/
 /**

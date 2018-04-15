@@ -129,7 +129,7 @@ void SaveLog(const char *fmt,...);
 int AdjustLCDLight(int Light,int force_off);
 BOOL screensaverStart(BOOL On);
 int check_database_sql(void);
-int net_detect(char* net_name);
+int net_detect(void);
 void print_data(char *data,int len);
 int GetFilesNum(char *pPathDir,void (*func)(void *));
 BOOL playButtonSound(void);

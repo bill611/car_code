@@ -50,7 +50,7 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"旋转座椅/"
+#define BMP_LOCAL_PATH "旋转座椅/"
 enum {
     CHAIR_DIR_LEFT,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅

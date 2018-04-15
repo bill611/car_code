@@ -48,7 +48,7 @@ static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"选择功能/"
+#define BMP_LOCAL_PATH "选择功能/"
 enum {
     IDC_CONFIRM = IDC_WALN, // 功能选择确认
     IDC_CANCEL, // 功能选择取消

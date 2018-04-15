@@ -29,7 +29,7 @@ extern "C" {
 
 #include <stdint.h>
 
-// #define BMP_RES_PATH "/image/"
+#define BMP_RESBACK_PATH "res/image_back/"
 #define BMP_RES_PATH "res/image/"
 
 #define INIT_MUTEX_LOCK(attr,mutex) \

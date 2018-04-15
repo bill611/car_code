@@ -58,7 +58,7 @@ static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"电动座椅/"
+#define BMP_LOCAL_PATH "电动座椅/"
 enum {
     CHAIR_DIR_LEFT,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅

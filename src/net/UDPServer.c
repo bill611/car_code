@@ -202,7 +202,7 @@ static void udpServerTaskSend(TUDPServer* This,DWORD *dwLastTick)
 			pList->SendTimes++;
             saveLog("times:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
 		} else {
-            saveLog("send time out:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
+            // saveLog("send time out:%d,UDP Send IP:%s:%d,size:%d\n",pList->SendTimes,pList->IP,pList->Port,pList->Size );
 			// 重发指定次数后失败
 			// if(pList->Func)
 				// pList->Func(MSG_SENDTIMEOUT,pList->CallBackData);

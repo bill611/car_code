@@ -46,7 +46,7 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"秘书椅/"
+#define BMP_LOCAL_PATH "秘书椅/"
 
 /* ---------------------------------------------------------------------------*
  *                      variables define

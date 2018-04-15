@@ -56,7 +56,7 @@ static void optColor3Notify(HWND hwnd, int id, int nc, DWORD add_data);
 	#define DBG_P( x... )
 #endif
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"灯光/"
+#define BMP_LOCAL_PATH "灯光/"
 
 enum {
 	LIGHT1,

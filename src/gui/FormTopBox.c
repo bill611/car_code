@@ -40,7 +40,7 @@
  *----------------------------------------------------------------------------*/
 #define DISPLAY_TIME 	3000		//显示时间 2S
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"弹出提示/"
+#define BMP_LOCAL_PATH "弹出提示/"
 
 enum {
 	IDC_TOPBOX_TIMER ,

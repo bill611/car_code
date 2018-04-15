@@ -108,7 +108,7 @@ static void formMainLoadBmp(void);
 typedef void (*InitBmpFunc)(void) ;
 typedef void (*InitLockFunc)(void) ;
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"主页/"
+#define BMP_LOCAL_PATH "主页/"
 
 enum {
     IDC_MAIN_PAGE = 100,  // 主页
@@ -126,8 +126,8 @@ BITMAP bmp_bkg2; // 背景2
 static BITMAP bmp_wifi; // wifi
 
 static BmpLocation bmp_load[] = {
-	{&bmp_bkg1, "res/image/背景.JPG"},
-	{&bmp_bkg2, "res/image/背景-2.JPG"},
+	{&bmp_bkg1, "背景.JPG"},
+	{&bmp_bkg2, "背景-2.JPG"},
 	{&bmp_wifi, BMP_LOCAL_PATH"/wifi(x424，y5).JPG"},
 };
 

@@ -51,7 +51,7 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data);
 
 #define IDC_FOMR_TIMER 0xff
 
-#define BMP_LOCAL_PATH BMP_RES_PATH"WLAN/"
+#define BMP_LOCAL_PATH "WLAN/"
 enum {
 
 	IDC_LABER_ERR,
@@ -81,7 +81,7 @@ static BmpLocation bmp_load[] = {
 static MY_CTRLDATA ChildCtrls [] = {
     STATIC_IMAGE(8,91,472,612,IDC_LABER_BACKGROUND,(DWORD)&bmp_title),
     EDIT_L(148,220,244,36,IDC_EDIT_ACCOUNT,"",0,NULL),
-    EDIT_PSD_L(148,264,244,36,IDC_EDIT_PASSWORD,"",0,NULL),
+    EDIT_L(148,264,244,36,IDC_EDIT_PASSWORD,"",0,NULL),
 };
 
 

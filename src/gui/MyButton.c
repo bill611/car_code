@@ -329,10 +329,8 @@ HWND createSkinButton(HWND hWnd,int id ,
 	pInfo.state = BUT_NORMAL;
 	pInfo.select.state = display;
 	if (bmp_button_select.bmBits == NULL) {
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_select, "res/image/选择功能/01-2(x105，y175).JPG"))
-			printf ("LoadBitmap(%s)fail.\n","01-2(x105，y175).JPG");
-		if (LoadBitmap (HDC_SCREEN, &bmp_button_unselect, "res/image/选择功能/01(x105，y175).JPG"))
-			printf ("LoadBitmap(%s)fail.\n","01(x105，y175).JPG");
+        bmpLoad(&bmp_button_select,"选择功能/01-2(x105，y175).JPG");
+        bmpLoad(&bmp_button_unselect,"选择功能/01(x105，y175).JPG");
 	}
 	if (pInfo.select.state == BUT_STATE_SELECT)
 		hCtrl = CreateWindowEx(CTRL_MYBUTTON,"",WS_VISIBLE|WS_CHILD,WS_EX_TRANSPARENT,

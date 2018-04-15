@@ -315,17 +315,16 @@ const char * GetSendIP(const char *pSrcIP,const char *pDestIP,const char *pMask)
  *
  * @return 0正常 -1不正常
  */
-int net_detect(char* net_name)
+int net_detect(void)
 {
 #ifdef PC
     return 0;
 #endif
-    char ip[16] =  {0},netmask[16],mac[20];
-    GetLocalIP(net_name,ip,netmask,mac);
-    if (ip[0] == 0)
-        return -1;
-    else
+	int ret = access("ip_ok",0);
+    if (ret == 0)
         return 0;
+    else
+        return -1;
 #if 0
 	int skfd = 0;
 	struct ifreq ifr;
