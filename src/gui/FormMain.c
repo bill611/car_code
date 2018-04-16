@@ -168,7 +168,6 @@ static InitBmpFunc loadBmps[] = {
     // formMainLoadBmp,
     // formTopBoxLoadBmp,
     formWlanLoadBmp,
-    formVersionLoadBmp,
 	formCDLoadBmp,
 	formMonitorLoadBmp,
     formPresetLoadBmp,
@@ -188,6 +187,7 @@ static InitBmpFunc loadBmps[] = {
 	formA12LoadBmp,
 	formLightLoadBmp,
 	formElectricChairLoadBmp,
+    formVersionLoadBmp,
 };
 static InitLockFunc loadLocks[] = {
 	formPasswordLoadLock,
@@ -568,6 +568,7 @@ static void fromLoadLocks(void)
 static void * loadBmpsThread(void *arg)
 {
     int i;
+    char *cmd = arg;
     unsigned long long time_n,time_o;
     for (i=0; i<NELEMENTS(loadBmps); i++) {
         time_o = GetMs();
@@ -576,12 +577,13 @@ static void * loadBmpsThread(void *arg)
         printf("time:%lld\n", time_n-time_o);
     }
 #ifndef WATCHDOG_DEBUG
-    restartNetwork();
+    if (cmd != NULL)
+        restartNetwork();
 #endif
     return NULL;
 }
 
-static void createBmpLoadThread(void)
+static void createBmpLoadThread(char *cmd)
 {
 	int result;
 	pthread_t m_pthread;					//线程号
@@ -590,7 +592,7 @@ static void createBmpLoadThread(void)
 	//设置线程为自动销毁
 	pthread_attr_setdetachstate(&threadAttr1,PTHREAD_CREATE_DETACHED);
 	//创建线程，无传递参数
-	result = pthread_create(&m_pthread,&threadAttr1,loadBmpsThread,NULL);
+	result = pthread_create(&m_pthread,&threadAttr1,loadBmpsThread,cmd);
 	if(result)
 		printf("[%s] pthread failt,Error code:%d\n",__FUNCTION__,result);
 
@@ -627,8 +629,7 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
                 formMainLoadBmp();
                 formTopBoxLoadBmp();
                 // fromLoadLocks();
-                createBmpLoadThread();
-				// 创建主窗口控件
+                createBmpLoadThread("1"); // 创建主窗口控件
 				formMainCreateControl(hWnd);
 				formMainTimerStart(IDC_TIMER_1S);
 				screensaverStart(LCD_ON);
@@ -646,6 +647,11 @@ static int formMainProc(HWND hWnd, int message, WPARAM wParam, LPARAM lParam)
 			{
                 Screen.ReturnMain();
                 showNormal(hWnd);
+			} return 0;
+
+		case MSG_MAIN_LOAD_BMP:
+			{
+                createBmpLoadThread(NULL);
 			} return 0;
 
 		case MSG_MAIN_TIMER_START:

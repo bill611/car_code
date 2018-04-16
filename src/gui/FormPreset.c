@@ -111,6 +111,7 @@ static void btConfirmPress(HWND hwnd, int id, int nc, DWORD add_data)
     }
 	Public.saveConfig();
     SendMessage(Screen.hMainWnd, MSG_MAIN_SHOW_NORMAL, 0, 0);
+    SendMessage(Screen.hMainWnd, MSG_MAIN_LOAD_BMP, 0, 0);
 }
 static void btCancelPress(HWND hwnd, int id, int nc, DWORD add_data)
 {
