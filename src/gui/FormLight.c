@@ -244,6 +244,8 @@ static MgCtrlButton *updateBright(HWND hwnd,int light_n,int value)
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
 	p_array = light[light_n].array + 1;
+	if (value >= p_array->num)
+        return NULL;
 	for (i=0; i<p_array->num; i++) {
 		p_ctrl = p_array->ctrl+i;
 		if (value == i)
@@ -267,7 +269,8 @@ static void updateAddBright(HWND hwnd,int light_n)
 		value = 0;
 	*public_light = (*public_light & ~(7 << 4) | value << 4);
     MgCtrlButton *p_ctrl = updateBright(hwnd,light_n,value);
-	pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
+    if (p_ctrl)
+        pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
 }
 static void optBright1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
@@ -294,6 +297,8 @@ static MgCtrlButton *updateRate(HWND hwnd,int light_n,int value)
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
 	p_array = light[light_n].array + 2;
+	if (value >= p_array->num)
+        return NULL;
 	for (i=0; i<p_array->num; i++) {
 		p_ctrl = p_array->ctrl+i;
 		if (value == i)
@@ -317,7 +322,8 @@ static void updateAddRate(HWND hwnd,int light_n)
 		value = 0;
 	*public_light = (*public_light & ~(7 << 0) | value << 0);
     MgCtrlButton *p_ctrl = updateRate(hwnd,light_n,value);
-	pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
+    if (p_ctrl)
+        pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
 }
 
 static void optRate1Notify(HWND hwnd, int id, int nc, DWORD add_data)
@@ -345,6 +351,8 @@ static MgCtrlButton *updateColor(HWND hwnd,int light_n,int value)
     ButtonArray *p_array;
     MgCtrlButton *p_ctrl;
 	p_array = light[light_n].array + 3;
+	if (value >= p_array->num)
+        return NULL;
 	for (i=0; i<p_array->num; i++) {
 		p_ctrl = p_array->ctrl+i;
 		if (value == i)
@@ -368,7 +376,8 @@ static void updateAddColor(HWND hwnd,int light_n)
 		value = 0;
 	*public_light = (*public_light & ~(1 << 3) | value << 3);
     MgCtrlButton *p_ctrl = updateColor(hwnd,light_n,value);
-	pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
+    if (p_ctrl)
+        pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
 }
 
 static void optColor1Notify(HWND hwnd, int id, int nc, DWORD add_data)
@@ -582,6 +591,7 @@ static int formLightProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	{
 		case MSG_UPDATESTATUS:
 			{
+                refreshAll(hDlg);
 				formMainUpdateMute(hDlg);
 			} break;
 		default:

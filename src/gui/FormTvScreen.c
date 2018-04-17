@@ -127,12 +127,15 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 		}
 	} else if (nc == BN_UNPUSHED) {
 		if(id == IDC_TV_PWR) {
-			Public.glass_power = SendMessage(GetDlgItem (GetParent (hwnd), id),
+			int power = SendMessage(GetDlgItem (GetParent (hwnd), id),
 					MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
-			if (Public.glass_power)
+            if (power) {
+                Public.tvPower = (Public.tvPower & 0x0f) | 0x90;
 				op_code = 0x80;
-			else
+            } else {
+                Public.tvPower = (Public.tvPower & 0x0f) | 0x80;
 				op_code = 0xaa;
+            }
 		}
 		pro_com->sendOpt(opt_controls[id].device_id, op_code);
 	}
@@ -199,8 +202,12 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	}
 	SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
 		   	MSG_MYBUTTON_SET_SELECT_MODE, 2, 0);
-	SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
-			   MSG_MYBUTTON_SET_SELECT_STATE, Public.glass_power, 0);
+    if ((Public.tvPower & 0xf0) == 0x80)
+        SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
+                MSG_MYBUTTON_SET_SELECT_STATE, 0, 0);
+    else
+        SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
+                MSG_MYBUTTON_SET_SELECT_STATE, 1, 0);
     CreateWindowEx2 (CTRL_STATIC, "",
             WS_CHILD|WS_VISIBLE|SS_BITMAP,
             WS_EX_TRANSPARENT,
@@ -229,6 +236,8 @@ static int formTvScreenProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
 	{
 		case MSG_UPDATESTATUS:
 			{
+                SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
+                        MSG_MYBUTTON_SET_SELECT_STATE, Public.tvPower, 0);
 				formMainUpdateMute(hDlg);
 			} break;
 		default:
