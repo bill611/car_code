@@ -5,7 +5,7 @@
 #include "communication.h"
 #include "UDPServer.h"
 
-#define CODE_VERSION	"V1.0.4.0"
+#define CODE_VERSION	"V1.0.6.0"
 
 typedef struct _FORMCLASS
 {
@@ -103,6 +103,9 @@ typedef struct _PublicData
 	uint8_t rightSeat;
 
 	uint8_t mute; // 静音状态
+	uint8_t rev02;
+	uint8_t rev03;
+	uint8_t rev04;
 	/*
 bit7:1为ON,0为OFF;
 bit6-4: 1为亮1格,2为亮2格,3为亮3格，4为亮4格,5为亮5格；
@@ -120,8 +123,14 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 	uint8_t tvPower;
 
 	uint8_t monitor; // 0为非监控状态，1为监控状态
+	uint8_t rev05;
 	uint8_t ucMedia; // 0:cd, 1:dvd, 2:cmmb, 3:satelliteTV
-	uint8_t glass_power; // 玻璃屏幕电源 0关 1开
+	uint8_t rev1;
+	uint8_t rev2;
+	uint8_t rev3;
+	uint8_t rev4;
+	uint8_t rev5;
+	uint8_t rev6;
 
 
     int LCDLight;

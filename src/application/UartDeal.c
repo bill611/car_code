@@ -82,6 +82,9 @@ static void FromSingleChip(UartDeal *This)
 /* ---------------------------------------------------------------------------*/
 static void ToSingleChip(UartDeal *This,int cnt)
 {
+#ifdef PC
+    return;
+#endif
 	This->uart->Send(This->uart,This->SndData,cnt);
     if (pro_app)
         pro_app->dbgSendSerial(This->SndData,cnt);

@@ -54,7 +54,7 @@ static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LP
 				this->auto_close_time = FORM_SETTING_ONTIME;
 				if (this->priv->initPara)
 					this->priv->initPara(hDlg,message,wParam,lParam);
-				SetTimer(hDlg,IDC_FORM_BASE_TIMER,TIME_1S);
+				// SetTimer(hDlg,IDC_FORM_BASE_TIMER,TIME_1S);
 			} return CONTINUE;
 
 		case MSG_LBUTTONDOWN:
@@ -87,7 +87,8 @@ static int formBaseProc(FormBase *this,HWND hDlg, int message, WPARAM wParam, LP
 
 		case MSG_CLOSE:
 			{
-				KillTimer (hDlg,IDC_FORM_BASE_TIMER);
+				if (IsTimerInstalled(hDlg,IDC_FORM_BASE_TIMER) == TRUE)
+                    KillTimer (hDlg,IDC_FORM_BASE_TIMER);
 				DestroyMainWindow (hDlg);
 				MainWindowThreadCleanup (hDlg);
 			} return STOP;

@@ -46,6 +46,7 @@ static void optAssistControlsReturnNotify(HWND hwnd, int id, int nc, DWORD add_d
 static void optLeftChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optSwichPartControlsNotify(HWND hwnd, int id, int nc, DWORD add_data);
+static void updateChairAssist(HWND hDlg);
 
 /* ---------------------------------------------------------------------------*
  *                        macro define
@@ -390,7 +391,7 @@ static void optAssistControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
             (DWORD)&bmp_bkg_assist,0);
 	chair_mode_type = CHAIR_BACKREST;
 	SendMessage(GetParent (hwnd),MSG_ELECTRIC_CHAIR_TYPE,0,0);
-
+    updateChairAssist(GetParent (hwnd));
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -597,6 +598,40 @@ static void bmpsElectricChairButtonLoad(MgCtrlButton *controls,int num)
         bmpLoad(&p->image_press, image_path);
 	}
 }
+static void updateChairAssist(HWND hDlg)
+{
+    int heat_state[2],cold_state[2],knead_state[2];
+    heat_state[0] = BIT(Public.leftSeat,7);
+    heat_state[1] = BIT(Public.rightSeat,7);
+    cold_state[0] = BIT(Public.leftSeat,6);
+    cold_state[1] = BIT(Public.rightSeat,6);
+    knead_state[0] = BIT2(Public.leftSeat,4);
+    knead_state[1] = BIT2(Public.rightSeat,4);
+    int i;
+    if (chair_dir_type == CHAIR_DIR_LEFT)
+        i = 0;
+    else
+        i = 1;
+    if (heat_state[i] == 0)
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[4].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    else
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[4].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    if (cold_state[i] == 0)
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[6].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    else
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[6].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    if (knead_state[i] == 0)
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[2].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    else
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[2].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+}
+
 void formElectricChairLoadLock(void)
 {
     INIT_MUTEX_LOCK(mutexattr2,mutex);
@@ -655,6 +690,7 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 					optMultiControlsNotify);
 		}
     }
+    updateChairAssist(hDlg);
     formManiCreateToolBar(hDlg);
 }
 
@@ -677,6 +713,7 @@ static int formElectricChairProc(HWND hDlg, int message, WPARAM wParam, LPARAM l
 		case MSG_UPDATESTATUS:
 			{
 				formMainUpdateMute(hDlg);
+                updateChairAssist(hDlg);
 			} break;
 		case MSG_ELECTRIC_CHAIR_TYPE:
 			{

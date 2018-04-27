@@ -98,7 +98,7 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 	u8 light3; // 0~20
 
 	/*
-	   高4位：8为电源关闭，9为电源打开  
+	   高4位：8为电源关闭，9为电源打开
 	   低4位：0电视上升中，1到顶，2下降中，3到底，5停止
 	   */
 	u8 tvPower;
@@ -192,7 +192,7 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 	u8 ucLight3;
 
 	/*
-	   高4位：8为电源关闭，9为电源打开  
+	   高4位：8为电源关闭，9为电源打开
 	   低4位：0电视上升中，1到顶，2下降中，3到底，5停止
 	   */
 	u8 ucPowerTV;
@@ -483,15 +483,15 @@ static void proComSendOpt(int device,int opt)
 {
 	if (device == 0 || opt == 0)
 		return;
-	uart->SndData[0] = device;	
-	uart->SndData[1] = opt;	
+	uart->SndData[0] = device;
+	uart->SndData[1] = opt;
 	saveLog("%x,%x\n", device,opt);
 	uart->ToSingleChip(uart,2);
 }
 
 static void proComStart(void)
 {
-   start = 1; 
+   start = 1;
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -500,10 +500,10 @@ static void proComStart(void)
 /* ---------------------------------------------------------------------------*/
 static void proComSendGetStatus(void)
 {
-	uart->SndData[0] = COM_HEAD;	
-	uart->SndData[1] = COM_ORDER_STATUS;	
+	uart->SndData[0] = COM_HEAD;
+	uart->SndData[1] = COM_ORDER_STATUS;
 	unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
-	uart->SndData[2] = check;	
+	uart->SndData[2] = check;
 	uart->ToSingleChip(uart,3);
 }
 /* ---------------------------------------------------------------------------*/
@@ -512,7 +512,7 @@ static void proComSendGetStatus(void)
  *
  * @param arg
  *
- * @returns 
+ * @returns
  */
 /* ---------------------------------------------------------------------------*/
 static void* proComInitThread(void *arg)
@@ -522,11 +522,11 @@ static void* proComInitThread(void *arg)
 			sleep(1);
 			continue;
 		}
-			
-		uart->SndData[0] = COM_HEAD;	
-		uart->SndData[1] = COM_ORDER_CONNECT;	
+
+		uart->SndData[0] = COM_HEAD;
+		uart->SndData[1] = COM_ORDER_CONNECT;
 		unsigned char check = (unsigned char)(uart->SndData[0] + uart->SndData[1]);
-		uart->SndData[2] = check;	
+		uart->SndData[2] = check;
 		uart->ToSingleChip(uart,3);
 		sleep(1);
 	}
@@ -537,7 +537,7 @@ static void* proComInitThread(void *arg)
 /**
  * @brief proUdpGetOnline 获取在线状态
  *
- * @returns 
+ * @returns
  */
 /* ---------------------------------------------------------------------------*/
 static int proUdpGetOnline(void)
@@ -549,7 +549,7 @@ static int proUdpGetOnline(void)
 /**
  * @brief proUdpGetRecivePort 获取接收端口
  *
- * @returns 
+ * @returns
  */
 /* ---------------------------------------------------------------------------*/
 static int proUdpGetRecivePort(void)
@@ -561,12 +561,12 @@ static int proUdpGetRecivePort(void)
 /**
  * @brief proUdpGetSendPort 获取发送端口
  *
- * @returns 
+ * @returns
  */
 /* ---------------------------------------------------------------------------*/
 static int proUdpGetSendPort(void)
 {
-	return REMOTE_PORT;	
+	return REMOTE_PORT;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -580,11 +580,11 @@ static int proUdpGetSendPort(void)
 static void proComCheckOnlineCmd(unsigned char *data,int leng)
 {
     if (leng != 3) {
-        proDbgPrint("[%s]leng:%d != 3\n",__FUNCTION__,leng);        
+        proDbgPrint("[%s]leng:%d != 3\n",__FUNCTION__,leng);
 		return;
     }
 	if (data[0] == COM_HEAD && data[1] == COM_ORDER_CONNECT) {
-		unsigned char check = (unsigned char)(COM_HEAD + COM_ORDER_CONNECT); 
+		unsigned char check = (unsigned char)(COM_HEAD + COM_ORDER_CONNECT);
 		if (data[2] == check)	 {
 			online_state = 1;
 			// 联机后发送UDP数据包
@@ -607,19 +607,33 @@ static void proComCheckStateCmd(unsigned char *data,int leng)
 {
     if (leng != sizeof(st_status)) {
         proDbgPrint("[%s]leng:%d != st_status:%d\n",
-                __FUNCTION__,leng,sizeof(st_status));        
+                __FUNCTION__,leng,sizeof(st_status));
 		return;
     }
 	st_status *status = (st_status *)data;
 	Public.leftSeat = status->leftSeat;
 	Public.rightSeat = status->rightSeat;
+
 	Public.mute = status->mute;
+    Public.rev02 = status->rev02;
+    Public.rev03 = status->rev03;
+    Public.rev04 = status->rev04;
+
 	Public.light1 = status->light1;
 	Public.light2 = status->light2;
 	Public.light3 = status->light3;
 	Public.tvPower = status->tvPower;
 	Public.monitor = status->monitor;
-	Screen.foreachForm(MSG_UPDATESTATUS,0,0);
+    Public.rev05 = status->rev05;
+    Public.ucMedia = status->ucMedia;
+
+    Public.rev1 = status->rev1;
+    Public.rev2 = status->rev2;
+    Public.rev3 = status->rev3;
+    Public.rev4 = status->rev4;
+    Public.rev5 = status->rev5;
+    Public.rev6 = status->rev6;
+    Screen.foreachForm(MSG_UPDATESTATUS,0,0);
 	proUdpSendStatus();
 }
 
@@ -630,7 +644,7 @@ static void proComCheckStateCmd(unsigned char *data,int leng)
  * @param ABinding
  * @param AData
  *
- * @returns 
+ * @returns
  */
 /* ---------------------------------------------------------------------------*/
 static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
@@ -639,7 +653,7 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 	unsigned int dwTick;
 	if (ABinding == NULL || AData == NULL) {
         proDbgPrint("[%s]ABinding = %x != AData:%x\n",
-                __FUNCTION__,AData,AData);        
+                __FUNCTION__,AData,AData);
 		return 0;
 	}
 	//回复数据包
@@ -648,21 +662,21 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 	// }
     if(AData->Size != sizeof(st_set)) {
         proDbgPrint("[%s]leng:%d != st_set:%d\n",
-                __FUNCTION__,AData->Size,sizeof(st_set));        
+                __FUNCTION__,AData->Size,sizeof(st_set));
         return 0;
     }
     st_set *data = (st_set *)AData->Data;
 	if (data->flagStart != NET_HEAD
             || data->flagEnd != NET_END) {
         proDbgPrint("[%s]data->flagStart:%#x != data->flagEnd:%#x\n",
-                __FUNCTION__,data->flagStart,data->flagEnd);        
+                __FUNCTION__,data->flagStart,data->flagEnd);
 		return 0;
     }
     //判断包是否重发
     dwTick = GetTickCount();
     for(i=0;i<10;i++) {
         if (strcmp(ABinding->IP,packets_id[i].IP) == 0
-                && data->id == packets_id[i].id 
+                && data->id == packets_id[i].id
                 && (getDiffSysTick(dwTick,packets_id[i].dwTick) < VAILDTIME)) {
             saveLog("Packet ID %d is already receive!\n",packets_id[i].id);
             return 0;
@@ -671,10 +685,10 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 
 	//保存ID
     sprintf(packets_id[packet_pos].IP,"%s",ABinding->IP);
-	packets_id[packet_pos].id = *(int*)AData->Data;
+	packets_id[packet_pos].id = data->id;
 	packets_id[packet_pos++].dwTick = dwTick;
 	packet_pos %= 10;
-    return 1;    
+    return 1;
 }
 
 /* ---------------------------------------------------------------------------*/
@@ -697,6 +711,9 @@ static void proUdpSendStatus(void)
 	data.ucRightSeatMassage = BIT2(Public.rightSeat,4);
 
 	data.ucVolumeCD = Public.mute;
+    data.ucVolumeDVD = Public.rev02;
+    data.ucVolumeCMMB = Public.rev03;
+    data.ucVolumeSatelliteTV = Public.rev04;
 
 	data.ucLight1 = Public.light1;
 	data.ucLight2 = Public.light2;
@@ -705,6 +722,16 @@ static void proUdpSendStatus(void)
 	data.ucPowerTV = Public.tvPower;
 
 	data.ucMonitor = Public.monitor;
+	data.bCallSw = Public.rev05;
+	data.ucMedia = Public.ucMedia;
+
+	data.rev0 = Public.rev1;
+	data.rev1 = Public.rev2;
+	data.rev2 = Public.rev3;
+	data.rev3 = Public.rev4;
+    data.rev4 = Public.rev5;
+    data.rev5 = Public.rev6;
+
 	data.flagEnd = NET_END;
 	udp_server->AddTask(udp_server,"255.255.255.255",REMOTE_PORT,
 			&data,sizeof(data),3,0,NULL,NULL);
@@ -726,6 +753,13 @@ static void proDbgSendSerial(unsigned char *data,int leng)
 }
 static void proDbgPrint(const char *fmt, ...)
 {
+#ifdef PC
+    va_list args;
+    va_start(args, fmt);
+    printf(fmt, args);
+    va_end(args);
+    return;
+#endif
 #ifndef WATCHDOG_DEBUG
     va_list args;
     char buf[128] = {0};
@@ -748,11 +782,11 @@ static void proDbgPrint(const char *fmt, ...)
 /* ---------------------------------------------------------------------------*/
 static int checOptCode(u16 tag,u8 data, u8 *device, u8 *code)
 {
-	int i;	
+	int i;
 	for (i=0; i<NELEMENTS(udp2com); i++) {
 		if (tag == udp2com[i].udpTag && data == udp2com[i].udpData) {
 			*device = udp2com[i].comDevice;
-			*code = udp2com[i].comOpCode;	
+			*code = udp2com[i].comOpCode;
 			return 1;
 		}
 	}

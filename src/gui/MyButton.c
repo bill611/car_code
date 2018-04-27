@@ -208,6 +208,14 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 		InvalidateRect (hwnd, NULL, FALSE);
 		return 0;
 
+    case MSG_MYBUTTON_SET_NORMAL_STATE:
+		if ((int)wParam)
+			pInfo->state = BUT_CLICK;
+		else
+			pInfo->state = BUT_NORMAL;
+		InvalidateRect (hwnd, NULL, FALSE);
+		return 0;
+
     case MSG_MYBUTTON_SET_SELECT_MODE:
 		pInfo->select.mode = (int)wParam;
 		InvalidateRect (hwnd, NULL, FALSE);

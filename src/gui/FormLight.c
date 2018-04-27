@@ -153,8 +153,8 @@ static MgCtrlButton opt_rate[] = {
 	{0,0x84,"速率-30",305,0,123,59},
 };
 static MgCtrlButton opt_color[] = {
-	{0,0x83,"颜色-1",178,0,124,59},
 	{0,0x83,"颜色-2",178,0,124,59},
+	{0,0x83,"颜色-1",178,0,124,59},
 };
 
 static ButtonArray array1[] = {

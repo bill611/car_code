@@ -426,7 +426,6 @@ static void showNormal(HWND hWnd)
 /* ---------------------------------------------------------------------------*/
 void formMainUpdateMute(HWND hWnd)
 {
-	printf("update:%d\n",Public.mute);
 	// 更新静音状态
 	SendMessage(GetDlgItem(hWnd,opt_toolbar_controls[IDC_MUTE-IDC_MAIN_PAGE].idc),
 			   MSG_MYBUTTON_SET_SELECT_STATE, Public.mute, 0);
