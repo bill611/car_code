@@ -64,10 +64,14 @@ enum {
     TV_STATE_STOP = 5,
 };
 
+typedef struct _GlassIcon{
+    BITMAP bmp;
+    int idc;
+}GlassIcon;
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_title; 
+static GlassIcon glass_icon[3],icon_title;
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
@@ -76,7 +80,10 @@ static int flash_idc; // 闪烁的按键
 static int flash_cnt; // 闪烁的次数
 
 static BmpLocation bmp_load[] = {
-    {&bmp_title, BMP_LOCAL_PATH"电视(x69，y89).JPG"},
+    {&icon_title.bmp, BMP_LOCAL_PATH"电视(x69，y89).JPG"},
+    {&glass_icon[IDC_TV_PWR].bmp, BMP_LOCAL_PATH"power(X219-Y536).JPG"},
+    {&glass_icon[IDC_TV_UP].bmp, BMP_LOCAL_PATH"up(X335-Y521).JPG"},
+    {&glass_icon[IDC_TV_DOWN].bmp, BMP_LOCAL_PATH"down(X92-Y538).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -143,11 +150,11 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 			int power = SendMessage(GetDlgItem (GetParent (hwnd), id),
 					MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
             if (power) {
-                // Public.tvPower = (Public.tvPower & 0x0f) | 0x90;
-				op_code = 0x80;
-            } else {
-                // Public.tvPower = (Public.tvPower & 0x0f) | 0x80;
+                Public.tvPower = (Public.tvPower & 0x0f) | 0x80;
 				op_code = 0xaa;
+            } else {
+                Public.tvPower = (Public.tvPower & 0x0f) | 0x90;
+				op_code = 0x80;
             }
 		}
 		pro_com->sendOpt(opt_controls[id].device_id, op_code);
@@ -157,10 +164,10 @@ static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 static void updateTvScreenPower(HWND hDlg)
 {
    int state = Public.tvPower & 0x0f; 
-    if ((Public.tvPower & 0xf0) == 0x80)
+   if ((Public.tvPower & 0xf0) == 0x80)
         SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
                 MSG_MYBUTTON_SET_SELECT_STATE, 0, 0);
-    else
+   else
         SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_PWR].idc),
                 MSG_MYBUTTON_SET_SELECT_STATE, 1, 0);
    switch (state) {
@@ -169,16 +176,14 @@ static void updateTvScreenPower(HWND hDlg)
                SetTimer(hDlg,IDC_FOMR_TIMER,TIME_500MS);
                flash_idc = IDC_TV_UP;
                flash_cnt = 0;
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_DOWN].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_TV_DOWN].idc),SW_SHOWNORMAL);
            } break;
        case TV_STATE_DOWNING:
            {
                SetTimer(hDlg,IDC_FOMR_TIMER,TIME_500MS);
                flash_idc = IDC_TV_DOWN;
                flash_cnt = 0;
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_UP].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_TV_UP].idc),SW_SHOWNORMAL);
            } break;
    
        case TV_STATE_TOP:
@@ -187,10 +192,8 @@ static void updateTvScreenPower(HWND hDlg)
            {
                if (IsTimerInstalled(hDlg,IDC_FOMR_TIMER) == TRUE)
                    KillTimer (hDlg,IDC_FOMR_TIMER);
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_UP].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_TV_DOWN].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_TV_UP].idc),SW_SHOWNORMAL);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_TV_DOWN].idc),SW_SHOWNORMAL);
            } break;
    
        default:
@@ -266,7 +269,31 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
             i,
             69,89,101,29,
             hDlg, NULL, NULL,
-            (DWORD)&bmp_title);
+            (DWORD)&icon_title.bmp);
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            219,536,45,38,
+            hDlg, NULL, NULL,
+            (DWORD)&glass_icon[IDC_TV_PWR].bmp);
+    glass_icon[IDC_TV_PWR].idc = i - 1;
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            335,521,57,55,
+            hDlg, NULL, NULL,
+            (DWORD)&glass_icon[IDC_TV_UP].bmp);
+    glass_icon[IDC_TV_UP].idc = i - 1;
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            92,538,51,37,
+            hDlg, NULL, NULL,
+            (DWORD)&glass_icon[IDC_TV_DOWN].bmp);
+    glass_icon[IDC_TV_DOWN].idc = i - 1;
 	formManiCreateToolBar(hDlg);
 }
 
@@ -296,11 +323,9 @@ static int formTvScreenProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam
 				if (wParam != IDC_FOMR_TIMER)
 					break;
                 if (flash_cnt++ % 2)
-                    SendMessage(GetDlgItem(hDlg,opt_controls[flash_idc].idc),
-                            MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+                    ShowWindow(GetDlgItem(hDlg,glass_icon[flash_idc].idc),SW_SHOWNORMAL);
                 else
-                    SendMessage(GetDlgItem(hDlg,opt_controls[flash_idc].idc),
-                            MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+                    ShowWindow(GetDlgItem(hDlg,glass_icon[flash_idc].idc),SW_HIDE);
                 
 			} break;
 		default:

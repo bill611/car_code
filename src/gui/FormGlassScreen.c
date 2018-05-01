@@ -64,10 +64,14 @@ enum {
     GLASS_STATE_STOP = 5,
 };
 
+typedef struct _GlassIcon{
+    BITMAP bmp;
+    int idc;
+}GlassIcon;
 /* ---------------------------------------------------------------------------*
  *                      variables define
  *----------------------------------------------------------------------------*/
-static BITMAP bmp_title,bmp_icon; 
+static GlassIcon glass_icon[3],icon_title;
 
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
@@ -76,8 +80,10 @@ static int flash_idc; // 闪烁的按键
 static int flash_cnt; // 闪烁的次数
 
 static BmpLocation bmp_load[] = {
-    {&bmp_title, BMP_LOCAL_PATH"玻璃控制(X69-Y89).JPG"},
-    {&bmp_icon, BMP_LOCAL_PATH"玻璃控制图标(X80-Y520).JPG"},
+    {&icon_title.bmp, BMP_LOCAL_PATH"玻璃控制(X69-Y89).JPG"},
+    {&glass_icon[IDC_GLASS_PWR].bmp, BMP_LOCAL_PATH"power(X219-Y536).JPG"},
+    {&glass_icon[IDC_GLASS_UP].bmp, BMP_LOCAL_PATH"up(X335-Y521).JPG"},
+    {&glass_icon[IDC_GLASS_DOWN].bmp, BMP_LOCAL_PATH"down(X92-Y538).JPG"},
 };
 
 static MY_CTRLDATA ChildCtrls [] = {
@@ -126,58 +132,55 @@ static FormBase* form_base = NULL;
 static void optControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	int op_code = opt_controls[id].op_code;
-	if (nc == BN_UNPUSHED)
-		return;
-
-	if (nc == BN_PUSHED && id == IDC_GLASS_PWR)
-		return;
 
 	if (nc == BN_PUSHED) {
-		if(id == IDC_GLASS_UP)
+        if(id == IDC_GLASS_UP) {
 			op_code = 0xa6;
-		else if (id == IDC_GLASS_DOWN)
-			op_code = 0xa7;
-	} else if (nc == BN_CLICKED) {
+            pro_com->sendOpt(opt_controls[id].device_id, op_code);
+        } else if (id == IDC_GLASS_DOWN) {
+            op_code = 0xa7;
+            pro_com->sendOpt(opt_controls[id].device_id, op_code);
+        }
+	} else if (nc == BN_UNPUSHED) {
 		if(id == IDC_GLASS_PWR) {
 			int power = SendMessage(GetDlgItem (GetParent (hwnd), id),
 					MSG_MYBUTTON_GET_SELECT_STATE, 0, 0);
             if (power) {
-                // Public.rev1 = (Public.rev1 & 0x0f) | 0x90;
-				op_code = 0x80;
-            } else {
-                // Public.rev1 = (Public.rev1 & 0x0f) | 0x80;
+                Public.rev1 = (Public.rev1 & 0x0f) | 0x80;
 				op_code = 0xaa;
+            } else {
+                Public.rev1 = (Public.rev1 & 0x0f) | 0x90;
+				op_code = 0x80;
             }
 		}
+        pro_com->sendOpt(opt_controls[id].device_id, op_code);
 	}
-	pro_com->sendOpt(opt_controls[id].device_id, op_code);
 }
 
 static void updateGlassScreenPower(HWND hDlg)
 {
    int state = Public.rev1 & 0x0f; 
-    if ((Public.rev1 & 0xf0) == 0x80)
+   if ((Public.rev1 & 0xf0) == 0x80)
         SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_PWR].idc),
                 MSG_MYBUTTON_SET_SELECT_STATE, 0, 0);
-    else
+   else 
         SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_PWR].idc),
                 MSG_MYBUTTON_SET_SELECT_STATE, 1, 0);
+   
    switch (state) {
        case GLASS_STATE_UPING:
            {
                SetTimer(hDlg,IDC_FOMR_TIMER,TIME_500MS);
                flash_idc = IDC_GLASS_UP;
                flash_cnt = 0;
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_DOWN].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_GLASS_DOWN].idc),SW_SHOWNORMAL);
            } break;
        case GLASS_STATE_DOWNING:
            {
                SetTimer(hDlg,IDC_FOMR_TIMER,TIME_500MS);
                flash_idc = IDC_GLASS_DOWN;
                flash_cnt = 0;
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_UP].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_GLASS_UP].idc),SW_SHOWNORMAL);
            } break;
    
        case GLASS_STATE_TOP:
@@ -186,10 +189,8 @@ static void updateGlassScreenPower(HWND hDlg)
            {
                if (IsTimerInstalled(hDlg,IDC_FOMR_TIMER) == TRUE)
                    KillTimer (hDlg,IDC_FOMR_TIMER);
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_UP].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
-               SendMessage(GetDlgItem(hDlg,opt_controls[IDC_GLASS_DOWN].idc),
-                       MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_GLASS_UP].idc),SW_SHOWNORMAL);
+               ShowWindow(GetDlgItem(hDlg,glass_icon[IDC_GLASS_DOWN].idc),SW_SHOWNORMAL);
            } break;
    
        default:
@@ -263,14 +264,31 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
             i++,
             69,89,108,28,
             hDlg, NULL, NULL,
-            (DWORD)&bmp_title);
+            (DWORD)&icon_title.bmp);
     CreateWindowEx2 (CTRL_STATIC, "",
             WS_CHILD|WS_VISIBLE|SS_BITMAP,
             WS_EX_TRANSPARENT,
             i++,
-            80,520,318,55,
+            219,536,45,38,
             hDlg, NULL, NULL,
-            (DWORD)&bmp_icon);
+            (DWORD)&glass_icon[IDC_GLASS_PWR].bmp);
+    glass_icon[IDC_GLASS_PWR].idc = i - 1;
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            335,521,57,55,
+            hDlg, NULL, NULL,
+            (DWORD)&glass_icon[IDC_GLASS_UP].bmp);
+    glass_icon[IDC_GLASS_UP].idc = i - 1;
+    CreateWindowEx2 (CTRL_STATIC, "",
+            WS_CHILD|WS_VISIBLE|SS_BITMAP,
+            WS_EX_TRANSPARENT,
+            i++,
+            92,538,51,37,
+            hDlg, NULL, NULL,
+            (DWORD)&glass_icon[IDC_GLASS_DOWN].bmp);
+    glass_icon[IDC_GLASS_DOWN].idc = i - 1;
 	formManiCreateToolBar(hDlg);
 }
 
@@ -300,11 +318,9 @@ static int formGlassScreenProc(HWND hDlg, int message, WPARAM wParam, LPARAM lPa
 				if (wParam != IDC_FOMR_TIMER)
 					break;
                 if (flash_cnt++ % 2)
-                    SendMessage(GetDlgItem(hDlg,opt_controls[flash_idc].idc),
-                            MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+                    ShowWindow(GetDlgItem(hDlg,glass_icon[flash_idc].idc),SW_SHOWNORMAL);
                 else
-                    SendMessage(GetDlgItem(hDlg,opt_controls[flash_idc].idc),
-                            MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+                    ShowWindow(GetDlgItem(hDlg,glass_icon[flash_idc].idc),SW_HIDE);
                 
 			} break;
 		default:

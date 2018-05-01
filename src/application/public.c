@@ -240,8 +240,12 @@ void publicInit(void)
 	Screen.ReturnMain = screenReturnMainForm;
 	Screen.foreachForm = screenForeachForm;
 
+    memset(&Public,0,sizeof(PUBLIC_DATA));
 	Public.net_connect_times = 0;
 	Public.WatchDog_fd = -2;
+
+    Public.tvPower = 0x85;
+    Public.rev1 = 0x85;
 
     Public.saveConfig = saveConfig;
     Public.getConfigInt = getConfigInt;

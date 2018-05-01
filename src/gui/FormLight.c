@@ -276,18 +276,24 @@ static void optBright1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light1 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddBright(GetParent(hwnd),0);
 }
 static void optBright2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light2 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddBright(GetParent(hwnd),1);
 }
 static void optBright3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light3 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddBright(GetParent(hwnd),2);
 }
 
@@ -330,18 +336,24 @@ static void optRate1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light1 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddRate(GetParent(hwnd),0);
 }
 static void optRate2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light2 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddRate(GetParent(hwnd),1);
 }
 static void optRate3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light3 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddRate(GetParent(hwnd),2);
 }
 
@@ -384,18 +396,24 @@ static void optColor1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light1 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddColor(GetParent(hwnd),0);
 }
 static void optColor2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light2 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddColor(GetParent(hwnd),1);
 }
 static void optColor3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
+    if (((Public.light3 & (1 << 7)) >> 7) == 0)
+        return;
 	updateAddColor(GetParent(hwnd),2);
 }
 
