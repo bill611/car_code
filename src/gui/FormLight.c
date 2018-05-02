@@ -47,6 +47,7 @@ static void optRate3Notify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optColor1Notify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optColor2Notify(HWND hwnd, int id, int nc, DWORD add_data);
 static void optColor3Notify(HWND hwnd, int id, int nc, DWORD add_data);
+static void refreshAll(HWND hDlg,int num);
 /* ---------------------------------------------------------------------------*
  *                        macro define
  *----------------------------------------------------------------------------*/
@@ -94,6 +95,7 @@ static BITMAP bmp_light1,bmp_light2,bmp_light3;
 static int bmp_load_finished = 0;
 static pthread_mutex_t mutex;		//队列控制互斥信号
 static pthread_mutexattr_t mutexattr2;
+static uint8_t *light_value[3] = {&Public.light1,&Public.light2,&Public.light3};
 
 static BmpLocation bmp_load[] = {
     {&bmp_title, BMP_LOCAL_PATH"灯光(x69，y89).JPG"},
@@ -153,8 +155,8 @@ static MgCtrlButton opt_rate[] = {
 	{0,0x84,"速率-30",305,0,123,59},
 };
 static MgCtrlButton opt_color[] = {
-	{0,0x83,"颜色-2",178,0,124,59},
 	{0,0x83,"颜色-1",178,0,124,59},
+	{0,0x83,"颜色-2",178,0,124,59},
 };
 
 static ButtonArray array1[] = {
@@ -182,62 +184,26 @@ static StructLight light[] = {
 };
 static FormBase* form_base = NULL;
 
-static void updatePower(HWND hwnd,int light_n,int value)
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief isPowerOn 判断是否为 on
+ *
+ * @param light_n 第几组灯
+ *
+ * @returns 1 ON; 0 OFF
+ */
+/* ---------------------------------------------------------------------------*/
+static int isPowerOn(int light_n)
 {
-	if (value)
-		SendMessage(GetDlgItem(hwnd,opt_static_power[light_n].idc),
-				STM_SETIMAGE,(WPARAM)&opt_static_power[light_n].bmp_active,0);
-	else
-		SendMessage(GetDlgItem(hwnd,opt_static_power[light_n].idc),
-				STM_SETIMAGE,(WPARAM)&opt_static_power[light_n].bmp_inactive,0);
-}
-static MgCtrlButton *searchPowerCtrl(int id,int *light_n)
-{
-	int i,j;
-    StructLight *p_light;
-    MgCtrlButton *p_ctrl;
-	for (i=0; i<NELEMENTS(light); i++) {
-        p_light = &light[i];
-		for (j=0; j<p_light->array->num; j++) {
-			p_ctrl = p_light->array->ctrl+j;
-			if (p_ctrl->idc == id)  {
-				if (light_n)
-					*light_n = i;
-				return p_ctrl;
-			}
-		}
-	}
-	return NULL;
+	uint8_t ret = BIT(*light_value[light_n],7);
+	return ret;
 }
 
-static void updateAddPower(HWND hwnd,int id,int value)
+static int isColorSingle(int light_n)
 {
-	uint8_t *public_light;
-	int light_n;
-	MgCtrlButton *p_ctrl = searchPowerCtrl(id,&light_n);
-	if (light_n == 0)
-		public_light = &Public.light1;
-	else if (light_n == 1)
-		public_light = &Public.light2;
-	else if (light_n == 2)
-		public_light = &Public.light3;
-	*public_light = (*public_light & ~(1 << 7) | value << 7);
-	updatePower(hwnd,light_n,value);
-	pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
+	uint8_t ret = BIT(*light_value[light_n],3);
+	return ret;
 }
-static void optPowerOnNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-	updateAddPower(GetParent(hwnd),id,1);
-}
-static void optPowerOffNotify(HWND hwnd, int id, int nc, DWORD add_data)
-{
-	if (nc != BN_CLICKED)
-		return;
-	updateAddPower(GetParent(hwnd),id,0);
-}
-
 static MgCtrlButton *updateBright(HWND hwnd,int light_n,int value)
 {
 	int i;
@@ -257,16 +223,12 @@ static MgCtrlButton *updateBright(HWND hwnd,int light_n,int value)
 }
 static void updateAddBright(HWND hwnd,int light_n)
 {
-	uint8_t *public_light;
-	if (light_n == 0)
-		public_light = &Public.light1;
-	else if (light_n == 1)
-		public_light = &Public.light2;
-	else if (light_n == 2)
-		public_light = &Public.light3;
+	if (isPowerOn(light_n) == 0)
+		return;
+	uint8_t *public_light= light_value[light_n];
 	int value = BIT3(*public_light,4);
 	if (++value >= NELEMENTS(opt_bright))
-		value = 0;
+		value = 1;
 	*public_light = (*public_light & ~(7 << 4) | value << 4);
     MgCtrlButton *p_ctrl = updateBright(hwnd,light_n,value);
     if (p_ctrl)
@@ -276,24 +238,18 @@ static void optBright1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light1 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddBright(GetParent(hwnd),0);
 }
 static void optBright2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light2 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddBright(GetParent(hwnd),1);
 }
 static void optBright3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light3 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddBright(GetParent(hwnd),2);
 }
 
@@ -316,16 +272,14 @@ static MgCtrlButton *updateRate(HWND hwnd,int light_n,int value)
 }
 static void updateAddRate(HWND hwnd,int light_n)
 {
-	uint8_t *public_light;
-	if (light_n == 0)
-		public_light = &Public.light1;
-	else if (light_n == 1)
-		public_light = &Public.light2;
-	else if (light_n == 2)
-		public_light = &Public.light3;
+	if (isPowerOn(light_n) == 0)
+		return;
+	if (isColorSingle(light_n))
+		return;
+	uint8_t *public_light= light_value[light_n];
 	int value = BIT3(*public_light,0);
 	if (++value >= NELEMENTS(opt_rate))
-		value = 0;
+		value = 1;
 	*public_light = (*public_light & ~(7 << 0) | value << 0);
     MgCtrlButton *p_ctrl = updateRate(hwnd,light_n,value);
     if (p_ctrl)
@@ -336,24 +290,18 @@ static void optRate1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light1 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddRate(GetParent(hwnd),0);
 }
 static void optRate2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light2 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddRate(GetParent(hwnd),1);
 }
 static void optRate3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light3 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddRate(GetParent(hwnd),2);
 }
 
@@ -376,18 +324,18 @@ static MgCtrlButton *updateColor(HWND hwnd,int light_n,int value)
 }
 static void updateAddColor(HWND hwnd,int light_n)
 {
-	uint8_t *public_light;
-	if (light_n == 0)
-		public_light = &Public.light1;
-	else if (light_n == 1)
-		public_light = &Public.light2;
-	else if (light_n == 2)
-		public_light = &Public.light3;
+	if (isPowerOn(light_n) == 0)
+		return;
+	uint8_t *public_light= light_value[light_n];
 	int value = BIT(*public_light,3);
 	if (++value >= NELEMENTS(opt_color))
 		value = 0;
 	*public_light = (*public_light & ~(1 << 3) | value << 3);
     MgCtrlButton *p_ctrl = updateColor(hwnd,light_n,value);
+    if (value)
+        updateRate(hwnd,	light_n,0);
+    else
+        updateRate(hwnd,	light_n,BIT3(*light_value[light_n],0));
     if (p_ctrl)
         pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
 }
@@ -396,44 +344,94 @@ static void optColor1Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light1 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddColor(GetParent(hwnd),0);
 }
 static void optColor2Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light2 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddColor(GetParent(hwnd),1);
 }
 static void optColor3Notify(HWND hwnd, int id, int nc, DWORD add_data)
 {
 	if (nc != BN_CLICKED)
 		return;
-    if (((Public.light3 & (1 << 7)) >> 7) == 0)
-        return;
 	updateAddColor(GetParent(hwnd),2);
 }
 
-static void refreshAll(HWND hDlg)
+static void updatePower(HWND hwnd,int light_n,int value)
 {
-	updatePower(hDlg,	0,(Public.light1 & (1 << 7)) >> 7);
-	updatePower(hDlg,	1,(Public.light2 & (1 << 7)) >> 7);
-	updatePower(hDlg,	2,(Public.light3 & (1 << 7)) >> 7);
+	if (value)
+		SendMessage(GetDlgItem(hwnd,opt_static_power[light_n].idc),
+				STM_SETIMAGE,(WPARAM)&opt_static_power[light_n].bmp_active,0);
+	else
+		SendMessage(GetDlgItem(hwnd,opt_static_power[light_n].idc),
+				STM_SETIMAGE,(WPARAM)&opt_static_power[light_n].bmp_inactive,0);
+}
 
-	updateBright(hDlg,	0,(Public.light1 & (7 << 4)) >> 4);
-	updateBright(hDlg,	1,(Public.light2 & (7 << 4)) >> 4);
-	updateBright(hDlg,	2,(Public.light3 & (7 << 4)) >> 4);
+static MgCtrlButton *searchPowerCtrl(int id,int *light_n)
+{
+	int i,j;
+    StructLight *p_light;
+    MgCtrlButton *p_ctrl;
+	for (i=0; i<NELEMENTS(light); i++) {
+        p_light = &light[i];
+		for (j=0; j<p_light->array->num; j++) {
+			p_ctrl = p_light->array->ctrl+j;
+			if (p_ctrl->idc == id)  {
+				if (light_n)
+					*light_n = i;
+				return p_ctrl;
+			}
+		}
+	}
+	return NULL;
+}
 
-	updateRate(hDlg,	0,(Public.light1 & (7 << 0)) >> 0);
-	updateRate(hDlg,	1,(Public.light2 & (7 << 0)) >> 0);
-	updateRate(hDlg,	2,(Public.light3 & (7 << 0)) >> 0);
+static void updateAddPower(HWND hwnd,int id,int value)
+{
+	int light_n;
+	MgCtrlButton *p_ctrl = searchPowerCtrl(id,&light_n);
+	uint8_t *public_light= light_value[light_n];
+	*public_light = (*public_light & ~(1 << 7) | value << 7);
 
-	updateColor(hDlg,	0,(Public.light1 & (1 << 3)) >> 3);
-	updateColor(hDlg,	1,(Public.light2 & (1 << 3)) >> 3);
-	updateColor(hDlg,	2,(Public.light3 & (1 << 3)) >> 3);
+    refreshAll(hwnd,light_n);
+	// updatePower(hwnd,light_n,value);
+	pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
+}
+static void optPowerOnNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	updateAddPower(GetParent(hwnd),id,1);
+}
+static void optPowerOffNotify(HWND hwnd, int id, int nc, DWORD add_data)
+{
+	if (nc != BN_CLICKED)
+		return;
+	updateAddPower(GetParent(hwnd),id,0);
+}
+
+static void refreshAll(HWND hDlg,int num)
+{
+    int power,bright,color;
+    power = ((*light_value[num]) & (1 << 7)) >> 7;
+    updatePower(hDlg,	num,power);
+    if (power == 0) {
+        updateBright(hDlg,	num,0);
+        updateRate(hDlg,	num,0);
+        updateColor(hDlg,	num,0);
+    } else {
+        bright = ((*light_value[num]) & (7 << 4)) >> 4;
+        updateBright(hDlg,	num,bright);
+        color = ((*light_value[num]) & (1 << 3)) >> 3;
+        updateColor(hDlg,	num,color);
+        if (color )
+            updateRate(hDlg,	num,0);
+        else
+            updateRate(hDlg,	num,((*light_value[num]) & (7 << 0)) >> 0);
+    }
+
 }
 void formLightLoadLock(void)
 {
@@ -587,7 +585,9 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
             218,516,44,26,
             hDlg, NULL, NULL,
             (DWORD)&bmp_light3);
-	refreshAll(hDlg);
+    for (i=0; i<3; i++) {
+        refreshAll(hDlg,i);
+    }
 	formManiCreateToolBar(hDlg);
 }
 
@@ -609,7 +609,10 @@ static int formLightProc(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	{
 		case MSG_UPDATESTATUS:
 			{
-                refreshAll(hDlg);
+                int i;
+                for (i=0; i<3; i++) {
+                    refreshAll(hDlg,i);
+                }
 				formMainUpdateMute(hDlg);
 			} break;
 		default:
@@ -635,7 +638,10 @@ int createFormLight(HWND hMainWnd)
 {
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
-		refreshAll(Form);
+        int i;
+        for (i=0; i<3; i++) {
+            refreshAll(Form,i);
+        }
 		SendMessage(Form,MSG_UPDATESTATUS,0,0);
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
