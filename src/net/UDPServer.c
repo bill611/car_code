@@ -262,7 +262,7 @@ static void * udpServerThread(void *ThreadData)
 		FD_SET(control->m_socket, &fdR);
 		timeout.tv_sec=0;
 		timeout.tv_usec=50000;		//50ms
-        usleep(10000);
+        // usleep(10000);
 		switch (select(control->m_socket+1, &fdR,NULL, NULL, &timeout))
         {
             case -1:

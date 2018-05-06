@@ -359,3 +359,46 @@ void restartNetwork(void)
 	ExcuteCmd(1,"./network.sh",">","debug.txt","&",NULL);
     Public.net_connect_times = 20;
 }
+
+/* ----------------------------------------------------------------*/
+/**
+ * @brief ClearFramebuffer 清除fb0
+ */
+/* ----------------------------------------------------------------*/
+void ClearFramebuffer(void)
+{
+	int fd = -1;
+	unsigned int VpostWidth=0, VpostHeight=0,VpostBpp=0;
+	unsigned int g_fb_vaddress=0;
+	unsigned int g_u32VpostBufMapSize=0;
+	struct	fb_var_screeninfo g_fb_var;
+	fd = open("/dev/fb0", O_RDWR);
+	if (fd < 0) {
+		perror("/dev/fb0");
+		return;
+	}
+	if (ioctl(fd, FBIOGET_VSCREENINFO, &g_fb_var) < 0) {
+		perror("/dev/fb0");
+		close(fd);
+		return;
+	}
+	VpostWidth = g_fb_var.xres;
+	VpostHeight = g_fb_var.yres;
+	VpostBpp = g_fb_var.bits_per_pixel/8;
+
+	g_u32VpostBufMapSize = VpostWidth*VpostHeight*VpostBpp*2;
+
+	g_fb_vaddress = (unsigned int)mmap( NULL, g_u32VpostBufMapSize,
+			PROT_READ|PROT_WRITE,
+			MAP_SHARED,
+			fd,
+			0);
+
+	memset ((void*)g_fb_vaddress, 0x0, g_u32VpostBufMapSize );
+
+	if (g_fb_vaddress)
+		munmap((void *)g_fb_vaddress, g_u32VpostBufMapSize);
+
+	close(fd);
+
+}

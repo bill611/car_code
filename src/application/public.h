@@ -5,7 +5,7 @@
 #include "communication.h"
 #include "UDPServer.h"
 
-#define CODE_VERSION	"V1.0.8.0"
+#define CODE_VERSION	"V1.0.9.0"
 
 typedef struct _FORMCLASS
 {

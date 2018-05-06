@@ -678,7 +678,7 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
         if (strcmp(ABinding->IP,packets_id[i].IP) == 0
                 && data->id == packets_id[i].id
                 && (getDiffSysTick(dwTick,packets_id[i].dwTick) < VAILDTIME)) {
-            saveLog("Packet ID %d is already receive!\n",packets_id[i].id);
+            // saveLog("Packet ID %d is already receive!\n",packets_id[i].id);
             return 0;
         }
     }

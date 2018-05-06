@@ -246,6 +246,9 @@ void publicInit(void)
 
     Public.tvPower = 0x85;
     Public.rev1 = 0x85;
+    Public.light1 = 0x08;
+    Public.light2 = 0x08;
+    Public.light3 = 0x08;
 
     Public.saveConfig = saveConfig;
     Public.getConfigInt = getConfigInt;

@@ -57,6 +57,7 @@ static void refreshAll(HWND hDlg,int num);
 	#define DBG_P( x... )
 #endif
 
+// #define UPDATE_NOW
 #define BMP_LOCAL_PATH "灯光/"
 
 enum {
@@ -155,8 +156,8 @@ static MgCtrlButton opt_rate[] = {
 	{0,0x84,"速率-30",305,0,123,59},
 };
 static MgCtrlButton opt_color[] = {
-	{0,0x83,"颜色-1",178,0,124,59},
 	{0,0x83,"颜色-2",178,0,124,59},
+	{0,0x83,"颜色-1",178,0,124,59},
 };
 
 static ButtonArray array1[] = {
@@ -227,9 +228,11 @@ static void updateAddBright(HWND hwnd,int light_n)
 		return;
 	uint8_t *public_light= light_value[light_n];
 	int value = BIT3(*public_light,4);
+#ifdef UPDATE_NOW
 	if (++value >= NELEMENTS(opt_bright))
 		value = 1;
 	*public_light = (*public_light & ~(7 << 4) | value << 4);
+#endif
     MgCtrlButton *p_ctrl = updateBright(hwnd,light_n,value);
     if (p_ctrl)
         pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
@@ -278,9 +281,11 @@ static void updateAddRate(HWND hwnd,int light_n)
 		return;
 	uint8_t *public_light= light_value[light_n];
 	int value = BIT3(*public_light,0);
+#ifdef UPDATE_NOW
 	if (++value >= NELEMENTS(opt_rate))
 		value = 1;
 	*public_light = (*public_light & ~(7 << 0) | value << 0);
+#endif
     MgCtrlButton *p_ctrl = updateRate(hwnd,light_n,value);
     if (p_ctrl)
         pro_com->sendOpt(p_ctrl->device_id, p_ctrl->op_code);
@@ -328,9 +333,11 @@ static void updateAddColor(HWND hwnd,int light_n)
 		return;
 	uint8_t *public_light= light_value[light_n];
 	int value = BIT(*public_light,3);
+#ifdef UPDATE_NOW
 	if (++value >= NELEMENTS(opt_color))
 		value = 0;
 	*public_light = (*public_light & ~(1 << 3) | value << 3);
+#endif
     MgCtrlButton *p_ctrl = updateColor(hwnd,light_n,value);
     if (value)
         updateRate(hwnd,	light_n,0);
@@ -392,8 +399,10 @@ static void updateAddPower(HWND hwnd,int id,int value)
 {
 	int light_n;
 	MgCtrlButton *p_ctrl = searchPowerCtrl(id,&light_n);
+#ifdef UPDATE_NOW
 	uint8_t *public_light= light_value[light_n];
 	*public_light = (*public_light & ~(1 << 7) | value << 7);
+#endif
 
     refreshAll(hwnd,light_n);
 	// updatePower(hwnd,light_n,value);
@@ -420,7 +429,7 @@ static void refreshAll(HWND hDlg,int num)
     if (power == 0) {
         updateBright(hDlg,	num,0);
         updateRate(hDlg,	num,0);
-        updateColor(hDlg,	num,0);
+        updateColor(hDlg,	num,1);
     } else {
         bright = ((*light_value[num]) & (7 << 4)) >> 4;
         updateBright(hDlg,	num,bright);

@@ -248,6 +248,7 @@ void formWlanLoadBmp(void)
 		bmpLoad(&opt_controls[i].image_normal, image_path);
 	}
 	bmp_load_finished = 1;
+    ClearFramebuffer();
     // pthread_mutex_unlock(&mutex);
 }
 /* ----------------------------------------------------------------*/

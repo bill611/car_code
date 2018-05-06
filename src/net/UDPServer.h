@@ -27,7 +27,7 @@ extern "C" {
 
 #define IPDATA sin_addr.s_addr
 
-#define TASKTIMEOUT (200)//(30)			//300ms
+#define TASKTIMEOUT (50)//(30)			//300ms
 #define MAXLIST 	(50)
 
 	typedef struct _SocketHandle {
