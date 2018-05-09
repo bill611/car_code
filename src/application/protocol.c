@@ -219,8 +219,8 @@ bit2-0: 1为闪烁2秒，2为闪烁5秒，3为闪烁10秒，4为15秒，5为20�
 
 typedef struct _PacketsID {
 	char IP[16];
-	u16 id;
-	u16 dwTick;		//时间
+	uint32_t id;
+	uint64_t dwTick;		//时间
 }PacketsID;
 
 /* ---------------------------------------------------------------------------*
@@ -673,12 +673,13 @@ static int proUdpFilter(SocketHandle *ABinding,SocketPacket *AData)
 		return 0;
     }
     //判断包是否重发
-    dwTick = GetTickCount();
+    dwTick = GetMs();
     for(i=0;i<10;i++) {
         if (strcmp(ABinding->IP,packets_id[i].IP) == 0
-                && data->id == packets_id[i].id
-                && (getDiffSysTick(dwTick,packets_id[i].dwTick) < VAILDTIME)) {
-            // saveLog("Packet ID %d is already receive!\n",packets_id[i].id);
+                && data->id == packets_id[i].id ){
+                // && (getDiffSysTick(dwTick,packets_id[i].dwTick) < VAILDTIME)) {
+            // saveLog("Packet ID %d is already receive,diff:%d!\n",
+                    // packets_id[i].id,getDiffSysTick(dwTick,packets_id[i].dwTick));
             return 0;
         }
     }

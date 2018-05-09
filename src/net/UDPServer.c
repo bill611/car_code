@@ -107,7 +107,8 @@ uint32_t getDiffSysTick(uint64_t new,uint64_t old)
 /* ---------------------------------------------------------------------------*/
 static unsigned long long udpServerGetTickCount(void)
 {
-	return GetTickCount();
+	// return GetTickCount();  // 用此函数不能返回精准毫秒数
+	return GetMs();
 }
 
 /* ---------------------------------------------------------------------------*/
