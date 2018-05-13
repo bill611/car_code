@@ -218,7 +218,8 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 
     case MSG_MYBUTTON_SET_SELECT_MODE:
 		pInfo->select.mode = (int)wParam;
-		InvalidateRect (hwnd, NULL, FALSE);
+        if (pInfo->select.mode != 3)
+            InvalidateRect (hwnd, NULL, FALSE);
 		return 0;
 
 	case MSG_ENABLE:
@@ -254,7 +255,8 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 			if(!(dwStyle & BS_CHECKBOX)) {
 				if(pInfo->state!=BUT_NORMAL) {
 					pInfo->state = BUT_NORMAL;
-					InvalidateRect (hwnd, NULL, FALSE);
+                    if (pInfo->select.mode != 3)
+                        InvalidateRect (hwnd, NULL, FALSE);
 				}
 			}
             break;
@@ -272,6 +274,7 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 			}
 			NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
 #endif
+        if (pInfo->select.mode != 3)
 			InvalidateRect (hwnd, NULL, FALSE);
 		}
 		NotifyParent (hwnd, pCtrl->id, BN_UNPUSHED);
@@ -294,10 +297,12 @@ static int myButtonControlProc (HWND hwnd, int message, WPARAM wParam, LPARAM lP
 					pInfo->select.state = BUT_STATE_SELECT;
 			}
 			NotifyParent (hwnd, pCtrl->id, BN_CLICKED);
-			InvalidateRect (hwnd, NULL, FALSE);
+            if (pInfo->select.mode != 3)
+                InvalidateRect (hwnd, NULL, FALSE);
 		} else if(dwStyle & BS_CHECKBOX) {
 			pInfo->state = BUT_NORMAL;
-			InvalidateRect (hwnd, NULL, FALSE);
+            if (pInfo->select.mode != 3)
+                InvalidateRect (hwnd, NULL, FALSE);
 		}
 		break;
 	}

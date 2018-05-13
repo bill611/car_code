@@ -5,7 +5,7 @@
 #include "communication.h"
 #include "UDPServer.h"
 
-#define CODE_VERSION	"V1.1.0.0"
+#define CODE_VERSION	"V1.1.2.0"
 
 typedef struct _FORMCLASS
 {
@@ -90,13 +90,15 @@ enum {
 typedef struct _ConfigFile {
    int device_main_controls[IDC_MAIN_NUM];
    char password[32];
+   char wlan_account[32];
+   char wlan_password[32];
 }ConfigFile;
 
 typedef struct _PublicData
 {
 	/*
-	   bit7座椅加热状态：0关闭，1开启
-	   bit6座椅制冷状态：0关闭，1开启
+	   bit7座椅制冷状态：0关闭，1开启
+	   bit6座椅加热状态：0关闭，1开启
 	   bit5、4位按摩状态：00关闭，01腿部，10背部，11全身
 	   */
 	uint8_t leftSeat;

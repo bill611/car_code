@@ -88,7 +88,7 @@ static FormBasePriv form_base_priv= {
 
 // device 0x0b
 static MgCtrlButton opt_controls[] = {
-	{0,	0x85,"主驾",310,271,115,56},
+	{0,	0x85,"主驾",315,270,115,57},
 };
 
 static FormBase* form_base = NULL;

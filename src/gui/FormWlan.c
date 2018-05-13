@@ -200,6 +200,11 @@ static void btKyeboardEnterPress(HWND hwnd, int id, int nc, DWORD add_data)
             account,sizeof(account));
     GetWindowText(GetDlgItem (GetParent (hwnd), IDC_EDIT_PASSWORD),
             pwd,sizeof(pwd));
+    memset(g_config.wlan_account,0,sizeof(g_config.wlan_account));
+    memset(g_config.wlan_password,0,sizeof(g_config.wlan_password));
+    sprintf(g_config.wlan_account,account);
+    sprintf(g_config.wlan_password,pwd);
+	Public.saveConfig();
     saveLog("account:%s,password:%s\n", account,pwd);
 	fp = fopen("network_config","wb");
 	if(fp) {
@@ -266,8 +271,11 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 	int i;
 	HWND hCtrl;
     // formWlanLoadBmp();
+    if (net_detect() < 0)
+        SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
+    else
+        SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),g_config.wlan_account);
 	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_PASSWORD),"");
-	SetWindowText(GetDlgItem(hDlg,IDC_EDIT_ACCOUNT),"");
     // CreateWindowEx2 (CTRL_STATIC, "",
             // WS_CHILD|WS_VISIBLE|SS_BITMAP,
             // WS_EX_TRANSPARENT,
@@ -350,8 +358,11 @@ int createFormWlan(HWND hMainWnd)
 	HWND Form = Screen.Find(form_base_priv.name);
 	if(Form) {
         current_edit = IDC_EDIT_ACCOUNT;
-		SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
-		SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),"");
+        if (net_detect() < 0)
+            SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),"");
+        else
+            SetWindowText(GetDlgItem(Form,IDC_EDIT_ACCOUNT),g_config.wlan_account);
+        SetWindowText(GetDlgItem(Form,IDC_EDIT_PASSWORD),"");
 		ShowWindow(Form,SW_SHOWNORMAL);
 	} else {
         if (bmp_load_finished == 0) {

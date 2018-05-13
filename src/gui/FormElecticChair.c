@@ -78,6 +78,16 @@ enum {
 };
 
 enum {
+    CHAIR_ASSIST_BACK , //  辅助返回
+    CHAIR_ASSIST_KNEAD_OPEN , //  按摩打开
+    CHAIR_ASSIST_KNEAD_CLOSE, // 按摩关闭
+    CHAIR_ASSIST_HEAT_OPEN, // 加热打开
+    CHAIR_ASSIST_HEAT_CLOSE, // 加热关闭
+    CHAIR_ASSIST_COLD_OPEN, // 制冷打开
+    CHAIR_ASSIST_COLD_CLOSE, // 制冷关闭
+};
+
+enum {
     IDC_LABER_TITEL = 200,
     IDC_LABER_BACKGROUND,
     IDC_LABER_ICON,
@@ -243,6 +253,55 @@ static ElecChair chair[] = {
 	{BMP_LOAD_PARA(chair_s)},
 };
 
+/* ---------------------------------------------------------------------------*/
+/**
+ * @brief assistKneadHandle 按摩,加热，制冷操作
+ *
+ * @param opt 0关闭 1打开
+ */
+/* ---------------------------------------------------------------------------*/
+static void assistKneadHandle(HWND hDlg,int opt)
+{
+    if (opt) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+}
+static void assistHeatHandle(HWND hDlg,int opt)
+{
+    if (opt) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+}
+static void assistColdHandle(HWND hDlg,int opt)
+{
+    if (opt) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief updateChairType 更新显示界面模块
@@ -518,9 +577,41 @@ static void optSingleControlsNotify(HWND hwnd, int id, int nc, DWORD add_data)
 	if (nc != BN_CLICKED)
 		return;
 	multi_ctrl = sendOptCmd(id);
-	if (chair_dir_type == CHAIR_DIR_LEFT)
-		pro_com->sendOpt(0x01, multi_ctrl->op_code);
-	else
+    HWND hDlg = GetParent (hwnd);
+    if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_COLD_OPEN].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_COLD_CLOSE].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_COLD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    } else if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_HEAT_OPEN].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_HEAT_CLOSE].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_HEAT_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    } else if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_KNEAD_OPEN].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else if (multi_ctrl->idc == opt_assist_controls[CHAIR_ASSIST_KNEAD_CLOSE].idc) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_OPEN].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[CHAIR_ASSIST_KNEAD_CLOSE].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+    if (chair_dir_type == CHAIR_DIR_LEFT)
+        pro_com->sendOpt(0x01, multi_ctrl->op_code);
+    else
 		pro_com->sendOpt(0x02, multi_ctrl->op_code);
 }
 
@@ -601,10 +692,10 @@ static void bmpsElectricChairButtonLoad(MgCtrlButton *controls,int num)
 static void updateChairAssist(HWND hDlg)
 {
     int heat_state[2],cold_state[2],knead_state[2];
-    heat_state[0] = BIT(Public.leftSeat,7);
-    heat_state[1] = BIT(Public.rightSeat,7);
-    cold_state[0] = BIT(Public.leftSeat,6);
-    cold_state[1] = BIT(Public.rightSeat,6);
+    heat_state[0] = BIT(Public.leftSeat,6);
+    heat_state[1] = BIT(Public.rightSeat,6);
+    cold_state[0] = BIT(Public.leftSeat,7);
+    cold_state[1] = BIT(Public.rightSeat,7);
     knead_state[0] = BIT2(Public.leftSeat,4);
     knead_state[1] = BIT2(Public.rightSeat,4);
     int i;
@@ -612,24 +703,9 @@ static void updateChairAssist(HWND hDlg)
         i = 0;
     else
         i = 1;
-    if (heat_state[i] == 0)
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[4].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
-    else
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[4].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
-    if (cold_state[i] == 0)
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[6].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
-    else
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[6].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
-    if (knead_state[i] == 0)
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[2].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
-    else
-        SendMessage(GetDlgItem(hDlg,opt_assist_controls[2].idc),
-                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    assistHeatHandle(hDlg,heat_state[i]);
+    assistColdHandle(hDlg,cold_state[i]);
+    assistKneadHandle(hDlg,knead_state[i]);
 }
 
 void formElectricChairLoadLock(void)
@@ -689,6 +765,10 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 			creatButtonControl(hDlg, array->ctrl,array->num,display,
 					optMultiControlsNotify);
 		}
+    }
+    for (i=1; i<NELEMENTS(opt_assist_controls); i++) {
+        SendMessage(GetDlgItem(hDlg,opt_assist_controls[i].idc),
+                MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
     }
     updateChairAssist(hDlg);
     formManiCreateToolBar(hDlg);

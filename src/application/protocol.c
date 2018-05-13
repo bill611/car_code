@@ -75,8 +75,8 @@ typedef struct{
 	u8 order;
 
 	/*
-	   bit7座椅加热状态：0关闭，1开启
-	   bit6座椅制冷状态：0关闭，1开启
+	   bit7座椅制冷状态：0关闭，1开启
+	   bit6座椅加热状态：0关闭，1开启
 	   bit5、4位按摩状态：00关闭，01腿部，10背部，11全身
 	   */
 	u8 leftSeat;
@@ -703,12 +703,12 @@ static void proUdpSendStatus(void)
 	data.flagStart = NET_HEAD;
 	data.id = packet_id++;
 	data.bConnect = online_state;
-	data.bLeftSeatKey = BIT(Public.leftSeat,6);
-	data.ucLeftSeatHeating = BIT(Public.leftSeat,7);
+	data.bLeftSeatKey = BIT(Public.leftSeat,7);
+	data.ucLeftSeatHeating = BIT(Public.leftSeat,6);
 	data.ucLeftSeatMassage = BIT2(Public.leftSeat,4);
 
-	data.bRightSeatKey = BIT(Public.rightSeat,6);
-	data.ucRightSeatHeating = BIT(Public.rightSeat,7);
+	data.bRightSeatKey = BIT(Public.rightSeat,7);
+	data.ucRightSeatHeating = BIT(Public.rightSeat,6);
 	data.ucRightSeatMassage = BIT2(Public.rightSeat,4);
 
 	data.ucVolumeCD = Public.mute;

@@ -79,6 +79,8 @@ static EtcValueInt etc_value_int[]={
 
 static EtcValueChar etc_value_char[]={
 {"Public",	"系统密码",         SIZE_CONFIG(g_config.password),	"0000"},
+{"Wlan",	"Account",         SIZE_CONFIG(g_config.wlan_account),	"0"},
+{"Wlan",	"Password",         SIZE_CONFIG(g_config.wlan_password),	"0"},
 };
 
 //--------------------------------------------------------------------------
