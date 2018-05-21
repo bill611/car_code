@@ -52,7 +52,7 @@ static void optRightChairControlsNotify(HWND hwnd, int id, int nc, DWORD add_dat
 
 #define BMP_LOCAL_PATH "旋转座椅/"
 enum {
-    CHAIR_DIR_LEFT,  // 左座椅
+    CHAIR_DIR_LEFT = 2,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅
 };
 
@@ -130,8 +130,8 @@ static FormBasePriv form_base_priv= {
 
 // device 0x0b
 static MgCtrlButton opt_controls[] = {
-	{0,	0x84,"后转",276,543,117,56},
-	{0,	0x95,"前转",86,543,115,56},
+	{0,	0x85,"后转",276,543,117,56},
+	{0,	0x84,"前转",86,543,115,56},
 	{0,	0x0,"右座椅",276,624,117,56,optRightChairControlsNotify},
 	{0,	0x0,"左座椅",86,624,115,56,optLeftChairControlsNotify},
 };
@@ -165,6 +165,20 @@ static ElecChair chair[] = {
 	{BMP_LOAD_PARA(chair_r)},
 };
 
+static void updateChairButtonType(HWND hDlg)
+{
+    if (chair_disp_type == CHAIR_RIGHT) {
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else {
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief updateChairType 更新显示界面模块
@@ -198,6 +212,7 @@ static void updateChairType(HWND hwnd)
 	rect.bottom = 480;
 
     InvalidateRect (hwnd, &rect, FALSE);
+    updateChairButtonType(hwnd);
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -404,7 +419,12 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
 					optMultiControlsNotify);
 		}
     }
+    SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT].idc),
+            MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
+    SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT].idc),
+            MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
     formManiCreateToolBar(hDlg);
+    SendMessage(hDlg,MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 
 /* ----------------------------------------------------------------*/

@@ -61,6 +61,11 @@ static void updateChairAssist(HWND hDlg);
 
 #define BMP_LOCAL_PATH "电动座椅/"
 enum {
+    CHAIR_DIR_RIGHT_BUTTON = 5, // 右座椅
+    CHAIR_DIR_LEFT_BUTTON,  // 左座椅
+};
+
+enum {
     CHAIR_DIR_LEFT,  // 左座椅
     CHAIR_DIR_RIGHT, // 右座椅
 };
@@ -302,6 +307,20 @@ static void assistColdHandle(HWND hDlg,int opt)
                 MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
     }
 }
+static void updateChairButtonType(HWND hDlg)
+{
+    if (chair_dir_type == CHAIR_DIR_LEFT) {
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT_BUTTON].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT_BUTTON].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+    } else {
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT_BUTTON].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 0, 0);
+        SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT_BUTTON].idc),
+                MSG_MYBUTTON_SET_NORMAL_STATE, 1, 0);
+    }
+}
 /* ---------------------------------------------------------------------------*/
 /**
  * @brief updateChairType 更新显示界面模块
@@ -335,6 +354,7 @@ static void updateChairType(HWND hwnd)
 	rect.bottom = 340;
 
     InvalidateRect (hwnd, &rect, FALSE);
+    updateChairButtonType(hwnd);
 }
 /* ---------------------------------------------------------------------------*/
 /**
@@ -770,8 +790,13 @@ static void initPara(HWND hDlg, int message, WPARAM wParam, LPARAM lParam)
         SendMessage(GetDlgItem(hDlg,opt_assist_controls[i].idc),
                 MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
     }
+    SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_RIGHT_BUTTON].idc),
+            MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
+    SendMessage(GetDlgItem(hDlg,opt_controls[CHAIR_DIR_LEFT_BUTTON].idc),
+            MSG_MYBUTTON_SET_SELECT_MODE, 3, 0);
     updateChairAssist(hDlg);
     formManiCreateToolBar(hDlg);
+    SendMessage(hDlg,MSG_ELECTRIC_CHAIR_TYPE,0,0);
 }
 
 /* ----------------------------------------------------------------*/

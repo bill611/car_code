@@ -202,20 +202,30 @@ static void publicInitTouchIrq(void)
 static int saveConfig(void)
 {
     unsigned int i;
-    char buf[8] = {0};
+    char buf[128] = {0};
     for (i=0; i<NELEMENTS(etc_value_int); i++) {
         sprintf(buf,"%d",*etc_value_int[i].value);
+        printf("[%s]-->[%s:%s]\n",
+                etc_value_int[i].section,
+                etc_value_int[i].key,
+                buf );
         SetValueToEtcFile("config.ini",
                     etc_value_int[i].section,
                     etc_value_int[i].key,
                     buf);
     }
     for (i=0; i<NELEMENTS(etc_value_char); i++) {
-        sprintf(buf,"%s",etc_value_char[i].value);
-        SetValueToEtcFile("config.ini",
+        printf("[%s]-->[%s:%s]\n",
+                etc_value_char[i].section,
+                etc_value_char[i].key,
+                etc_value_char[i].value );
+        if (etc_value_char[i].value) {
+            sprintf(buf,"%s",etc_value_char[i].value);
+            SetValueToEtcFile("config.ini",
                     etc_value_char[i].section,
                     etc_value_char[i].key,
                     buf);
+        }
     }
 	if (etcFileCheck("config.ini") == TRUE) {//检查配置文件并备份
 	    backData("config.ini");
