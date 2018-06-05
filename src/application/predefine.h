@@ -211,7 +211,7 @@
 
 #define TIME_1S (10 * 5)
 #define TIME_100MS (TIME_1S / 10)
-#define TIME_500MS (TIME_100MS * 5)
+#define TIME_500MS (TIME_100MS * 4) // 400ms²âÊÔ
 
 #define DBG_RC(x) printf("l:%d,t:%d,r:%d,b:%d\n",x.left,x.top,x.right,x.bottom)
 #define DBG_STR(x)  printf("flag------->[%s]\n",x)
